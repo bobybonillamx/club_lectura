@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="glass p-4 mb-4">
+  <h1 class="hero-title mb-1">Bienvenido a {{ club_settings.name }}</h1>
+  <p class="text-muted mb-0">Organiza sesiones, vota libros y comparte reseñas en un solo lugar.</p>
+</section>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <h2 class="mb-3">Libros</h2>
+    {% for book in books %}
+    <div class="card mb-3 border-0 shadow-sm">
+      <div class="row g-0">
+        <div class="col-4 col-md-3"><img src="{{ book.cover_url }}" class="img-fluid rounded-start" alt="{{ book.title }}"></div>
+        <div class="col-8 col-md-9">
+          <div class="card-body">
+            <h5>{{ book.title }}</h5>
+            <p class="mb-1 text-muted">{{ book.get_status_display }} · {{ book.author }}</p>
+            <a target="_blank" rel="noopener" href="{{ book.amazon_url }}">Ver en Amazon</a>
+            {% if book.status == book_status.FUTURE and user.is_authenticated %}
+              {% if user.is_approved or user.is_superuser %}
+              <form action="/libros/{{ book.id }}/votar/" method="post">{% csrf_token %}<button class="btn btn-sm btn-club mt-2">Votar</button></form>
+              {% endif %}
+            {% endif %}
+            {% if book.external_video_url %}<div><a href="{{ book.external_video_url }}" target="_blank">Video relacionado</a></div>{% endif %}
+            <div class="small text-muted">Votos: {{ book.votes.count }}</div>
+
+            {% if user.is_authenticated %}
+            {% if user.is_approved or user.is_superuser %}
+            <form class="mt-2" action="/libros/{{ book.id }}/resena/" method="post">
+              {% csrf_token %}
+              <div class="input-group input-group-sm mb-1">
+                <input type="number" min="1" max="5" class="form-control" name="rating" value="5" required>
+                <input type="text" class="form-control" name="comment" placeholder="Escribe una reseña" required>
+                <button class="btn btn-outline-secondary">Publicar</button>
+              </div>
+              <small class="text-muted">Tu reseña pasa por moderación antes de verse pública.</small>
+            </form>
+            {% endif %}
+            {% endif %}
+
+            <div class="mt-2">
+              <strong>Reseñas:</strong>
+              {% for review in book.reviews.all %}
+                {% if review.is_approved %}
+                  <div class="border rounded p-2 my-1 bg-light-subtle">
+                    ⭐ {{ review.rating }} · {{ review.user.username }}<br>
+                    {{ review.comment }}
+                  </div>
+                {% endif %}
+              {% empty %}
+                <div class="text-muted">Aún no hay reseñas aprobadas.</div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% empty %}<p>No hay libros aún.</p>{% endfor %}
+  </div>
+  <div class="col-lg-4">
+    <div class="glass p-3 mb-3">
+      <h3>Próximos eventos</h3>
+      {% for event in events %}
+        <div class="border rounded p-2 mb-2 bg-white">
+          <strong>{{ event.title }}</strong><br>
+          <span>{{ event.event_type }} · {{ event.starts_at }}</span>
+          <div>{{ event.location }}</div>
+        </div>
+      {% empty %}<p>No hay eventos próximos.</p>{% endfor %}
+    </div>
+
+    <div class="glass p-3">
+      <h3 class="mt-1">Redes</h3>
+      {% for link in links %}
+        <a class="d-block" href="{{ link.url }}" target="_blank">{{ link.network }}</a>
+      {% endfor %}
+
+      <button class="btn btn-outline-primary mt-3" onclick="navigator.share ? navigator.share({title: document.title, url: location.href}) : alert('Comparte esta URL: ' + location.href)">Compartir</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
