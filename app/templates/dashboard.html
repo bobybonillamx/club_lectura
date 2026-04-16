@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="glass p-4 mb-4">
+  <h2 class="hero-title">Panel de control</h2>
+  <p class="mb-0 text-muted">Crea contenido, personaliza tu club y administra usuarios.</p>
+</section>
+
+{% if user.role == 'admin' or user.role == 'superadmin' or user.is_superuser %}
+<div class="card mb-4 border-0 shadow-sm">
+  <div class="card-body">
+    <h4>Personalización visual y branding</h4>
+    <form action="/dashboard/" method="post">{% csrf_token %}
+      {{ settings_form.as_p }}
+      <button class="btn btn-club">Guardar personalización</button>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<div class="row g-4">
+  <div class="col-md-6">
+    <div class="card border-0 shadow-sm"><div class="card-body">
+      <h4>Nuevo libro</h4>
+      <form action="/libros/nuevo/" method="post">{% csrf_token %}{{ book_form.as_p }}<button class="btn btn-club">Guardar libro</button></form>
+    </div></div>
+  </div>
+  <div class="col-md-6">
+    <div class="card border-0 shadow-sm"><div class="card-body">
+      <h4>Nuevo evento</h4>
+      <form action="/eventos/nuevo/" method="post">{% csrf_token %}{{ event_form.as_p }}<button class="btn btn-club">Guardar evento</button></form>
+    </div></div>
+  </div>
+</div>
+
+{% if user.role == 'admin' or user.role == 'superadmin' or user.is_superuser %}
+<hr>
+<h4>Invitar usuario</h4>
+<form action="/admin/invitar/" method="post" class="row g-2">{% csrf_token %}
+  <div class="col-md-4"><input class="form-control" name="name" placeholder="Nombre" required></div>
+  <div class="col-md-4"><input class="form-control" name="email" type="email" placeholder="Correo" required></div>
+  <div class="col-md-3">
+    <select class="form-select" name="role">
+      <option value="user">Usuario</option>
+      {% if user.role == 'superadmin' or user.is_superuser %}<option value="admin">Admin</option>{% endif %}
+    </select>
+  </div>
+  <div class="col-md-1"><button class="btn btn-club">Invitar</button></div>
+</form>
+<a href="/usuarios/pendientes/" class="btn btn-link mt-2">Aprobar usuarios pendientes</a>
+<a href="/resenas/moderacion/" class="btn btn-link mt-2">Moderar reseñas ({{ pending_reviews_count }})</a>
+{% endif %}
+{% endblock %}
