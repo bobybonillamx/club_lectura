@@ -142,3 +142,29 @@ docker compose exec db pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB" > backup.sql
 - Definir `ALLOWED_HOSTS` real
 - Rotar `DJANGO_SECRET_KEY` en producción
 - Respaldos automáticos de PostgreSQL
+---
+
+## Resolución de conflictos de merge (GitHub)
+
+Si GitHub muestra *"This branch has conflicts that must be resolved"*:
+
+```bash
+git fetch origin
+git checkout work
+git pull --rebase origin main
+```
+
+Si aparecen conflictos, resuélvelos en los archivos marcados, luego:
+
+```bash
+git add .
+git rebase --continue
+git push --force-with-lease
+```
+
+Tip de validación rápida para confirmar que no quedaron marcadores de conflicto:
+
+```bash
+rg -n "^(<<<<<<<|=======|>>>>>>>)"
+```
+
