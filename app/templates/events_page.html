@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Eventos</h2>
+<h4>Próximos</h4>
+{% for e in upcoming %}
+<div class="card border-0 shadow-sm mb-2"><div class="card-body"><strong>{{ e.title }}</strong> · {{ e.starts_at }} · {{ e.event_type }}</div></div>
+{% empty %}<p>Sin eventos próximos.</p>{% endfor %}
+<h4 class="mt-4">Pasados</h4>
+{% for e in past %}
+<div class="card border-0 shadow-sm mb-2"><div class="card-body"><strong>{{ e.title }}</strong> · {{ e.starts_at }} · {{ e.event_type }}</div></div>
+{% empty %}<p>Sin eventos pasados.</p>{% endfor %}
+{% endblock %}

@@ -6,7 +6,15 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from .forms import RegisterForm, BookForm, EventForm, ReviewForm, ClubSettingsForm
+from .forms import (
+    RegisterForm,
+    BookForm,
+    EventForm,
+    ReviewForm,
+    ClubSettingsForm,
+    SocialLinkForm,
+    UserProfileForm,
+)
 from .oauth import sync_google_social_app_from_settings
 from .models import (
     Book,
@@ -28,7 +36,7 @@ def _is_effectively_approved(user):
 
 
 def _visible_filter(user):
-    if user.is_authenticated and user.role == Role.SUPERADMIN:
+    if user.is_authenticated and (user.role == Role.SUPERADMIN or user.is_superuser):
         return [v for v in Visibility.values]
     if user.is_authenticated and user.role == Role.ADMIN:
         return [Visibility.PUBLIC, Visibility.ADMINS]
@@ -38,15 +46,37 @@ def _visible_filter(user):
 def home(request):
     visible = _visible_filter(request.user)
     books = Book.objects.filter(visibility__in=visible).order_by('-created_at')[:30]
+    current_book = Book.objects.filter(visibility__in=visible, status=BookStatus.READING).order_by('-created_at').first()
+    next_event = Event.objects.filter(visibility__in=visible, starts_at__gte=timezone.now()).order_by('starts_at').first()
     events = Event.objects.filter(visibility__in=visible, starts_at__gte=timezone.now()).order_by('starts_at')[:20]
     links = SocialLink.objects.all()
     return render(request, 'home.html', {
         'books': books,
         'events': events,
+        'current_book': current_book,
+        'next_event': next_event,
         'links': links,
         'book_status': BookStatus,
     })
 
+
+
+
+def books_page(request):
+    visible = _visible_filter(request.user)
+    status = request.GET.get('estado', '')
+    qs = Book.objects.filter(visibility__in=visible).order_by('-created_at')
+    if status in {BookStatus.COMPLETED, BookStatus.READING, BookStatus.FUTURE}:
+        qs = qs.filter(status=status)
+    return render(request, 'books_page.html', {'books': qs, 'estado': status})
+
+
+def events_page(request):
+    visible = _visible_filter(request.user)
+    now = timezone.now()
+    upcoming = Event.objects.filter(visibility__in=visible, starts_at__gte=now).order_by('starts_at')
+    past = Event.objects.filter(visibility__in=visible, starts_at__lt=now).order_by('-starts_at')
+    return render(request, 'events_page.html', {'upcoming': upcoming, 'past': past})
 
 def register(request):
     if request.method == 'POST':
@@ -69,28 +99,52 @@ def dashboard(request):
     if not _is_effectively_approved(request.user):
         return HttpResponseForbidden('Pendiente de aprobación por un admin.')
 
+    section = request.GET.get('seccion', 'inicio')
     club_settings = ClubSettings.get_solo()
-    if request.method == 'POST' and request.user.is_admin_like():
-        settings_form = ClubSettingsForm(request.POST, instance=club_settings)
-        if request.user.role != Role.SUPERADMIN:
-            settings_form.fields.pop('google_login_enabled', None)
-        if settings_form.is_valid():
-            settings_form.save()
-            if request.user.role == Role.SUPERADMIN:
-                sync_google_social_app_from_settings()
-            messages.success(request, 'Personalización actualizada.')
-            return redirect('dashboard')
-    else:
-        settings_form = ClubSettingsForm(instance=club_settings)
-        if request.user.role != Role.SUPERADMIN:
-            settings_form.fields.pop('google_login_enabled', None)
+    settings_form = ClubSettingsForm(instance=club_settings)
+    if request.user.role != Role.SUPERADMIN and not request.user.is_superuser:
+        settings_form.fields.pop('google_login_enabled', None)
+        settings_form.fields.pop('google_client_id', None)
+        settings_form.fields.pop('google_client_secret', None)
 
-    return render(request, 'dashboard.html', {
+    context = {
+        'seccion': section,
         'book_form': BookForm(),
         'event_form': EventForm(),
         'settings_form': settings_form,
+        'social_form': SocialLinkForm(),
+        'profile_form': UserProfileForm(instance=request.user),
+        'books': Book.objects.order_by('-created_at')[:100],
+        'events_all': Event.objects.order_by('-starts_at')[:100],
+        'users_all': User.objects.order_by('-date_joined')[:100],
+        'users_pending': User.objects.filter(is_approved=False),
+        'reviews_pending': Review.objects.filter(is_approved=False).order_by('-created_at'),
+        'reviews_all': Review.objects.order_by('-created_at')[:200],
+        'social_links': SocialLink.objects.all(),
         'pending_reviews_count': Review.objects.filter(is_approved=False).count(),
-    })
+    }
+    return render(request, 'dashboard.html', context)
+
+
+@login_required
+def update_club_settings(request):
+    if not request.user.is_admin_like():
+        return HttpResponseForbidden('Solo admins.')
+
+    club_settings = ClubSettings.get_solo()
+    form = ClubSettingsForm(request.POST, instance=club_settings)
+    if request.user.role != Role.SUPERADMIN and not request.user.is_superuser:
+        form.fields.pop('google_login_enabled', None)
+        form.fields.pop('google_client_id', None)
+        form.fields.pop('google_client_secret', None)
+    if form.is_valid():
+        form.save()
+        if request.user.role == Role.SUPERADMIN or request.user.is_superuser:
+            sync_google_social_app_from_settings()
+        messages.success(request, 'Configuración del club actualizada.')
+    else:
+        messages.error(request, f'Error de configuración: {form.errors}')
+    return redirect('/dashboard/?seccion=integraciones')
 
 
 @login_required
@@ -102,10 +156,38 @@ def create_book(request):
         book = form.save(commit=False)
         book.created_by = request.user
         book.save()
+        if book.status == BookStatus.READING and form.cleaned_data.get('reemplazar_leyendo_actual'):
+            Book.objects.filter(status=BookStatus.READING).exclude(id=book.id).update(status=BookStatus.COMPLETED)
         messages.success(request, 'Libro guardado correctamente.')
     else:
         messages.error(request, f'Error al guardar libro: {form.errors}')
-    return redirect('dashboard')
+    return redirect('/dashboard/?seccion=libros')
+
+
+@login_required
+def edit_book(request, book_id):
+    if not request.user.is_admin_like():
+        return HttpResponseForbidden('Solo admins.')
+    book = get_object_or_404(Book, pk=book_id)
+    form = BookForm(request.POST, instance=book)
+    if form.is_valid():
+        updated = form.save()
+        if updated.status == BookStatus.READING and form.cleaned_data.get('reemplazar_leyendo_actual'):
+            Book.objects.filter(status=BookStatus.READING).exclude(id=updated.id).update(status=BookStatus.COMPLETED)
+        messages.success(request, 'Libro actualizado.')
+    else:
+        messages.error(request, f'No se pudo actualizar: {form.errors}')
+    return redirect('/dashboard/?seccion=libros')
+
+
+@login_required
+def delete_book(request, book_id):
+    if not request.user.is_admin_like():
+        return HttpResponseForbidden('Solo admins.')
+    book = get_object_or_404(Book, pk=book_id)
+    book.delete()
+    messages.success(request, 'Libro eliminado.')
+    return redirect('/dashboard/?seccion=libros')
 
 
 @login_required
@@ -120,14 +202,38 @@ def create_event(request):
         messages.success(request, 'Evento creado correctamente.')
     else:
         messages.error(request, f'Error al crear evento: {form.errors}')
-    return redirect('dashboard')
+    return redirect('/dashboard/?seccion=eventos')
+
+
+@login_required
+def edit_event(request, event_id):
+    if not request.user.is_admin_like():
+        return HttpResponseForbidden('Solo admins.')
+    event = get_object_or_404(Event, pk=event_id)
+    form = EventForm(request.POST, instance=event)
+    if form.is_valid():
+        form.save()
+        messages.success(request, 'Evento actualizado.')
+    else:
+        messages.error(request, f'No se pudo actualizar evento: {form.errors}')
+    return redirect('/dashboard/?seccion=eventos')
+
+
+@login_required
+def delete_event(request, event_id):
+    if not request.user.is_admin_like():
+        return HttpResponseForbidden('Solo admins.')
+    event = get_object_or_404(Event, pk=event_id)
+    event.delete()
+    messages.success(request, 'Evento eliminado.')
+    return redirect('/dashboard/?seccion=eventos')
 
 
 @login_required
 def vote_book(request, book_id):
     if not _is_effectively_approved(request.user):
         return HttpResponseForbidden('Necesitas aprobación.')
-    book = get_object_or_404(Book, pk=book_id, status=BookStatus.FUTURE)
+    book = get_object_or_404(Book, pk=book_id, status=BookStatus.FUTURE, allow_voting=True)
     Vote.objects.get_or_create(user=request.user, book=book)
     messages.success(request, 'Voto registrado.')
     return redirect('home')
@@ -168,7 +274,7 @@ def approve_review(request, review_id):
     review.moderation_note = request.POST.get('moderation_note', '').strip()
     review.save(update_fields=['is_approved', 'is_flagged', 'moderation_note'])
     messages.success(request, 'Reseña aprobada.')
-    return redirect('review_moderation')
+    return redirect('/dashboard/?seccion=resenas')
 
 
 @login_required
@@ -181,7 +287,17 @@ def flag_review(request, review_id):
     review.moderation_note = request.POST.get('moderation_note', '').strip() or 'Marcada por moderación'
     review.save(update_fields=['is_approved', 'is_flagged', 'moderation_note'])
     messages.success(request, 'Reseña marcada para seguimiento.')
-    return redirect('review_moderation')
+    return redirect('/dashboard/?seccion=resenas')
+
+
+@login_required
+def delete_review(request, review_id):
+    if not request.user.is_admin_like():
+        return HttpResponseForbidden('Solo admins.')
+    review = get_object_or_404(Review, pk=review_id)
+    review.delete()
+    messages.success(request, 'Reseña eliminada.')
+    return redirect('/dashboard/?seccion=resenas')
 
 
 @login_required
@@ -200,18 +316,43 @@ def approve_user(request, user_id):
     user.is_approved = True
     user.save(update_fields=['is_approved'])
     messages.success(request, f'{user.username} aprobado.')
-    return redirect('pending_users')
+    return redirect('/dashboard/?seccion=usuarios')
+
+
+@login_required
+def edit_user(request, user_id):
+    if not request.user.is_admin_like():
+        return HttpResponseForbidden('Solo admins.')
+    user = get_object_or_404(User, pk=user_id)
+    user.full_name = request.POST.get('full_name', user.full_name)
+    user.email = request.POST.get('email', user.email)
+    user.favorite_book = request.POST.get('favorite_book', user.favorite_book)
+    user.save()
+    messages.success(request, 'Usuario actualizado.')
+    return redirect('/dashboard/?seccion=usuarios')
+
+
+@login_required
+def delete_user(request, user_id):
+    if not request.user.is_admin_like():
+        return HttpResponseForbidden('Solo admins.')
+    user = get_object_or_404(User, pk=user_id)
+    if user.id == request.user.id:
+        return HttpResponseForbidden('No puedes eliminarte a ti mismo.')
+    user.delete()
+    messages.success(request, 'Usuario eliminado.')
+    return redirect('/dashboard/?seccion=usuarios')
 
 
 @login_required
 def invite_user(request):
-    if request.user.role not in {Role.ADMIN, Role.SUPERADMIN}:
+    if request.user.role not in {Role.ADMIN, Role.SUPERADMIN} and not request.user.is_superuser:
         return HttpResponseForbidden('Solo admins.')
     if request.method == 'POST':
         name = request.POST.get('name', '').strip()
         email = request.POST.get('email', '').strip().lower()
         role = request.POST.get('role', Role.USER)
-        if role == Role.ADMIN and request.user.role != Role.SUPERADMIN:
+        if role == Role.ADMIN and request.user.role != Role.SUPERADMIN and not request.user.is_superuser:
             return HttpResponseForbidden('Solo el super admin puede crear admins.')
 
         alphabet = string.ascii_letters + string.digits + '!@#$%'
@@ -234,7 +375,41 @@ def invite_user(request):
         )
         invite_link = f"{settings.PUBLIC_BASE_URL}/login/"
         messages.success(request, f'Invitación creada para {email}. Password temporal: {password}. Link: {invite_link}')
-    return redirect('dashboard')
+    return redirect('/dashboard/?seccion=usuarios')
+
+
+@login_required
+def add_social_link(request):
+    if not request.user.is_admin_like():
+        return HttpResponseForbidden('Solo admins.')
+    form = SocialLinkForm(request.POST)
+    if form.is_valid():
+        form.save()
+        messages.success(request, 'Red social agregada.')
+    else:
+        messages.error(request, f'Error en red social: {form.errors}')
+    return redirect('/dashboard/?seccion=integraciones')
+
+
+@login_required
+def delete_social_link(request, link_id):
+    if not request.user.is_admin_like():
+        return HttpResponseForbidden('Solo admins.')
+    link = get_object_or_404(SocialLink, pk=link_id)
+    link.delete()
+    messages.success(request, 'Red social eliminada.')
+    return redirect('/dashboard/?seccion=integraciones')
+
+
+@login_required
+def edit_profile(request):
+    form = UserProfileForm(request.POST, instance=request.user)
+    if form.is_valid():
+        form.save()
+        messages.success(request, 'Perfil actualizado.')
+    else:
+        messages.error(request, f'Error al actualizar perfil: {form.errors}')
+    return redirect('/dashboard/?seccion=perfil')
 
 
 def manifest(_request):

@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import User, Book, Event, Review, ClubSettings
+from .models import User, Book, Event, Review, ClubSettings, SocialLink
 
 
 class RegisterForm(UserCreationForm):
@@ -12,6 +12,8 @@ class RegisterForm(UserCreationForm):
 
 
 class BookForm(forms.ModelForm):
+    reemplazar_leyendo_actual = forms.BooleanField(required=False, help_text='Si marcas esto, los otros libros en "Leyendo" pasarán a "Leído".')
+
     class Meta:
         model = Book
         fields = [
@@ -19,6 +21,7 @@ class BookForm(forms.ModelForm):
             'author',
             'status',
             'visibility',
+            'allow_voting',
             'description',
             'amazon_url',
             'cover_url',
@@ -51,3 +54,15 @@ class ReviewModerationForm(forms.ModelForm):
     class Meta:
         model = Review
         fields = ['is_approved', 'is_flagged', 'moderation_note']
+
+
+class SocialLinkForm(forms.ModelForm):
+    class Meta:
+        model = SocialLink
+        fields = ['network', 'url']
+
+
+class UserProfileForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['full_name', 'avatar_url', 'bio', 'favorite_book', 'email']

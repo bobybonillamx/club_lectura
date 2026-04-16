@@ -23,6 +23,9 @@ class User(AbstractUser):
     full_name = models.CharField(max_length=180, blank=True)
     role = models.CharField(max_length=20, choices=Role.choices, default=Role.USER)
     is_approved = models.BooleanField(default=False)
+    avatar_url = models.URLField(blank=True)
+    bio = models.TextField(blank=True)
+    favorite_book = models.CharField(max_length=255, blank=True)
 
     def is_admin_like(self):
         return self.is_superuser or self.role in {Role.ADMIN, Role.SUPERADMIN}
@@ -70,6 +73,7 @@ class Book(models.Model):
     amazon_url = models.URLField(blank=True)
     cover_url = models.URLField(blank=True)
     external_video_url = models.URLField(blank=True)
+    allow_voting = models.BooleanField(default=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -100,6 +104,7 @@ class Event(models.Model):
     visibility = models.CharField(max_length=20, choices=Visibility.choices, default=Visibility.PUBLIC)
     location = models.CharField(max_length=255, blank=True)
     external_video_url = models.URLField(blank=True)
+    allow_voting = models.BooleanField(default=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
 
 
@@ -118,6 +123,9 @@ class Review(models.Model):
     rating = models.PositiveSmallIntegerField(default=5)
     comment = models.TextField()
     is_approved = models.BooleanField(default=False)
+    avatar_url = models.URLField(blank=True)
+    bio = models.TextField(blank=True)
+    favorite_book = models.CharField(max_length=255, blank=True)
     is_flagged = models.BooleanField(default=False)
     moderation_note = models.CharField(max_length=255, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
