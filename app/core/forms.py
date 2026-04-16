@@ -26,6 +26,7 @@ class BookForm(forms.ModelForm):
             'amazon_url',
             'cover_url',
             'external_video_url',
+            'pdf_url',
         ]
 
 

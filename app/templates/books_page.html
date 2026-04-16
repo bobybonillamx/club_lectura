@@ -8,6 +8,6 @@
   <a class="btn btn-sm btn-outline-secondary" href="/libros/?estado=future">En votación / por leer</a>
 </div>
 {% for b in books %}
-<div class="card border-0 shadow-sm mb-2"><div class="card-body"><strong>{{ b.title }}</strong> · {{ b.get_status_display }} · {{ b.author }}</div></div>
+<div class="card border-0 shadow-sm mb-2"><div class="card-body"><strong>{{ b.title }}</strong> · {{ b.get_status_display }} · {{ b.author }}{% if b.pdf_url %} · <a href="{{ b.pdf_url }}" target="_blank">PDF</a>{% endif %}</div></div>
 {% empty %}<p>Sin libros.</p>{% endfor %}
 {% endblock %}

@@ -36,6 +36,7 @@
               {% endif %}
             {% endif %}
             {% if book.external_video_url %}<div><a href="{{ book.external_video_url }}" target="_blank">Video relacionado</a></div>{% endif %}
+            {% if book.pdf_url %}<div><a href="{{ book.pdf_url }}" target="_blank">Descargar PDF</a></div>{% endif %}
             <div class="small text-muted">Votos: {{ book.votes.count }}</div>
 
             {% if user.is_authenticated %}

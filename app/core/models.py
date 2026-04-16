@@ -73,6 +73,7 @@ class Book(models.Model):
     amazon_url = models.URLField(blank=True)
     cover_url = models.URLField(blank=True)
     external_video_url = models.URLField(blank=True)
+    pdf_url = models.URLField(blank=True)
     allow_voting = models.BooleanField(default=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -104,7 +105,6 @@ class Event(models.Model):
     visibility = models.CharField(max_length=20, choices=Visibility.choices, default=Visibility.PUBLIC)
     location = models.CharField(max_length=255, blank=True)
     external_video_url = models.URLField(blank=True)
-    allow_voting = models.BooleanField(default=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
 
 
