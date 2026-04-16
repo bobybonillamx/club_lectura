@@ -49,6 +49,10 @@ class ClubSettingsForm(forms.ModelForm):
     class Meta:
         model = ClubSettings
         fields = ['name', 'description', 'logo_url', 'primary_color', 'accent_color', 'affiliate_tag', 'google_login_enabled', 'google_client_id', 'google_client_secret']
+        widgets = {
+            'primary_color': forms.TextInput(attrs={'type': 'color'}),
+            'accent_color': forms.TextInput(attrs={'type': 'color'}),
+        }
 
 
 class ReviewModerationForm(forms.ModelForm):

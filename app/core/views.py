@@ -85,6 +85,21 @@ def books_page(request):
     return render(request, 'books_page.html', {'books': qs, 'estado': status})
 
 
+def book_detail(request, book_id):
+    visible = _visible_filter(request.user)
+    book = get_object_or_404(Book, pk=book_id, visibility__in=visible)
+    approved_reviews = book.reviews.filter(is_approved=True).order_by('-created_at')
+    user_vote = None
+    if request.user.is_authenticated:
+        user_vote = Vote.objects.filter(user=request.user, book=book).first()
+    return render(request, 'book_detail.html', {
+        'book': book,
+        'approved_reviews': approved_reviews,
+        'book_status': BookStatus,
+        'user_vote': user_vote,
+    })
+
+
 def events_page(request):
     visible = _visible_filter(request.user)
     now = timezone.now()
@@ -158,7 +173,8 @@ def update_club_settings(request):
         messages.success(request, 'Configuración del club actualizada.')
     else:
         messages.error(request, f'Error de configuración: {form.errors}')
-    return redirect('/dashboard/?seccion=integraciones')
+    section = request.POST.get('seccion', 'inicio')
+    return redirect(f'/dashboard/?seccion={section}')
 
 
 @login_required
@@ -248,9 +264,12 @@ def vote_book(request, book_id):
     if not _is_effectively_approved(request.user):
         return HttpResponseForbidden('Necesitas aprobación.')
     book = get_object_or_404(Book, pk=book_id, status=BookStatus.FUTURE, allow_voting=True)
-    Vote.objects.get_or_create(user=request.user, book=book)
-    messages.success(request, 'Voto registrado.')
-    return redirect('home')
+    vote, created = Vote.objects.get_or_create(user=request.user, book=book)
+    if created:
+        messages.success(request, f'Tu voto por "{book.title}" quedó registrado. Puedes votar por otros libros también.')
+    else:
+        messages.info(request, f'Ya habías votado por "{book.title}". Tu voto sigue contando.')
+    return redirect(request.POST.get('next') or f'/libros/{book.id}/')
 
 
 @login_required

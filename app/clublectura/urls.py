@@ -8,6 +8,7 @@ urlpatterns = [
     path('accounts/', include('allauth.urls')),
     path('', views.home, name='home'),
     path('libros/', views.books_page, name='books_page'),
+    path('libros/<int:book_id>/', views.book_detail, name='book_detail'),
     path('eventos/', views.events_page, name='events_page'),
     path('registro/', views.register, name='register'),
     path('login/', auth_views.LoginView.as_view(template_name='auth/login.html'), name='login'),

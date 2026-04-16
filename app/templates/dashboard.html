@@ -5,7 +5,7 @@
     <div class="glass p-3 position-sticky" style="top: 16px;">
       <h5 class="mb-3">Menú interno</h5>
       <div class="list-group">
-        <a class="list-group-item {% if seccion == 'inicio' %}active{% endif %}" href="/dashboard/?seccion=inicio">Inicio</a>
+        <a class="list-group-item {% if seccion == 'inicio' %}active{% endif %}" href="/dashboard/?seccion=inicio">Inicio y personalización</a>
         <a class="list-group-item {% if seccion == 'libros' %}active{% endif %}" href="/dashboard/?seccion=libros">Libros</a>
         <a class="list-group-item {% if seccion == 'eventos' %}active{% endif %}" href="/dashboard/?seccion=eventos">Eventos</a>
         <a class="list-group-item {% if seccion == 'usuarios' %}active{% endif %}" href="/dashboard/?seccion=usuarios">Usuarios</a>
@@ -18,10 +18,41 @@
 
   <div class="col-lg-9">
     {% if seccion == 'inicio' %}
-      <section class="glass p-4">
+      <section class="glass p-4 mb-4">
         <h2 class="hero-title">Panel de control</h2>
-        <p class="mb-0 text-muted">Selecciona una sección del menú para administrar el club.</p>
+        <p class="mb-0 text-muted">Desde aquí personalizas la identidad visual y el nombre del club.</p>
       </section>
+      <div class="card border-0 shadow-sm mb-4"><div class="card-body">
+        <h4>Personalización del club</h4>
+        <form action="/dashboard/configuracion/" method="post" class="row g-3">{% csrf_token %}
+          <input type="hidden" name="seccion" value="inicio">
+          <div class="col-md-6">
+            <label class="form-label" for="id_name">Nombre del club</label>
+            {{ settings_form.name }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="id_logo_url">URL del logo</label>
+            {{ settings_form.logo_url }}
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="id_description">Descripción pública</label>
+            {{ settings_form.description }}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="id_primary_color">Color principal</label>
+            {{ settings_form.primary_color }}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="id_accent_color">Color secundario</label>
+            {{ settings_form.accent_color }}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="id_affiliate_tag">Tag de afiliado</label>
+            {{ settings_form.affiliate_tag }}
+          </div>
+          <div class="col-12"><button class="btn btn-club">Guardar personalización</button></div>
+        </form>
+      </div></div>
     {% endif %}
 
     {% if seccion == 'libros' %}
@@ -32,7 +63,11 @@
       <h5>Libros actuales</h5>
       {% for b in books %}
       <div class="card border-0 shadow-sm mb-2"><div class="card-body">
-        <strong>{{ b.title }}</strong> · {{ b.get_status_display }}
+        <div class="d-flex justify-content-between align-items-center">
+          <strong>{{ b.title }}</strong>
+          <a class="btn btn-sm btn-outline-primary" href="/libros/{{ b.id }}/">Ver detalle</a>
+        </div>
+        <div class="text-muted small">{{ b.get_status_display }}</div>
         <form action="/libros/{{ b.id }}/editar/" method="post" class="row g-2 mt-2">{% csrf_token %}
           <div class="col-md-5"><input class="form-control" name="title" value="{{ b.title }}"></div>
           <div class="col-md-4"><input class="form-control" name="author" value="{{ b.author }}"></div>
@@ -73,11 +108,21 @@
     {% if seccion == 'usuarios' %}
       <div class="card border-0 shadow-sm mb-4"><div class="card-body">
         <h4>Invitar usuario</h4>
+        <p class="text-muted small mb-3">Completa todos los campos para enviar invitación por correo.</p>
         <form action="/admin/invitar/" method="post" class="row g-2">{% csrf_token %}
-          <div class="col-md-4"><input class="form-control" name="name" placeholder="Nombre" required></div>
-          <div class="col-md-4"><input class="form-control" name="email" type="email" placeholder="Correo" required></div>
-          <div class="col-md-2"><select class="form-select" name="role"><option value="user">Usuario</option><option value="admin">Admin</option></select></div>
-          <div class="col-md-2"><button class="btn btn-club">Invitar</button></div>
+          <div class="col-md-4">
+            <label class="form-label">Nombre completo</label>
+            <input class="form-control" name="name" placeholder="Ej. Ana Torres" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Correo electrónico</label>
+            <input class="form-control" name="email" type="email" placeholder="ana@correo.com" required>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Rol inicial</label>
+            <select class="form-select" name="role"><option value="user">Usuario</option><option value="admin">Admin</option></select>
+          </div>
+          <div class="col-md-2 d-flex align-items-end"><button class="btn btn-club">Invitar</button></div>
         </form>
       </div></div>
       <h5>Pendientes por aprobar</h5>
@@ -86,9 +131,18 @@
       {% for u in users_all %}
       <div class="card border-0 shadow-sm mb-2"><div class="card-body">
         <form action="/usuarios/{{ u.id }}/editar/" method="post" class="row g-2">{% csrf_token %}
-          <div class="col-md-4"><input class="form-control" name="full_name" value="{{ u.full_name }}"></div>
-          <div class="col-md-4"><input class="form-control" name="email" value="{{ u.email }}"></div>
-          <div class="col-md-4"><input class="form-control" name="favorite_book" value="{{ u.favorite_book }}"></div>
+          <div class="col-md-4">
+            <label class="form-label">Nombre completo</label>
+            <input class="form-control" name="full_name" value="{{ u.full_name }}">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Correo</label>
+            <input class="form-control" name="email" value="{{ u.email }}">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Libro favorito</label>
+            <input class="form-control" name="favorite_book" value="{{ u.favorite_book }}">
+          </div>
           <div class="col-12 d-flex gap-2"><button class="btn btn-sm btn-primary">Editar</button><a href="/usuarios/{{ u.id }}/eliminar/" class="btn btn-sm btn-danger">Eliminar</a></div>
         </form>
       </div></div>
@@ -112,21 +166,49 @@
 
     {% if seccion == 'integraciones' %}
       <div class="card border-0 shadow-sm mb-4"><div class="card-body">
-        <h4>Integraciones</h4>
-        <form action="/dashboard/configuracion/" method="post">{% csrf_token %}
-          {{ settings_form.as_p }}
-          <button class="btn btn-club">Guardar integraciones</button>
+        <h4>Integración con Google</h4>
+        <p class="text-muted small">En esta sección solo se configura el inicio de sesión con Google.</p>
+        <form action="/dashboard/configuracion/" method="post" class="row g-3">{% csrf_token %}
+          <input type="hidden" name="seccion" value="integraciones">
+          {% if settings_form.google_login_enabled %}
+          <div class="col-12 form-check">
+            {{ settings_form.google_login_enabled }}
+            <label class="form-check-label" for="id_google_login_enabled">Habilitar login con Google</label>
+          </div>
+          {% endif %}
+          {% if settings_form.google_client_id %}
+          <div class="col-md-6">
+            <label class="form-label" for="id_google_client_id">Google Client ID</label>
+            {{ settings_form.google_client_id }}
+          </div>
+          {% endif %}
+          {% if settings_form.google_client_secret %}
+          <div class="col-md-6">
+            <label class="form-label" for="id_google_client_secret">Google Client Secret</label>
+            {{ settings_form.google_client_secret }}
+          </div>
+          {% endif %}
+          <div class="col-12"><button class="btn btn-club">Guardar integraciones</button></div>
         </form>
       </div></div>
       <div class="card border-0 shadow-sm"><div class="card-body">
         <h5>Redes sociales</h5>
+        <p class="text-muted small">Da de alta una red social indicando nombre de red y URL completa.</p>
         <form action="/integraciones/redes/nueva/" method="post" class="row g-2">{% csrf_token %}
-          <div class="col-md-4">{{ social_form.network }}</div>
-          <div class="col-md-6">{{ social_form.url }}</div>
-          <div class="col-md-2"><button class="btn btn-club">Agregar</button></div>
+          <div class="col-md-4">
+            <label class="form-label" for="id_network">Red social</label>
+            {{ social_form.network }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="id_url">URL pública</label>
+            {{ social_form.url }}
+          </div>
+          <div class="col-md-2 d-flex align-items-end"><button class="btn btn-club">Agregar</button></div>
         </form>
         {% for link in social_links %}
           <div class="d-flex justify-content-between mt-2"><span>{{ link.network }} - {{ link.url }}</span><a class="btn btn-sm btn-danger" href="/integraciones/redes/{{ link.id }}/eliminar/">Eliminar</a></div>
+        {% empty %}
+          <p class="text-muted mt-2 mb-0">Aún no hay redes registradas.</p>
         {% endfor %}
       </div></div>
     {% endif %}
