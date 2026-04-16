@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Usuarios pendientes</h2>
+{% for u in users %}
+  <div class="d-flex justify-content-between border rounded p-2 mb-2">
+    <span>{{ u.username }} ({{ u.email }})</span>
+    <form action="/usuarios/{{ u.id }}/aprobar/" method="post">{% csrf_token %}<button class="btn btn-sm btn-success">Aprobar</button></form>
+  </div>
+{% empty %}<p>Sin pendientes.</p>{% endfor %}
+{% endblock %}
