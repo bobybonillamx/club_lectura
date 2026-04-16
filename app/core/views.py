@@ -7,6 +7,7 @@ from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from .forms import RegisterForm, BookForm, EventForm, ReviewForm, ClubSettingsForm
+from .oauth import sync_google_social_app_from_settings
 from .models import (
     Book,
     BookStatus,
@@ -71,6 +72,8 @@ def dashboard(request):
             settings_form.fields.pop('google_login_enabled', None)
         if settings_form.is_valid():
             settings_form.save()
+            if request.user.role == Role.SUPERADMIN:
+                sync_google_social_app_from_settings()
             messages.success(request, 'Personalización actualizada.')
             return redirect('dashboard')
     else:

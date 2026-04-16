@@ -36,6 +36,8 @@ class ClubSettings(models.Model):
     primary_color = models.CharField(max_length=7, default='#6f42c1')
     accent_color = models.CharField(max_length=7, default='#212529')
     google_login_enabled = models.BooleanField(default=False)
+    google_client_id = models.CharField(max_length=255, blank=True, default='')
+    google_client_secret = models.CharField(max_length=255, blank=True, default='')
 
     @classmethod
     def get_solo(cls):

@@ -44,7 +44,7 @@ class ReviewForm(forms.ModelForm):
 class ClubSettingsForm(forms.ModelForm):
     class Meta:
         model = ClubSettings
-        fields = ['name', 'description', 'logo_url', 'primary_color', 'accent_color', 'affiliate_tag', 'google_login_enabled']
+        fields = ['name', 'description', 'logo_url', 'primary_color', 'accent_color', 'affiliate_tag', 'google_login_enabled', 'google_client_id', 'google_client_secret']
 
 
 class ReviewModerationForm(forms.ModelForm):

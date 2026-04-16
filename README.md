@@ -66,7 +66,6 @@ Edita `.env` según tu servidor. Variables principales:
 - `PUBLIC_BASE_URL` URL pública real (ejemplo: `https://club.midominio.com`)
 - `DJANGO_SECRET_KEY` secreto de producción
 - `POSTGRES_*` credenciales de base de datos
-- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
 
 ### 3) Levantar servicios
 
@@ -81,19 +80,17 @@ docker compose --env-file .env exec web python manage.py migrate
 docker compose --env-file .env exec web python manage.py createsuperuser
 ```
 
-### 5) Configurar OAuth de Google en la app (opcional)
-
-```bash
-docker compose --env-file .env exec web python manage.py configure_google_oauth
-```
-
-### 6) Activar acceso con Google desde panel
+### 5) Activar OAuth Google desde el dashboard (sin .env)
 
 - Inicia sesión como **superadmin**
 - Ve a `Dashboard`
-- En “Personalización visual y branding” activa `google_login_enabled`
+- En “Personalización visual y branding” captura:
+  - `google_login_enabled`
+  - `google_client_id`
+  - `google_client_secret`
+- Guarda cambios
 
-### 7) Abrir la app
+### 6) Abrir la app
 
 - URL local por defecto: `http://localhost:8787`
 - URL real: la que definiste en `PUBLIC_BASE_URL`
@@ -109,11 +106,8 @@ docker compose --env-file .env exec web python manage.py configure_google_oauth
 5. Agrega redirect URI:
    - `https://TU_DOMINIO/accounts/google/login/callback/`
    - En local: `http://localhost:8787/accounts/google/login/callback/`
-6. Copia credenciales a `.env`:
-   - `GOOGLE_CLIENT_ID`
-   - `GOOGLE_CLIENT_SECRET`
-7. Ejecuta comando:
-   - `python manage.py configure_google_oauth` (o vía docker compose)
+6. Captura `Client ID` y `Client Secret` en el Dashboard como superadmin.
+7. Guarda cambios y prueba el botón de Google en `/login/`.
 
 ---
 
