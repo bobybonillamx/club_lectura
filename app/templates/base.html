@@ -8,14 +8,21 @@
   <title>{{ club_settings.name }}</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    :root { --club-color: {{ club_settings.primary_color }}; }
+    :root {
+      --club-color: {{ club_settings.primary_color }};
+      --club-accent: {{ club_settings.accent_color|default:'#212529' }};
+    }
     .btn-club { background: var(--club-color); color: white; }
+    .navbar-brand { color: var(--club-accent) !important; }
   </style>
 </head>
 <body>
 <nav class="navbar navbar-expand-lg bg-light border-bottom">
   <div class="container">
-    <a class="navbar-brand" href="/">{{ club_settings.name }}</a>
+    <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+      {% if club_settings.logo_url %}<img src="{{ club_settings.logo_url }}" alt="logo" style="width:32px;height:32px;object-fit:cover;border-radius:50%;">{% endif %}
+      {{ club_settings.name }}
+    </a>
     <div class="ms-auto d-flex gap-2">
       {% if user.is_authenticated %}
         <a class="btn btn-sm btn-outline-secondary" href="/dashboard/">Dashboard</a>

@@ -1,4 +1,6 @@
-from urllib.parse import urlencode, urlparse, parse_qs, urlunparse
+import json
+from urllib.parse import urlencode, urlparse, parse_qs, urlunparse, quote_plus
+from urllib.request import Request, urlopen
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
@@ -32,6 +34,7 @@ class ClubSettings(models.Model):
     logo_url = models.URLField(blank=True)
     affiliate_tag = models.CharField(max_length=120, blank=True, default='')
     primary_color = models.CharField(max_length=7, default='#6f42c1')
+    accent_color = models.CharField(max_length=7, default='#212529')
 
     @classmethod
     def get_solo(cls):
@@ -40,7 +43,7 @@ class ClubSettings(models.Model):
 
     @property
     def effective_affiliate_tag(self):
-        return 'bobybonilla0b-20'
+        return self.affiliate_tag or settings.DEFAULT_AFFILIATE_TAG
 
 
 class BookStatus(models.TextChoices):
@@ -62,12 +65,21 @@ class Book(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
+        tag = ClubSettings.get_solo().effective_affiliate_tag
         if not self.amazon_url:
-            self.amazon_url = build_amazon_url(self.title, ClubSettings.get_solo().effective_affiliate_tag)
+            self.amazon_url = build_amazon_url(self.title, tag)
         else:
-            self.amazon_url = apply_affiliate_tag(self.amazon_url, ClubSettings.get_solo().effective_affiliate_tag)
+            self.amazon_url = apply_affiliate_tag(self.amazon_url, tag)
+
+        if not self.cover_url or not self.description or not self.author:
+            metadata = fetch_book_metadata(self.title)
+            self.cover_url = self.cover_url or metadata.get('cover_url', '')
+            self.description = self.description or metadata.get('description', '')
+            self.author = self.author or metadata.get('author', '')
+
         if not self.cover_url:
             self.cover_url = f'https://source.unsplash.com/featured/?book,{self.title.replace(" ", ",")}'
+
         super().save(*args, **kwargs)
 
 
@@ -96,6 +108,9 @@ class Review(models.Model):
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='reviews')
     rating = models.PositiveSmallIntegerField(default=5)
     comment = models.TextField()
+    is_approved = models.BooleanField(default=False)
+    is_flagged = models.BooleanField(default=False)
+    moderation_note = models.CharField(max_length=255, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
 
@@ -123,3 +138,60 @@ def apply_affiliate_tag(url: str, affiliate_tag: str) -> str:
     query['tag'] = [affiliate_tag]
     new_query = urlencode(query, doseq=True)
     return urlunparse((parsed.scheme, parsed.netloc, parsed.path, parsed.params, new_query, parsed.fragment))
+
+
+def fetch_book_metadata(title: str) -> dict:
+    metadata = fetch_from_google_books(title)
+    if metadata.get('cover_url'):
+        return metadata
+
+    metadata_open = fetch_from_open_library(title)
+    for key in ('cover_url', 'description', 'author'):
+        if not metadata.get(key):
+            metadata[key] = metadata_open.get(key, '')
+    return metadata
+
+
+def fetch_from_google_books(title: str) -> dict:
+    query = quote_plus(title)
+    url = f'https://www.googleapis.com/books/v1/volumes?q=intitle:{query}&maxResults=1&langRestrict=es'
+    data = _safe_json_get(url)
+    items = data.get('items') or []
+    if not items:
+        return {}
+
+    info = items[0].get('volumeInfo', {})
+    image_links = info.get('imageLinks', {})
+    authors = info.get('authors') or []
+    return {
+        'cover_url': image_links.get('thumbnail', '').replace('http://', 'https://'),
+        'description': info.get('description', ''),
+        'author': ', '.join(authors),
+    }
+
+
+def fetch_from_open_library(title: str) -> dict:
+    query = quote_plus(title)
+    url = f'https://openlibrary.org/search.json?title={query}&limit=1'
+    data = _safe_json_get(url)
+    docs = data.get('docs') or []
+    if not docs:
+        return {}
+
+    first = docs[0]
+    cover_id = first.get('cover_i')
+    authors = first.get('author_name') or []
+    return {
+        'cover_url': f'https://covers.openlibrary.org/b/id/{cover_id}-L.jpg' if cover_id else '',
+        'author': ', '.join(authors),
+        'description': '',
+    }
+
+
+def _safe_json_get(url: str) -> dict:
+    req = Request(url, headers={'User-Agent': 'ClubLecturaBot/1.0'})
+    try:
+        with urlopen(req, timeout=5) as res:
+            return json.loads(res.read().decode('utf-8'))
+    except Exception:
+        return {}

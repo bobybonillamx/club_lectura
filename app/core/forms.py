@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import User, Book, Event, Review
+from .models import User, Book, Event, Review, ClubSettings
 
 
 class RegisterForm(UserCreationForm):
@@ -39,3 +39,15 @@ class ReviewForm(forms.ModelForm):
     class Meta:
         model = Review
         fields = ['rating', 'comment']
+
+
+class ClubSettingsForm(forms.ModelForm):
+    class Meta:
+        model = ClubSettings
+        fields = ['name', 'description', 'logo_url', 'primary_color', 'accent_color', 'affiliate_tag']
+
+
+class ReviewModerationForm(forms.ModelForm):
+    class Meta:
+        model = Review
+        fields = ['is_approved', 'is_flagged', 'moderation_note']

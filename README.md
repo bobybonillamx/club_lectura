@@ -1,91 +1,144 @@
-# Club de Lectura (MVP)
+# Club de Lectura
 
-Mini sitio **dockerizable** para crear y publicar tu propio club de lectura, con roles, aprobación de usuarios, votaciones y eventos.
+Plataforma web para crear y administrar clubes de lectura con roles, aprobación de usuarios, votaciones, eventos, reseñas moderadas, OAuth con Google, PWA y despliegue Docker.
 
-## Incluye en este MVP
+## Funcionalidades incluidas
 
-- Libros por estado: leído, leyendo, por leer.
-- Votaciones para libros futuros.
-- Registro/login con aprobación por admin.
-- Roles:
-  - `superadmin`: puede crear admins.
-  - `admin`: aprueba usuarios e invita usuarios.
-  - `user`: participa y reseña.
-- Eventos flexibles (sesión, intercambio, visita, restaurante, cine, etc.) con fecha/hora.
-- Control de visibilidad en libros/eventos: público, privado, solo admins.
-- Enlace Amazon automático con `tag` de afiliado fijo: `bobybonilla0b-20` (persistente, no configurable).
-- Portada automática (si no se captura URL manual).
-- URL base pública configurable (`PUBLIC_BASE_URL`) para invitaciones y compartir.
-- Footer persistente: **Powered By: Gold Tech Mx**.
-- Diseño responsive + soporte PWA básico (`manifest` + service worker).
+- Gestión de libros: leídos, leyendo, por leer.
+- Votación para elegir próximos libros.
+- Registro/login tradicional + login con Google (django-allauth).
+- Roles: `superadmin`, `admin`, `user`.
+- Aprobación manual de usuarios por admins.
+- Invitación de usuarios con contraseña temporal autogenerada.
+- Eventos flexibles (sesión, intercambio, visita, restaurante, cine, etc.).
+- Visibilidad por contenido: público, privado, solo admins.
+- Reseñas con moderación (aprobar/marcar).
+- Personalización visual completa desde dashboard:
+  - Nombre del club
+  - Descripción
+  - Logo
+  - Color principal y color acento
+  - Tag de afiliado Amazon (si está vacío se usa automáticamente el tag base del sistema)
+- Enlaces de compra en Amazon con tag de afiliado aplicado automáticamente.
+- Búsqueda enriquecida de metadatos de libros:
+  - Google Books
+  - OpenLibrary
+- Footer persistente:
+  - Powered By: Gold Tech Mx
+  - Repositorio oficial de GitHub
+- PWA básica (instalable en Android/iOS con “Agregar a pantalla de inicio”).
 
-## Stack
+---
 
-- Django 5
-- PostgreSQL (con Docker) o SQLite (local rápido)
-- Bootstrap 5
+## Requisitos
 
-## Ejecución rápida local (SQLite)
+- Docker + Docker Compose
+- (Opcional) Python 3.12 para correr sin Docker
+- Cuenta de Google Cloud para OAuth
+
+---
+
+## Instalación en VPS (recomendada con Docker)
+
+### 1) Clonar o actualizar repositorio
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py createsuperuser
-python manage.py runserver
+git clone https://github.com/bobybonillamx/club_lectura.git
+cd club_lectura
 ```
 
-## Ejecución con Docker
+Si ya existe en tu servidor:
 
 ```bash
-docker compose up --build
+cd club_lectura
+git pull
 ```
 
-Abre: http://localhost:8000
+### 2) Crear archivo de variables
 
-## Configuración clave
+```bash
+cp .env.example .env
+```
 
-Variables importantes:
+Edita `.env` según tu servidor. Variables principales:
 
-- `PUBLIC_BASE_URL`: URL pública de invitaciones/compartir.
-- `DB_ENGINE=postgres|sqlite`
-- `POSTGRES_*` si usas postgres.
-- `DJANGO_SECRET_KEY`
+- `APP_PORT` puerto público del sitio (default recomendado: `8787`)
+- `PUBLIC_BASE_URL` URL pública real (ejemplo: `https://club.midominio.com`)
+- `DJANGO_SECRET_KEY` secreto de producción
+- `POSTGRES_*` credenciales de base de datos
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
 
-## Flujo recomendado de roles
+### 3) Levantar servicios
 
-1. Crea un superusuario con `python manage.py createsuperuser`.
-2. Entra a `/admin` y ajusta su rol a `superadmin`.
-3. Superadmin crea/autoriza admins.
-4. Admins autorizan usuarios y gestionan contenido.
+```bash
+docker compose --env-file .env up -d --build
+```
 
-## Google Login (paso a paso - guía)
+### 4) Ejecutar migraciones y super admin inicial
 
-> Este repo deja la base lista; para OAuth Google puedes usar `django-allauth`.
+```bash
+docker compose --env-file .env exec web python manage.py migrate
+docker compose --env-file .env exec web python manage.py createsuperuser
+```
 
-1. Crea proyecto en [Google Cloud Console](https://console.cloud.google.com/).
-2. Ve a **APIs & Services → OAuth consent screen** y configura nombre/app.
-3. Ve a **Credentials → Create Credentials → OAuth client ID**.
-4. Tipo: **Web application**.
-5. Authorized redirect URI (ejemplo local):
-   - `http://localhost:8000/accounts/google/login/callback/`
-6. Guarda `Client ID` y `Client Secret`.
-7. Instala y configura `django-allauth` en `INSTALLED_APPS` y `urls.py`.
-8. Define variables seguras para secrets en tu `.env`.
-9. Reinicia y prueba login con Google.
+### 5) Configurar OAuth de Google en la app
 
-## Seguridad recomendada para producción
+```bash
+docker compose --env-file .env exec web python manage.py configure_google_oauth
+```
 
-- `DEBUG=false`
-- `ALLOWED_HOSTS` correcto
-- HTTPS con reverse proxy (Nginx/Caddy)
-- Rotar `DJANGO_SECRET_KEY`
-- Políticas de backup de base de datos
+### 6) Abrir la app
 
-## Pendiente para siguiente iteración
+- URL local por defecto: `http://localhost:8787`
+- URL real: la que definiste en `PUBLIC_BASE_URL`
 
-- Integración real de OAuth Google en código.
-- Personalización visual completa desde panel.
-- Scraping/búsqueda enriquecida de Amazon y portadas (OpenLibrary/Google Books).
-- Moderación avanzada de reseñas/actividad.
+---
+
+## Configuración OAuth Google (Cloud Console)
+
+1. Entra a https://console.cloud.google.com/
+2. Crea proyecto o selecciona uno existente.
+3. Configura **OAuth consent screen**.
+4. Crea credencial **OAuth Client ID** tipo **Web application**.
+5. Agrega redirect URI:
+   - `https://TU_DOMINIO/accounts/google/login/callback/`
+   - En local: `http://localhost:8787/accounts/google/login/callback/`
+6. Copia credenciales a `.env`:
+   - `GOOGLE_CLIENT_ID`
+   - `GOOGLE_CLIENT_SECRET`
+7. Ejecuta comando:
+   - `python manage.py configure_google_oauth` (o vía docker compose)
+
+---
+
+## Despliegue y mantenimiento
+
+Actualizar en VPS:
+
+```bash
+git pull
+docker compose --env-file .env up -d --build
+docker compose --env-file .env exec web python manage.py migrate
+```
+
+Ver logs:
+
+```bash
+docker compose logs -f web
+```
+
+Respaldar base de datos (ejemplo rápido):
+
+```bash
+docker compose exec db pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB" > backup.sql
+```
+
+---
+
+## Seguridad mínima recomendada
+
+- Ejecutar con `DEBUG=false`
+- Usar HTTPS con proxy reverso (Nginx/Caddy/Traefik)
+- Definir `ALLOWED_HOSTS` real
+- Rotar `DJANGO_SECRET_KEY` en producción
+- Respaldos automáticos de PostgreSQL

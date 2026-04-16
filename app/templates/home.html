@@ -17,6 +17,32 @@
             {% endif %}
             {% if book.external_video_url %}<div><a href="{{ book.external_video_url }}" target="_blank">Video relacionado</a></div>{% endif %}
             <div class="small text-muted">Votos: {{ book.votes.count }}</div>
+
+            {% if user.is_authenticated and user.is_approved %}
+            <form class="mt-2" action="/libros/{{ book.id }}/resena/" method="post">
+              {% csrf_token %}
+              <div class="input-group input-group-sm mb-1">
+                <input type="number" min="1" max="5" class="form-control" name="rating" value="5" required>
+                <input type="text" class="form-control" name="comment" placeholder="Escribe una reseña" required>
+                <button class="btn btn-outline-secondary">Publicar</button>
+              </div>
+              <small class="text-muted">Tu reseña pasa por moderación antes de verse pública.</small>
+            </form>
+            {% endif %}
+
+            <div class="mt-2">
+              <strong>Reseñas:</strong>
+              {% for review in book.reviews.all %}
+                {% if review.is_approved %}
+                  <div class="border rounded p-2 my-1">
+                    ⭐ {{ review.rating }} · {{ review.user.username }}<br>
+                    {{ review.comment }}
+                  </div>
+                {% endif %}
+              {% empty %}
+                <div class="text-muted">Aún no hay reseñas aprobadas.</div>
+              {% endfor %}
+            </div>
           </div>
         </div>
       </div>

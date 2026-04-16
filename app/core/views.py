@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from .forms import RegisterForm, BookForm, EventForm, ReviewForm
+from .forms import RegisterForm, BookForm, EventForm, ReviewForm, ClubSettingsForm
 from .models import (
     Book,
     BookStatus,
@@ -17,8 +17,8 @@ from .models import (
     Event,
     Visibility,
     Invitation,
-    ClubSettings,
     SocialLink,
+    ClubSettings,
 )
 
 
@@ -40,7 +40,6 @@ def home(request):
         'events': events,
         'links': links,
         'book_status': BookStatus,
-        'public_base_url': settings.PUBLIC_BASE_URL,
     })
 
 
@@ -64,9 +63,22 @@ def register(request):
 def dashboard(request):
     if not request.user.is_approved:
         return HttpResponseForbidden('Pendiente de aprobación por un admin.')
+
+    club_settings = ClubSettings.get_solo()
+    if request.method == 'POST' and request.user.is_admin_like():
+        settings_form = ClubSettingsForm(request.POST, instance=club_settings)
+        if settings_form.is_valid():
+            settings_form.save()
+            messages.success(request, 'Personalización actualizada.')
+            return redirect('dashboard')
+    else:
+        settings_form = ClubSettingsForm(instance=club_settings)
+
     return render(request, 'dashboard.html', {
         'book_form': BookForm(),
         'event_form': EventForm(),
+        'settings_form': settings_form,
+        'pending_reviews_count': Review.objects.filter(is_approved=False).count(),
     })
 
 
@@ -120,9 +132,45 @@ def add_review(request, book_id):
         review = form.save(commit=False)
         review.user = request.user
         review.book = book
+        review.is_approved = False
         review.save()
-        messages.success(request, 'Reseña publicada.')
+        messages.success(request, 'Reseña enviada a moderación.')
     return redirect('home')
+
+
+@login_required
+def review_moderation(request):
+    if not request.user.is_admin_like():
+        return HttpResponseForbidden('Solo admins.')
+
+    reviews = Review.objects.filter(is_approved=False).order_by('-created_at')
+    return render(request, 'review_moderation.html', {'reviews': reviews})
+
+
+@login_required
+def approve_review(request, review_id):
+    if not request.user.is_admin_like():
+        return HttpResponseForbidden('Solo admins.')
+    review = get_object_or_404(Review, pk=review_id)
+    review.is_approved = True
+    review.is_flagged = False
+    review.moderation_note = request.POST.get('moderation_note', '').strip()
+    review.save(update_fields=['is_approved', 'is_flagged', 'moderation_note'])
+    messages.success(request, 'Reseña aprobada.')
+    return redirect('review_moderation')
+
+
+@login_required
+def flag_review(request, review_id):
+    if not request.user.is_admin_like():
+        return HttpResponseForbidden('Solo admins.')
+    review = get_object_or_404(Review, pk=review_id)
+    review.is_approved = False
+    review.is_flagged = True
+    review.moderation_note = request.POST.get('moderation_note', '').strip() or 'Marcada por moderación'
+    review.save(update_fields=['is_approved', 'is_flagged', 'moderation_note'])
+    messages.success(request, 'Reseña marcada para seguimiento.')
+    return redirect('review_moderation')
 
 
 @login_required

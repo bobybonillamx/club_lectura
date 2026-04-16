@@ -1,7 +1,19 @@
 {% extends 'base.html' %}
 {% block content %}
 <h2>Panel de control</h2>
-<p>Desde aquí puedes crear libros/eventos y gestionar invitaciones.</p>
+<p>Desde aquí puedes crear libros/eventos, personalizar el club y gestionar usuarios.</p>
+
+{% if user.role == 'admin' or user.role == 'superadmin' %}
+<div class="card mb-4">
+  <div class="card-body">
+    <h4>Personalización visual y branding</h4>
+    <form action="/dashboard/" method="post">{% csrf_token %}
+      {{ settings_form.as_p }}
+      <button class="btn btn-club">Guardar personalización</button>
+    </form>
+  </div>
+</div>
+{% endif %}
 
 <div class="row g-4">
   <div class="col-md-6">
@@ -29,5 +41,6 @@
   <div class="col-md-1"><button class="btn btn-club">Invitar</button></div>
 </form>
 <a href="/usuarios/pendientes/" class="btn btn-link mt-2">Aprobar usuarios pendientes</a>
+<a href="/resenas/moderacion/" class="btn btn-link mt-2">Moderar reseñas ({{ pending_reviews_count }})</a>
 {% endif %}
 {% endblock %}

@@ -2,4 +2,6 @@
 {% block content %}
 <h2>Entrar</h2>
 <form method="post">{% csrf_token %}{{ form.as_p }}<button class="btn btn-club">Entrar</button></form>
+<hr>
+<a class="btn btn-outline-dark" href="/accounts/google/login/">Entrar con Google</a>
 {% endblock %}
