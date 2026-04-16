@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
+from django.db.utils import DatabaseError, OperationalError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from .forms import (
@@ -45,11 +46,24 @@ def _visible_filter(user):
 
 def home(request):
     visible = _visible_filter(request.user)
-    books = Book.objects.filter(visibility__in=visible).order_by('-created_at')[:30]
-    current_book = Book.objects.filter(visibility__in=visible, status=BookStatus.READING).order_by('-created_at').first()
-    next_event = Event.objects.filter(visibility__in=visible, starts_at__gte=timezone.now()).order_by('starts_at').first()
-    events = Event.objects.filter(visibility__in=visible, starts_at__gte=timezone.now()).order_by('starts_at')[:20]
-    links = SocialLink.objects.all()
+    books = Book.objects.none()
+    current_book = None
+    next_event = None
+    events = Event.objects.none()
+    links = SocialLink.objects.none()
+
+    try:
+        books = Book.objects.filter(visibility__in=visible).order_by('-created_at')[:30]
+        current_book = Book.objects.filter(visibility__in=visible, status=BookStatus.READING).order_by('-created_at').first()
+        next_event = Event.objects.filter(visibility__in=visible, starts_at__gte=timezone.now()).order_by('starts_at').first()
+        events = Event.objects.filter(visibility__in=visible, starts_at__gte=timezone.now()).order_by('starts_at')[:20]
+        links = SocialLink.objects.all()
+    except (DatabaseError, OperationalError):
+        messages.warning(
+            request,
+            'No se pudieron cargar todos los datos de inicio. Verifica migraciones pendientes.',
+        )
+
     return render(request, 'home.html', {
         'books': books,
         'events': events,
