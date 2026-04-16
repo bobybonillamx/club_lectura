@@ -12,12 +12,22 @@
       --club-color: {{ club_settings.primary_color }};
       --club-accent: {{ club_settings.accent_color|default:'#212529' }};
     }
-    .btn-club { background: var(--club-color); color: white; }
-    .navbar-brand { color: var(--club-accent) !important; }
+    body { background: linear-gradient(180deg, #f8f9fb 0%, #eef2f7 100%); }
+    .glass {
+      background: rgba(255,255,255,.8);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,.6);
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(18,38,63,.08);
+    }
+    .btn-club { background: var(--club-color); color: white; border: none; }
+    .btn-club:hover { filter: brightness(.95); color: white; }
+    .navbar-brand { color: var(--club-accent) !important; font-weight: 700; }
+    .hero-title { font-weight: 800; letter-spacing: -.5px; }
   </style>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg bg-light border-bottom">
+<nav class="navbar navbar-expand-lg bg-white border-bottom shadow-sm">
   <div class="container">
     <a class="navbar-brand d-flex align-items-center gap-2" href="/">
       {% if club_settings.logo_url %}<img src="{{ club_settings.logo_url }}" alt="logo" style="width:32px;height:32px;object-fit:cover;border-radius:50%;">{% endif %}
@@ -37,12 +47,12 @@
 <main class="container py-4">
   {% if messages %}
     {% for message in messages %}
-      <div class="alert alert-info">{{ message }}</div>
+      <div class="alert alert-info glass">{{ message }}</div>
     {% endfor %}
   {% endif %}
   {% block content %}{% endblock %}
 </main>
-<footer class="border-top py-3 text-center">
+<footer class="border-top py-3 text-center bg-white">
   Powered By: <a href="https://goldtech.mx" target="_blank" rel="noopener">Gold Tech Mx</a><br>
   ¿Quieres tu propio club? Usa este <a href="https://github.com/bobybonillamx/club_lectura" target="_blank" rel="noopener">repositorio en GitHub</a>.
 </footer>

@@ -25,7 +25,13 @@ class User(AbstractUser):
     is_approved = models.BooleanField(default=False)
 
     def is_admin_like(self):
-        return self.role in {Role.ADMIN, Role.SUPERADMIN}
+        return self.is_superuser or self.role in {Role.ADMIN, Role.SUPERADMIN}
+
+    def save(self, *args, **kwargs):
+        if self.is_superuser:
+            self.role = Role.SUPERADMIN
+            self.is_approved = True
+        super().save(*args, **kwargs)
 
 
 class ClubSettings(models.Model):

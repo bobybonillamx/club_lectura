@@ -23,6 +23,10 @@ from .models import (
 )
 
 
+def _is_effectively_approved(user):
+    return bool(user.is_authenticated and (user.is_superuser or user.is_approved))
+
+
 def _visible_filter(user):
     if user.is_authenticated and user.role == Role.SUPERADMIN:
         return [v for v in Visibility.values]
@@ -62,7 +66,7 @@ def register(request):
 
 @login_required
 def dashboard(request):
-    if not request.user.is_approved:
+    if not _is_effectively_approved(request.user):
         return HttpResponseForbidden('Pendiente de aprobación por un admin.')
 
     club_settings = ClubSettings.get_solo()
@@ -91,7 +95,7 @@ def dashboard(request):
 
 @login_required
 def create_book(request):
-    if not request.user.is_admin_like() or not request.user.is_approved:
+    if not request.user.is_admin_like() or not _is_effectively_approved(request.user):
         return HttpResponseForbidden('Solo admins aprobados.')
     form = BookForm(request.POST)
     if form.is_valid():
@@ -106,7 +110,7 @@ def create_book(request):
 
 @login_required
 def create_event(request):
-    if not request.user.is_admin_like() or not request.user.is_approved:
+    if not request.user.is_admin_like() or not _is_effectively_approved(request.user):
         return HttpResponseForbidden('Solo admins aprobados.')
     form = EventForm(request.POST)
     if form.is_valid():
@@ -121,7 +125,7 @@ def create_event(request):
 
 @login_required
 def vote_book(request, book_id):
-    if not request.user.is_approved:
+    if not _is_effectively_approved(request.user):
         return HttpResponseForbidden('Necesitas aprobación.')
     book = get_object_or_404(Book, pk=book_id, status=BookStatus.FUTURE)
     Vote.objects.get_or_create(user=request.user, book=book)
@@ -131,7 +135,7 @@ def vote_book(request, book_id):
 
 @login_required
 def add_review(request, book_id):
-    if not request.user.is_approved:
+    if not _is_effectively_approved(request.user):
         return HttpResponseForbidden('Necesitas aprobación.')
     book = get_object_or_404(Book, pk=book_id)
     form = ReviewForm(request.POST)
