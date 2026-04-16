@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Libros</h2>
+<div class="mb-3 d-flex gap-2">
+  <a class="btn btn-sm btn-outline-secondary" href="/libros/">Todos</a>
+  <a class="btn btn-sm btn-outline-secondary" href="/libros/?estado=completed">Leídos</a>
+  <a class="btn btn-sm btn-outline-secondary" href="/libros/?estado=reading">Leyendo</a>
+  <a class="btn btn-sm btn-outline-secondary" href="/libros/?estado=future">En votación / por leer</a>
+</div>
+{% for b in books %}
+<div class="card border-0 shadow-sm mb-2"><div class="card-body"><strong>{{ b.title }}</strong> · {{ b.get_status_display }} · {{ b.author }}</div></div>
+{% empty %}<p>Sin libros.</p>{% endfor %}
+{% endblock %}
