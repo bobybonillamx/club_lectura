@@ -2,12 +2,13 @@ services:
   db:
     image: postgres:16
     restart: unless-stopped
+    command: ["postgres", "-p", "${POSTGRES_PORT:-5432}"]
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-clublectura}
       POSTGRES_USER: ${POSTGRES_USER:-clublectura}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-clublectura}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${POSTGRES_PORT:-5432}:${POSTGRES_PORT:-5432}"
     volumes:
       - pg_data:/var/lib/postgresql/data
 

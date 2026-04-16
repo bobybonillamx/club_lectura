@@ -66,6 +66,7 @@ Edita `.env` según tu servidor. Variables principales:
 - `PUBLIC_BASE_URL` URL pública real (ejemplo: `https://club.midominio.com`)
 - `DJANGO_SECRET_KEY` secreto de producción
 - `POSTGRES_*` credenciales de base de datos
+- `POSTGRES_PORT`: puerto interno y externo de Postgres (debe ser el mismo en `db` y `web`).
 
 ### 3) Levantar servicios
 
