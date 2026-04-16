@@ -6,7 +6,7 @@ Plataforma web para crear y administrar clubes de lectura con roles, aprobación
 
 - Gestión de libros: leídos, leyendo, por leer.
 - Votación para elegir próximos libros.
-- Registro/login tradicional + login con Google (django-allauth).
+- Registro/login tradicional + login con Google (django-allauth, opcional y activable por superadmin).
 - Roles: `superadmin`, `admin`, `user`.
 - Aprobación manual de usuarios por admins.
 - Invitación de usuarios con contraseña temporal autogenerada.
@@ -81,13 +81,19 @@ docker compose --env-file .env exec web python manage.py migrate
 docker compose --env-file .env exec web python manage.py createsuperuser
 ```
 
-### 5) Configurar OAuth de Google en la app
+### 5) Configurar OAuth de Google en la app (opcional)
 
 ```bash
 docker compose --env-file .env exec web python manage.py configure_google_oauth
 ```
 
-### 6) Abrir la app
+### 6) Activar acceso con Google desde panel
+
+- Inicia sesión como **superadmin**
+- Ve a `Dashboard`
+- En “Personalización visual y branding” activa `google_login_enabled`
+
+### 7) Abrir la app
 
 - URL local por defecto: `http://localhost:8787`
 - URL real: la que definiste en `PUBLIC_BASE_URL`

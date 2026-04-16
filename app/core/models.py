@@ -35,6 +35,7 @@ class ClubSettings(models.Model):
     affiliate_tag = models.CharField(max_length=120, blank=True, default='')
     primary_color = models.CharField(max_length=7, default='#6f42c1')
     accent_color = models.CharField(max_length=7, default='#212529')
+    google_login_enabled = models.BooleanField(default=False)
 
     @classmethod
     def get_solo(cls):

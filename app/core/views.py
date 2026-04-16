@@ -67,12 +67,16 @@ def dashboard(request):
     club_settings = ClubSettings.get_solo()
     if request.method == 'POST' and request.user.is_admin_like():
         settings_form = ClubSettingsForm(request.POST, instance=club_settings)
+        if request.user.role != Role.SUPERADMIN:
+            settings_form.fields.pop('google_login_enabled', None)
         if settings_form.is_valid():
             settings_form.save()
             messages.success(request, 'Personalización actualizada.')
             return redirect('dashboard')
     else:
         settings_form = ClubSettingsForm(instance=club_settings)
+        if request.user.role != Role.SUPERADMIN:
+            settings_form.fields.pop('google_login_enabled', None)
 
     return render(request, 'dashboard.html', {
         'book_form': BookForm(),
