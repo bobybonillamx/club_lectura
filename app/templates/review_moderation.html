@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Moderación de reseñas</h2>
+{% for review in reviews %}
+  <div class="card mb-2">
+    <div class="card-body">
+      <strong>{{ review.book.title }}</strong> · {{ review.user.username }} · ⭐ {{ review.rating }}
+      <p class="mb-2">{{ review.comment }}</p>
+      <form class="d-flex gap-2" action="/resenas/{{ review.id }}/aprobar/" method="post">
+        {% csrf_token %}
+        <input class="form-control" name="moderation_note" placeholder="Nota de moderación (opcional)">
+        <button class="btn btn-success">Aprobar</button>
+      </form>
+      <form class="d-flex gap-2 mt-2" action="/resenas/{{ review.id }}/marcar/" method="post">
+        {% csrf_token %}
+        <input class="form-control" name="moderation_note" placeholder="Motivo de rechazo/marcado" required>
+        <button class="btn btn-warning">Marcar</button>
+      </form>
+    </div>
+  </div>
+{% empty %}
+  <p>No hay reseñas pendientes.</p>
+{% endfor %}
+{% endblock %}
