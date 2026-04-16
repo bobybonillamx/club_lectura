@@ -17,13 +17,16 @@
             <h5>{{ book.title }}</h5>
             <p class="mb-1 text-muted">{{ book.get_status_display }} · {{ book.author }}</p>
             <a target="_blank" rel="noopener" href="{{ book.amazon_url }}">Ver en Amazon</a>
-            {% if book.status == book_status.FUTURE and user.is_authenticated and (user.is_approved or user.is_superuser) %}
+            {% if book.status == book_status.FUTURE and user.is_authenticated %}
+              {% if user.is_approved or user.is_superuser %}
               <form action="/libros/{{ book.id }}/votar/" method="post">{% csrf_token %}<button class="btn btn-sm btn-club mt-2">Votar</button></form>
+              {% endif %}
             {% endif %}
             {% if book.external_video_url %}<div><a href="{{ book.external_video_url }}" target="_blank">Video relacionado</a></div>{% endif %}
             <div class="small text-muted">Votos: {{ book.votes.count }}</div>
 
-            {% if user.is_authenticated and (user.is_approved or user.is_superuser) %}
+            {% if user.is_authenticated %}
+            {% if user.is_approved or user.is_superuser %}
             <form class="mt-2" action="/libros/{{ book.id }}/resena/" method="post">
               {% csrf_token %}
               <div class="input-group input-group-sm mb-1">
@@ -33,6 +36,7 @@
               </div>
               <small class="text-muted">Tu reseña pasa por moderación antes de verse pública.</small>
             </form>
+            {% endif %}
             {% endif %}
 
             <div class="mt-2">
