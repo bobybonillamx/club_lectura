@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Panel de control</h2>
+<p>Desde aquí puedes crear libros/eventos y gestionar invitaciones.</p>
+
+<div class="row g-4">
+  <div class="col-md-6">
+    <h4>Nuevo libro</h4>
+    <form action="/libros/nuevo/" method="post">{% csrf_token %}{{ book_form.as_p }}<button class="btn btn-club">Guardar libro</button></form>
+  </div>
+  <div class="col-md-6">
+    <h4>Nuevo evento</h4>
+    <form action="/eventos/nuevo/" method="post">{% csrf_token %}{{ event_form.as_p }}<button class="btn btn-club">Guardar evento</button></form>
+  </div>
+</div>
+
+{% if user.role == 'admin' or user.role == 'superadmin' %}
+<hr>
+<h4>Invitar usuario</h4>
+<form action="/admin/invitar/" method="post" class="row g-2">{% csrf_token %}
+  <div class="col-md-4"><input class="form-control" name="name" placeholder="Nombre" required></div>
+  <div class="col-md-4"><input class="form-control" name="email" type="email" placeholder="Correo" required></div>
+  <div class="col-md-3">
+    <select class="form-select" name="role">
+      <option value="user">Usuario</option>
+      {% if user.role == 'superadmin' %}<option value="admin">Admin</option>{% endif %}
+    </select>
+  </div>
+  <div class="col-md-1"><button class="btn btn-club">Invitar</button></div>
+</form>
+<a href="/usuarios/pendientes/" class="btn btn-link mt-2">Aprobar usuarios pendientes</a>
+{% endif %}
+{% endblock %}
