@@ -11,9 +11,9 @@
     <input type="text" name="q" value="{{ query|default:'' }}" class="form-control" placeholder="Buscar por título o autor…" style="max-width:320px;">
     <select name="estado" class="form-select" style="max-width:180px;" onchange="this.form.submit()">
         <option value="">Todos los estados</option>
-        <option value="completed" {% if estado= ='completed' %}selected{% endif %}>Leídos</option>
-        <option value="reading" {% if estado= ='reading' %}selected{% endif %}>Leyendo</option>
-        <option value="future" {% if estado= ='future' %}selected{% endif %}>En votación</option>
+        <option value="completed" {% if estado == "completed" %}selected{% endif %}>Leídos</option>
+        <option value="reading" {% if estado == "reading" %}selected{% endif %}>Leyendo</option>
+        <option value="future" {% if estado == "future" %}selected{% endif %}>En votación</option>
     </select>
     <button class="btn-primary-warm" type="submit">Buscar</button>
     {% if query or estado %}<a class="btn-outline-warm" href="/libros/">Limpiar</a>{% endif %}
