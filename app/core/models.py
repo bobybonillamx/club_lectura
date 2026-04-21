@@ -19,6 +19,43 @@ class Role(models.TextChoices):
     USER = 'user', 'Usuario'
 
 
+DEFAULT_TPL_WELCOME = """Hola {nombre},
+
+Gracias por registrarte en {club}. Tu cuenta esta pendiente de aprobacion por un administrador.
+
+Te avisaremos por correo cuando tu cuenta sea aprobada.
+
+Saludos,
+El equipo de {club}
+"""
+
+DEFAULT_TPL_APPROVED = """Hola {nombre},
+
+Tu cuenta en {club} ha sido aprobada. Ya puedes acceder al panel desde:
+
+{url}/dashboard/
+
+Bienvenido/a al club.
+
+Saludos,
+El equipo de {club}
+"""
+
+DEFAULT_TPL_INVITATION = """Hola {nombre},
+
+Has sido invitado/a a unirte a {club}.
+
+Accede en: {url}/login/
+Usuario: {usuario}
+Contrasena temporal: {contrasena}
+
+Te recomendamos cambiar tu contrasena al ingresar.
+
+Saludos,
+El equipo de {club}
+"""
+
+
 class User(AbstractUser):
     full_name = models.CharField(max_length=180, blank=True)
     role = models.CharField(max_length=20, choices=Role.choices, default=Role.USER)
@@ -38,16 +75,38 @@ class User(AbstractUser):
 
 
 class ClubSettings(models.Model):
+    # Identidad
     name = models.CharField(max_length=120, default='Mi Club de Lectura')
     description = models.TextField(blank=True)
     logo_url = models.URLField(blank=True, help_text='Logo rectangular para la navbar.')
-    icon_url = models.URLField(blank=True, default='', help_text='Icono cuadrado 512x512 para PWA/favicon. Se usa en navbar si logo_url esta vacio.')
-    affiliate_tag = models.CharField(max_length=120, blank=True, default='')
+    icon_url = models.URLField(blank=True, default='', help_text='Icono cuadrado 512x512 para PWA/favicon.')
+    cover_image_url = models.URLField(blank=True, default='', help_text='Imagen de portada para la pagina principal.')
     primary_color = models.CharField(max_length=7, default='#6f42c1')
     accent_color = models.CharField(max_length=7, default='#5C3D2E')
+
+    # Dominio publico
+    public_domain = models.CharField(max_length=255, blank=True, default='', help_text='Dominio publico sin https://. Ej: miclub.com')
+
+    # Amazon
+    affiliate_tag = models.CharField(max_length=120, blank=True, default='')
+
+    # Google OAuth
     google_login_enabled = models.BooleanField(default=False)
     google_client_id = models.CharField(max_length=255, blank=True, default='')
     google_client_secret = models.CharField(max_length=255, blank=True, default='')
+
+    # SMTP
+    smtp_host = models.CharField(max_length=255, blank=True, default='')
+    smtp_port = models.PositiveIntegerField(default=587)
+    smtp_user = models.CharField(max_length=255, blank=True, default='')
+    smtp_password = models.CharField(max_length=255, blank=True, default='')
+    smtp_use_tls = models.BooleanField(default=True)
+    email_from = models.CharField(max_length=255, blank=True, default='', help_text='Ej: Club de Lectura <club@midominio.com>')
+
+    # Plantillas de correo
+    email_tpl_welcome = models.TextField(blank=True, default='')
+    email_tpl_approved = models.TextField(blank=True, default='')
+    email_tpl_invitation = models.TextField(blank=True, default='')
 
     @classmethod
     def get_solo(cls):
@@ -61,6 +120,25 @@ class ClubSettings(models.Model):
     @property
     def nav_logo(self):
         return self.logo_url or self.icon_url
+
+    @property
+    def public_url(self):
+        if self.public_domain:
+            return f'https://{self.public_domain.rstrip("/")}'
+        return getattr(settings, 'PUBLIC_BASE_URL', 'http://localhost:8787')
+
+    @property
+    def smtp_configured(self):
+        return bool(self.smtp_host and self.smtp_user and self.smtp_password)
+
+    def get_welcome_template(self):
+        return self.email_tpl_welcome or DEFAULT_TPL_WELCOME
+
+    def get_approved_template(self):
+        return self.email_tpl_approved or DEFAULT_TPL_APPROVED
+
+    def get_invitation_template(self):
+        return self.email_tpl_invitation or DEFAULT_TPL_INVITATION
 
 
 class BookStatus(models.TextChoices):

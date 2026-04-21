@@ -3,40 +3,27 @@ import string
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.mail import send_mail
+from django.core.mail import send_mail, get_connection
 from django.http import HttpResponse, HttpResponseForbidden
 from django.db.utils import DatabaseError, OperationalError
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from .forms import (
-    RegisterForm,
-    BookForm,
-    EventForm,
-    ReviewForm,
-    ClubSettingsForm,
-    SocialLinkForm,
-    UserProfileForm,
+    RegisterForm, BookForm, EventForm, ReviewForm,
+    ClubSettingsForm, SocialLinkForm, UserProfileForm,
 )
 from .oauth import sync_google_social_app_from_settings
 from .models import (
-    Book,
-    BookStatus,
-    Role,
-    User,
-    Vote,
-    Review,
-    Event,
-    Visibility,
-    Invitation,
-    SocialLink,
-    ClubSettings,
+    Book, BookStatus, Role, User, Vote, Review, Event,
+    Visibility, Invitation, SocialLink, ClubSettings,
+    DEFAULT_TPL_WELCOME, DEFAULT_TPL_APPROVED, DEFAULT_TPL_INVITATION,
 )
 
 
-# ──────────────────────────────────────────────
+# ─────────────────────────────────────────
 # Helpers
-# ──────────────────────────────────────────────
+# ─────────────────────────────────────────
 
 def _is_effectively_approved(user):
     return bool(user.is_authenticated and (user.is_superuser or user.is_approved))
@@ -50,179 +37,27 @@ def _visible_filter(user):
     return [Visibility.PUBLIC]
 
 
-def _send_email_safe(subject, body, to):
-    """Send mail swallowing errors so it never breaks a request."""
+def _send_email(subject, body, to, cfg=None):
+    if cfg is None:
+        cfg = ClubSettings.get_solo()
     try:
-        send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [to], fail_silently=True)
+        if cfg.smtp_configured:
+            connection = get_connection(
+                backend='django.core.mail.backends.smtp.EmailBackend',
+                host=cfg.smtp_host,
+                port=cfg.smtp_port,
+                username=cfg.smtp_user,
+                password=cfg.smtp_password,
+                use_tls=cfg.smtp_use_tls,
+                fail_silently=False,
+            )
+            from_email = cfg.email_from or f'{cfg.name} <{cfg.smtp_user}>'
+        else:
+            connection = None
+            from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@localhost')
+        send_mail(subject, body, from_email, [to], connection=connection, fail_silently=True)
     except Exception:
         pass
-
-
-# ──────────────────────────────────────────────
-# Public views
-# ──────────────────────────────────────────────
-
-def home(request):
-    visible = _visible_filter(request.user)
-    books = Book.objects.none()
-    current_book = None
-    next_event = None
-    events = Event.objects.none()
-    links = SocialLink.objects.none()
-
-    try:
-        books = (
-            Book.objects.filter(visibility__in=visible)
-            .prefetch_related('reviews', 'votes')
-            .order_by('-created_at')[:30]
-        )
-        current_book = (
-            Book.objects.filter(visibility__in=visible, status=BookStatus.READING)
-            .order_by('-created_at')
-            .first()
-        )
-        next_event = (
-            Event.objects.filter(visibility__in=visible, starts_at__gte=timezone.now())
-            .order_by('starts_at')
-            .first()
-        )
-        events = (
-            Event.objects.filter(visibility__in=visible, starts_at__gte=timezone.now())
-            .order_by('starts_at')[:20]
-        )
-        links = SocialLink.objects.all()
-    except (DatabaseError, OperationalError):
-        messages.warning(
-            request,
-            'No se pudieron cargar todos los datos. Verifica que las migraciones estén aplicadas.',
-        )
-
-    return render(request, 'home.html', {
-        'books': books,
-        'events': events,
-        'current_book': current_book,
-        'next_event': next_event,
-        'links': links,
-        'book_status': BookStatus,
-    })
-
-
-def books_page(request):
-    visible = _visible_filter(request.user)
-    status = request.GET.get('estado', '')
-    query = request.GET.get('q', '').strip()
-
-    qs = Book.objects.filter(visibility__in=visible).order_by('-created_at')
-
-    if status in {BookStatus.COMPLETED, BookStatus.READING, BookStatus.FUTURE}:
-        qs = qs.filter(status=status)
-
-    if query:
-        qs = qs.filter(Q(title__icontains=query) | Q(author__icontains=query))
-
-    return render(request, 'books_page.html', {
-        'books': qs,
-        'estado': status,
-        'query': query,
-    })
-
-
-def book_detail(request, book_id):
-    visible = _visible_filter(request.user)
-    book = get_object_or_404(Book, pk=book_id, visibility__in=visible)
-    approved_reviews = book.reviews.filter(is_approved=True).order_by('-created_at')
-    user_vote = None
-    if request.user.is_authenticated:
-        user_vote = Vote.objects.filter(user=request.user, book=book).first()
-    return render(request, 'book_detail.html', {
-        'book': book,
-        'approved_reviews': approved_reviews,
-        'book_status': BookStatus,
-        'user_vote': user_vote,
-    })
-
-
-def events_page(request):
-    visible = _visible_filter(request.user)
-    now = timezone.now()
-    upcoming = Event.objects.filter(visibility__in=visible, starts_at__gte=now).order_by('starts_at')
-    past = Event.objects.filter(visibility__in=visible, starts_at__lt=now).order_by('-starts_at')
-    return render(request, 'events_page.html', {'upcoming': upcoming, 'past': past})
-
-
-def register(request):
-    if request.method == 'POST':
-        form = RegisterForm(request.POST)
-        if form.is_valid():
-            user = form.save(commit=False)
-            user.is_active = True
-            user.is_approved = False
-            user.role = Role.USER
-            user.save()
-            # Notify admins
-            admin_emails = list(
-                User.objects.filter(
-                    role__in=[Role.ADMIN, Role.SUPERADMIN], is_approved=True
-                ).values_list('email', flat=True)
-            )
-            for email in admin_emails:
-                _send_email_safe(
-                    subject=f'[{_club_name()}] Nuevo usuario pendiente: {user.username}',
-                    body=(
-                        f'El usuario {user.username} ({user.email}) se ha registrado '
-                        f'y está esperando aprobación.\n\n'
-                        f'Apruébalo desde el dashboard: {settings.PUBLIC_BASE_URL}/dashboard/?seccion=usuarios'
-                    ),
-                    to=email,
-                )
-            messages.success(
-                request,
-                'Tu cuenta fue creada. Un administrador debe aprobarla antes de que puedas acceder al panel.',
-            )
-            return redirect('login')
-    else:
-        form = RegisterForm()
-    return render(request, 'auth/register.html', {'form': form})
-
-
-# ──────────────────────────────────────────────
-# Dashboard
-# ──────────────────────────────────────────────
-
-@login_required
-def dashboard(request):
-    if not _is_effectively_approved(request.user):
-        return HttpResponseForbidden('Tu cuenta está pendiente de aprobación por un administrador.')
-
-    section = request.GET.get('seccion', 'inicio')
-    club_settings = ClubSettings.get_solo()
-    settings_form = ClubSettingsForm(instance=club_settings)
-    if request.user.role != Role.SUPERADMIN and not request.user.is_superuser:
-        for f in ('google_login_enabled', 'google_client_id', 'google_client_secret'):
-            settings_form.fields.pop(f, None)
-
-    # Stats
-    stats = _build_stats()
-
-    context = {
-        'seccion': section,
-        'book_form': BookForm(),
-        'event_form': EventForm(),
-        'settings_form': settings_form,
-        'social_form': SocialLinkForm(),
-        'profile_form': UserProfileForm(instance=request.user),
-        'books': Book.objects.order_by('-created_at')[:100],
-        'events_all': Event.objects.order_by('-starts_at')[:100],
-        'users_all': User.objects.order_by('-date_joined')[:100],
-        'users_pending': User.objects.filter(is_approved=False),
-        'reviews_pending': Review.objects.filter(is_approved=False).order_by('-created_at'),
-        'reviews_all': Review.objects.order_by('-created_at')[:200],
-        'social_links': SocialLink.objects.all(),
-        'pending_reviews_count': Review.objects.filter(is_approved=False).count(),
-        'stats': stats,
-        'default_affiliate_tag': settings.DEFAULT_AFFILIATE_TAG,
-    }
-    return render(request, 'dashboard.html', context)
 
 
 def _club_name():
@@ -249,34 +84,167 @@ def _build_stats():
     }
 
 
-# ──────────────────────────────────────────────
-# Settings
-# ──────────────────────────────────────────────
+# ─────────────────────────────────────────
+# Public views
+# ─────────────────────────────────────────
+
+def home(request):
+    visible = _visible_filter(request.user)
+    books = Book.objects.none()
+    current_book = None
+    next_event = None
+    events = Event.objects.none()
+    links = SocialLink.objects.none()
+    try:
+        books = Book.objects.filter(visibility__in=visible).prefetch_related('reviews', 'votes').order_by('-created_at')[:30]
+        current_book = Book.objects.filter(visibility__in=visible, status=BookStatus.READING).order_by('-created_at').first()
+        next_event = Event.objects.filter(visibility__in=visible, starts_at__gte=timezone.now()).order_by('starts_at').first()
+        events = Event.objects.filter(visibility__in=visible, starts_at__gte=timezone.now()).order_by('starts_at')[:20]
+        links = SocialLink.objects.all()
+    except (DatabaseError, OperationalError):
+        messages.warning(request, 'No se pudieron cargar todos los datos. Verifica que las migraciones esten aplicadas.')
+    return render(request, 'home.html', {
+        'books': books, 'events': events, 'current_book': current_book,
+        'next_event': next_event, 'links': links, 'book_status': BookStatus,
+    })
+
+
+def books_page(request):
+    visible = _visible_filter(request.user)
+    status = request.GET.get('estado', '')
+    query = request.GET.get('q', '').strip()
+    qs = Book.objects.filter(visibility__in=visible).order_by('-created_at')
+    if status in {BookStatus.COMPLETED, BookStatus.READING, BookStatus.FUTURE}:
+        qs = qs.filter(status=status)
+    if query:
+        qs = qs.filter(Q(title__icontains=query) | Q(author__icontains=query))
+    return render(request, 'books_page.html', {'books': qs, 'estado': status, 'query': query})
+
+
+def book_detail(request, book_id):
+    visible = _visible_filter(request.user)
+    book = get_object_or_404(Book, pk=book_id, visibility__in=visible)
+    approved_reviews = book.reviews.filter(is_approved=True).order_by('-created_at')
+    user_vote = None
+    if request.user.is_authenticated:
+        user_vote = Vote.objects.filter(user=request.user, book=book).first()
+    return render(request, 'book_detail.html', {
+        'book': book, 'approved_reviews': approved_reviews,
+        'book_status': BookStatus, 'user_vote': user_vote,
+    })
+
+
+def events_page(request):
+    visible = _visible_filter(request.user)
+    now = timezone.now()
+    upcoming = Event.objects.filter(visibility__in=visible, starts_at__gte=now).order_by('starts_at')
+    past = Event.objects.filter(visibility__in=visible, starts_at__lt=now).order_by('-starts_at')
+    return render(request, 'events_page.html', {'upcoming': upcoming, 'past': past})
+
+
+def register(request):
+    if request.method == 'POST':
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.is_active = True
+            user.is_approved = False
+            user.role = Role.USER
+            user.save()
+            cfg = ClubSettings.get_solo()
+            # Notify admins
+            admin_emails = list(
+                User.objects.filter(role__in=[Role.ADMIN, Role.SUPERADMIN], is_approved=True)
+                .values_list('email', flat=True)
+            )
+            for email in admin_emails:
+                _send_email(
+                    subject=f'[{cfg.name}] Nuevo usuario pendiente: {user.username}',
+                    body=f'El usuario {user.username} ({user.email}) se ha registrado y esta esperando aprobacion.\n\n'
+                         f'{cfg.public_url}/dashboard/?seccion=usuarios',
+                    to=email, cfg=cfg,
+                )
+            # Welcome email to user
+            if user.email:
+                body = cfg.get_welcome_template().format(
+                    nombre=user.username, club=cfg.name, url=cfg.public_url,
+                    usuario=user.username,
+                )
+                _send_email(subject=f'Bienvenido a {cfg.name}', body=body, to=user.email, cfg=cfg)
+            messages.success(request, 'Tu cuenta fue creada. Un administrador debe aprobarla antes de que puedas acceder al panel.')
+            return redirect('login')
+    else:
+        form = RegisterForm()
+    return render(request, 'auth/register.html', {'form': form})
+
+
+# ─────────────────────────────────────────
+# Dashboard
+# ─────────────────────────────────────────
+
+@login_required
+def dashboard(request):
+    if not _is_effectively_approved(request.user):
+        return HttpResponseForbidden('Tu cuenta esta pendiente de aprobacion por un administrador.')
+
+    section = request.GET.get('seccion', 'inicio')
+    cfg = ClubSettings.get_solo()
+    settings_form = ClubSettingsForm(instance=cfg)
+    if request.user.role != Role.SUPERADMIN and not request.user.is_superuser:
+        for f in ('google_login_enabled', 'google_client_id', 'google_client_secret',
+                  'smtp_host', 'smtp_port', 'smtp_user', 'smtp_password', 'smtp_use_tls', 'email_from',
+                  'email_tpl_welcome', 'email_tpl_approved', 'email_tpl_invitation',
+                  'public_domain'):
+            settings_form.fields.pop(f, None)
+
+    context = {
+        'seccion': section,
+        'settings_form': settings_form,
+        'social_form': SocialLinkForm(),
+        'profile_form': UserProfileForm(instance=request.user),
+        'books': Book.objects.order_by('-created_at')[:100],
+        'events_all': Event.objects.order_by('-starts_at')[:100],
+        'users_all': User.objects.order_by('-date_joined')[:100],
+        'users_pending': User.objects.filter(is_approved=False),
+        'reviews_all': Review.objects.order_by('-created_at')[:200],
+        'social_links': SocialLink.objects.all(),
+        'pending_reviews_count': Review.objects.filter(is_approved=False).count(),
+        'stats': _build_stats(),
+        'cfg': cfg,
+        # Default templates for the email section
+        'default_tpl_welcome': DEFAULT_TPL_WELCOME,
+        'default_tpl_approved': DEFAULT_TPL_APPROVED,
+        'default_tpl_invitation': DEFAULT_TPL_INVITATION,
+    }
+    return render(request, 'dashboard.html', context)
+
 
 @login_required
 def update_club_settings(request):
     if not request.user.is_admin_like():
         return HttpResponseForbidden('Solo admins.')
-
-    club_settings = ClubSettings.get_solo()
-    form = ClubSettingsForm(request.POST, instance=club_settings)
+    cfg = ClubSettings.get_solo()
+    form = ClubSettingsForm(request.POST, instance=cfg)
     if request.user.role != Role.SUPERADMIN and not request.user.is_superuser:
-        for f in ('google_login_enabled', 'google_client_id', 'google_client_secret'):
+        for f in ('google_login_enabled', 'google_client_id', 'google_client_secret',
+                  'smtp_host', 'smtp_port', 'smtp_user', 'smtp_password', 'smtp_use_tls', 'email_from',
+                  'email_tpl_welcome', 'email_tpl_approved', 'email_tpl_invitation',
+                  'public_domain'):
             form.fields.pop(f, None)
     if form.is_valid():
         form.save()
         if request.user.role == Role.SUPERADMIN or request.user.is_superuser:
             sync_google_social_app_from_settings()
-        messages.success(request, 'Configuración del club actualizada.')
+        messages.success(request, 'Configuracion guardada correctamente.')
     else:
-        messages.error(request, f'Error de configuración: {form.errors}')
+        messages.error(request, f'Error: {form.errors}')
     section = request.POST.get('seccion', 'inicio')
     return redirect(f'/dashboard/?seccion={section}')
 
 
-# ──────────────────────────────────────────────
+# ─────────────────────────────────────────
 # Books
-# ──────────────────────────────────────────────
+# ─────────────────────────────────────────
 
 @login_required
 def create_book(request):
@@ -300,13 +268,22 @@ def edit_book(request, book_id):
     if not request.user.is_admin_like():
         return HttpResponseForbidden('Solo admins.')
     book = get_object_or_404(Book, pk=book_id)
-    # Partial inline edit from dashboard (title/author/status only)
     book.title = request.POST.get('title', book.title).strip() or book.title
     book.author = request.POST.get('author', book.author).strip()
+    book.description = request.POST.get('description', book.description).strip()
+    book.cover_url = request.POST.get('cover_url', book.cover_url).strip()
+    book.amazon_url = request.POST.get('amazon_url', book.amazon_url).strip()
+    book.pdf_url = request.POST.get('pdf_url', book.pdf_url).strip()
+    book.external_video_url = request.POST.get('external_video_url', book.external_video_url).strip()
     new_status = request.POST.get('status', book.status)
     if new_status in dict(BookStatus.choices):
         book.status = new_status
-    book.save(update_fields=['title', 'author', 'status'])
+    new_vis = request.POST.get('visibility', book.visibility)
+    if new_vis in dict(Visibility.choices):
+        book.visibility = new_vis
+    book.allow_voting = request.POST.get('allow_voting', 'True') == 'True'
+    book.save(update_fields=['title', 'author', 'description', 'cover_url', 'amazon_url',
+                             'pdf_url', 'external_video_url', 'status', 'visibility', 'allow_voting'])
     messages.success(request, 'Libro actualizado.')
     return redirect('/dashboard/?seccion=libros')
 
@@ -314,7 +291,7 @@ def edit_book(request, book_id):
 @login_required
 def delete_book(request, book_id):
     if request.method != 'POST':
-        return HttpResponseForbidden('Método no permitido.')
+        return HttpResponseForbidden('Metodo no permitido.')
     if not request.user.is_admin_like():
         return HttpResponseForbidden('Solo admins.')
     book = get_object_or_404(Book, pk=book_id)
@@ -323,9 +300,9 @@ def delete_book(request, book_id):
     return redirect('/dashboard/?seccion=libros')
 
 
-# ──────────────────────────────────────────────
+# ─────────────────────────────────────────
 # Events
-# ──────────────────────────────────────────────
+# ─────────────────────────────────────────
 
 @login_required
 def create_event(request):
@@ -359,7 +336,7 @@ def edit_event(request, event_id):
 @login_required
 def delete_event(request, event_id):
     if request.method != 'POST':
-        return HttpResponseForbidden('Método no permitido.')
+        return HttpResponseForbidden('Metodo no permitido.')
     if not request.user.is_admin_like():
         return HttpResponseForbidden('Solo admins.')
     event = get_object_or_404(Event, pk=event_id)
@@ -368,27 +345,27 @@ def delete_event(request, event_id):
     return redirect('/dashboard/?seccion=eventos')
 
 
-# ──────────────────────────────────────────────
+# ─────────────────────────────────────────
 # Voting & Reviews
-# ──────────────────────────────────────────────
+# ─────────────────────────────────────────
 
 @login_required
 def vote_book(request, book_id):
     if not _is_effectively_approved(request.user):
-        return HttpResponseForbidden('Necesitas aprobación para votar.')
+        return HttpResponseForbidden('Necesitas aprobacion para votar.')
     book = get_object_or_404(Book, pk=book_id, status=BookStatus.FUTURE, allow_voting=True)
     vote, created = Vote.objects.get_or_create(user=request.user, book=book)
     if created:
         messages.success(request, f'Voto registrado por "{book.title}".')
     else:
-        messages.info(request, f'Ya habías votado por "{book.title}".')
+        messages.info(request, f'Ya habias votado por "{book.title}".')
     return redirect(request.POST.get('next') or f'/libros/{book.id}/')
 
 
 @login_required
 def add_review(request, book_id):
     if not _is_effectively_approved(request.user):
-        return HttpResponseForbidden('Necesitas aprobación para reseñar.')
+        return HttpResponseForbidden('Necesitas aprobacion para resenar.')
     book = get_object_or_404(Book, pk=book_id)
     form = ReviewForm(request.POST)
     if form.is_valid():
@@ -397,22 +374,14 @@ def add_review(request, book_id):
         review.book = book
         review.is_approved = False
         review.save()
-        messages.success(request, 'Reseña enviada. Aparecerá una vez que un admin la apruebe.')
+        messages.success(request, 'Resena enviada. Aparecera una vez que un admin la apruebe.')
     return redirect(request.POST.get('next') or 'home')
-
-
-@login_required
-def review_moderation(request):
-    if not request.user.is_admin_like():
-        return HttpResponseForbidden('Solo admins.')
-    reviews = Review.objects.filter(is_approved=False).order_by('-created_at')
-    return render(request, 'review_moderation.html', {'reviews': reviews})
 
 
 @login_required
 def approve_review(request, review_id):
     if request.method != 'POST':
-        return HttpResponseForbidden('Método no permitido.')
+        return HttpResponseForbidden('Metodo no permitido.')
     if not request.user.is_admin_like():
         return HttpResponseForbidden('Solo admins.')
     review = get_object_or_404(Review, pk=review_id)
@@ -420,40 +389,40 @@ def approve_review(request, review_id):
     review.is_flagged = False
     review.moderation_note = request.POST.get('moderation_note', '').strip()
     review.save(update_fields=['is_approved', 'is_flagged', 'moderation_note'])
-    messages.success(request, 'Reseña aprobada.')
+    messages.success(request, 'Resena aprobada.')
     return redirect('/dashboard/?seccion=resenas')
 
 
 @login_required
 def flag_review(request, review_id):
     if request.method != 'POST':
-        return HttpResponseForbidden('Método no permitido.')
+        return HttpResponseForbidden('Metodo no permitido.')
     if not request.user.is_admin_like():
         return HttpResponseForbidden('Solo admins.')
     review = get_object_or_404(Review, pk=review_id)
     review.is_approved = False
     review.is_flagged = True
-    review.moderation_note = request.POST.get('moderation_note', '').strip() or 'Marcada por moderación'
+    review.moderation_note = request.POST.get('moderation_note', '').strip() or 'Marcada por moderacion'
     review.save(update_fields=['is_approved', 'is_flagged', 'moderation_note'])
-    messages.success(request, 'Reseña marcada.')
+    messages.success(request, 'Resena marcada.')
     return redirect('/dashboard/?seccion=resenas')
 
 
 @login_required
 def delete_review(request, review_id):
     if request.method != 'POST':
-        return HttpResponseForbidden('Método no permitido.')
+        return HttpResponseForbidden('Metodo no permitido.')
     if not request.user.is_admin_like():
         return HttpResponseForbidden('Solo admins.')
     review = get_object_or_404(Review, pk=review_id)
     review.delete()
-    messages.success(request, 'Reseña eliminada.')
+    messages.success(request, 'Resena eliminada.')
     return redirect('/dashboard/?seccion=resenas')
 
 
-# ──────────────────────────────────────────────
+# ─────────────────────────────────────────
 # Users
-# ──────────────────────────────────────────────
+# ─────────────────────────────────────────
 
 @login_required
 def pending_users(request):
@@ -466,24 +435,18 @@ def pending_users(request):
 @login_required
 def approve_user(request, user_id):
     if request.method != 'POST':
-        return HttpResponseForbidden('Método no permitido.')
+        return HttpResponseForbidden('Metodo no permitido.')
     if not request.user.is_admin_like():
         return HttpResponseForbidden('Solo admins.')
     user = get_object_or_404(User, pk=user_id)
     user.is_approved = True
     user.save(update_fields=['is_approved'])
-    # Notify user
+    cfg = ClubSettings.get_solo()
     if user.email:
-        _send_email_safe(
-            subject=f'Tu cuenta en {_club_name()} fue aprobada',
-            body=(
-                f'Hola {user.username},\n\n'
-                f'Tu cuenta en {_club_name()} ha sido aprobada. '
-                f'Ya puedes acceder al panel desde:\n{settings.PUBLIC_BASE_URL}/dashboard/\n\n'
-                f'¡Bienvenido/a!'
-            ),
-            to=user.email,
+        body = cfg.get_approved_template().format(
+            nombre=user.username, club=cfg.name, url=cfg.public_url, usuario=user.username,
         )
+        _send_email(subject=f'Tu cuenta en {cfg.name} fue aprobada', body=body, to=user.email, cfg=cfg)
     messages.success(request, f'{user.username} aprobado.')
     return redirect('/dashboard/?seccion=usuarios')
 
@@ -504,7 +467,7 @@ def edit_user(request, user_id):
 @login_required
 def delete_user(request, user_id):
     if request.method != 'POST':
-        return HttpResponseForbidden('Método no permitido.')
+        return HttpResponseForbidden('Metodo no permitido.')
     if not request.user.is_admin_like():
         return HttpResponseForbidden('Solo admins.')
     user = get_object_or_404(User, pk=user_id)
@@ -530,47 +493,65 @@ def invite_user(request):
         password = ''.join(secrets.choice(alphabet) for _ in range(12))
         username = email.split('@')[0]
         user, created = User.objects.get_or_create(username=username, defaults={
-            'email': email,
-            'full_name': name,
-            'role': role,
-            'is_approved': True,
+            'email': email, 'full_name': name, 'role': role, 'is_approved': True,
         })
         if created:
             user.set_password(password)
             user.save()
 
         Invitation.objects.create(
-            invited_name=name,
-            email=email,
-            generated_password=password,
-            invited_by=request.user,
+            invited_name=name, email=email,
+            generated_password=password, invited_by=request.user,
         )
-        invite_link = f'{settings.PUBLIC_BASE_URL}/login/'
-
-        # Send invitation email
-        _send_email_safe(
-            subject=f'Invitación a {_club_name()}',
-            body=(
-                f'Hola {name},\n\n'
-                f'Has sido invitado/a a unirte a {_club_name()}.\n\n'
-                f'Accede en: {invite_link}\n'
-                f'Usuario: {username}\n'
-                f'Contraseña temporal: {password}\n\n'
-                f'Te recomendamos cambiar tu contraseña al ingresar.'
-            ),
-            to=email,
+        cfg = ClubSettings.get_solo()
+        body = cfg.get_invitation_template().format(
+            nombre=name, club=cfg.name, url=cfg.public_url,
+            usuario=username, contrasena=password,
         )
+        _send_email(subject=f'Invitacion a {cfg.name}', body=body, to=email, cfg=cfg)
         messages.success(
             request,
-            f'Invitación creada para {email}. Contraseña temporal: {password}. '
-            f'Se envió un correo de invitación (si el servidor de correo está configurado).',
+            f'Invitacion creada para {email}. Contrasena temporal: {password}. '
+            f'Correo de invitacion enviado (si SMTP esta configurado).',
         )
     return redirect('/dashboard/?seccion=usuarios')
 
 
-# ──────────────────────────────────────────────
+# ─────────────────────────────────────────
+# Test SMTP
+# ─────────────────────────────────────────
+
+@login_required
+def test_smtp(request):
+    if not (request.user.role == Role.SUPERADMIN or request.user.is_superuser):
+        return HttpResponseForbidden('Solo superadmin.')
+    cfg = ClubSettings.get_solo()
+    if not cfg.smtp_configured:
+        messages.error(request, 'Configura SMTP antes de probarlo.')
+        return redirect('/dashboard/?seccion=integraciones')
+    try:
+        connection = get_connection(
+            backend='django.core.mail.backends.smtp.EmailBackend',
+            host=cfg.smtp_host, port=cfg.smtp_port,
+            username=cfg.smtp_user, password=cfg.smtp_password,
+            use_tls=cfg.smtp_use_tls, fail_silently=False,
+        )
+        send_mail(
+            subject=f'Prueba de correo - {cfg.name}',
+            message=f'Este es un correo de prueba enviado desde {cfg.name}.',
+            from_email=cfg.email_from or cfg.smtp_user,
+            recipient_list=[request.user.email],
+            connection=connection,
+        )
+        messages.success(request, f'Correo de prueba enviado a {request.user.email}.')
+    except Exception as e:
+        messages.error(request, f'Error al enviar correo de prueba: {e}')
+    return redirect('/dashboard/?seccion=integraciones')
+
+
+# ─────────────────────────────────────────
 # Social links & Profile
-# ──────────────────────────────────────────────
+# ─────────────────────────────────────────
 
 @login_required
 def add_social_link(request):
@@ -582,19 +563,19 @@ def add_social_link(request):
         messages.success(request, 'Red social agregada.')
     else:
         messages.error(request, f'Error: {form.errors}')
-    return redirect('/dashboard/?seccion=integraciones')
+    return redirect('/dashboard/?seccion=inicio')
 
 
 @login_required
 def delete_social_link(request, link_id):
     if request.method != 'POST':
-        return HttpResponseForbidden('Método no permitido.')
+        return HttpResponseForbidden('Metodo no permitido.')
     if not request.user.is_admin_like():
         return HttpResponseForbidden('Solo admins.')
     link = get_object_or_404(SocialLink, pk=link_id)
     link.delete()
     messages.success(request, 'Red social eliminada.')
-    return redirect('/dashboard/?seccion=integraciones')
+    return redirect('/dashboard/?seccion=inicio')
 
 
 @login_required
@@ -608,10 +589,9 @@ def edit_profile(request):
     return redirect('/dashboard/?seccion=perfil')
 
 
-# ──────────────────────────────────────────────
+# ─────────────────────────────────────────
 # PWA
-# ──────────────────────────────────────────────
-
+# ─────────────────────────────────────────
 
 def manifest(request):
     import json as _json

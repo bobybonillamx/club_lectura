@@ -123,8 +123,8 @@ X_FRAME_OPTIONS = 'DENY'
 
 PUBLIC_BASE_URL = os.getenv('PUBLIC_BASE_URL', 'http://localhost:8787')
 DEFAULT_AFFILIATE_TAG = 'bobybonilla0b-20'
-POWERED_BY_NAME = 'Gold Tech Mx'
-POWERED_BY_URL = 'https://goldtech.mx'
+POWERED_BY_NAME = 'Locos X la Tecnología'
+POWERED_BY_URL = 'https://bio.goldtech.mx/lxltmx'
 
 # ── Email ──────────────────────────────────────
 # By default uses console backend (prints to logs).

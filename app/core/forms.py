@@ -41,17 +41,36 @@ class ReviewForm(forms.ModelForm):
 
 
 class ClubSettingsForm(forms.ModelForm):
+    accent_color = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={'type': 'color'}),
+        initial='#5C3D2E',
+    )
+    primary_color = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={'type': 'color'}),
+        initial='#6f42c1',
+    )
+
     class Meta:
         model = ClubSettings
         fields = [
-            'name', 'description', 'logo_url', 'icon_url',
-            'primary_color', 'accent_color', 'affiliate_tag',
+            'name', 'description', 'logo_url', 'icon_url', 'cover_image_url',
+            'primary_color', 'accent_color',
+            'public_domain',
+            'affiliate_tag',
             'google_login_enabled', 'google_client_id', 'google_client_secret',
+            'smtp_host', 'smtp_port', 'smtp_user', 'smtp_password', 'smtp_use_tls', 'email_from',
+            'email_tpl_welcome', 'email_tpl_approved', 'email_tpl_invitation',
         ]
-        widgets = {
-            'primary_color': forms.TextInput(attrs={'type': 'color'}),
-            'accent_color': forms.TextInput(attrs={'type': 'color'}),
-        }
+
+    def clean_accent_color(self):
+        val = self.cleaned_data.get('accent_color', '').strip()
+        return val or '#5C3D2E'
+
+    def clean_primary_color(self):
+        val = self.cleaned_data.get('primary_color', '').strip()
+        return val or '#6f42c1'
 
 
 class ReviewModerationForm(forms.ModelForm):
