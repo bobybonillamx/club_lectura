@@ -19,6 +19,114 @@ class Role(models.TextChoices):
     USER = 'user', 'Usuario'
 
 
+THEMES = {
+    'literario_cafe': {
+        'label': 'Literario Cafe',
+        'page': '#F7F3EE',
+        'surface': '#FFFFFF',
+        'border': '#EAE0D5',
+        'border2': '#DDD4C8',
+        'primary': '#3D2B1F',
+        'accent': '#B87333',
+        'accent_bg': '#FDF3E3',
+        'accent_bdr': '#F0D8A8',
+        'ink': '#1A0F0A',
+        'ink_mid': '#3D2B1F',
+        'ink_light': '#7A6252',
+        'serif': "'Lora', Georgia, serif",
+        'sans': "'Inter', system-ui, sans-serif",
+        'fonts': 'https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap',
+    },
+    'moderno_oscuro': {
+        'label': 'Moderno Oscuro',
+        'page': '#111318',
+        'surface': '#1C2030',
+        'border': '#2A2F42',
+        'border2': '#363C52',
+        'primary': '#7C6FFF',
+        'accent': '#7C6FFF',
+        'accent_bg': '#2A2050',
+        'accent_bdr': '#3D3570',
+        'ink': '#F0EFFF',
+        'ink_mid': '#C8C6F0',
+        'ink_light': '#8B8FA8',
+        'serif': "'Space Grotesk', system-ui, sans-serif",
+        'sans': "'Space Grotesk', system-ui, sans-serif",
+        'fonts': 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&display=swap',
+    },
+    'minimalista_blanco': {
+        'label': 'Minimalista Blanco',
+        'page': '#FAFAFA',
+        'surface': '#FFFFFF',
+        'border': '#EBEBEB',
+        'border2': '#D8D8D8',
+        'primary': '#111111',
+        'accent': '#111111',
+        'accent_bg': '#F5F5F5',
+        'accent_bdr': '#E0E0E0',
+        'ink': '#111111',
+        'ink_mid': '#333333',
+        'ink_light': '#888888',
+        'serif': "'DM Sans', system-ui, sans-serif",
+        'sans': "'DM Sans', system-ui, sans-serif",
+        'fonts': 'https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&display=swap',
+    },
+    'verde_bosque': {
+        'label': 'Verde Bosque',
+        'page': '#F2F7F2',
+        'surface': '#FFFFFF',
+        'border': '#D4E8D4',
+        'border2': '#B8D8B8',
+        'primary': '#1E4D2B',
+        'accent': '#3A7D44',
+        'accent_bg': '#E8F5E8',
+        'accent_bdr': '#AEDCAE',
+        'ink': '#0F2B18',
+        'ink_mid': '#1E4D2B',
+        'ink_light': '#4A6B52',
+        'serif': "'Crimson Pro', Georgia, serif",
+        'sans': "'Inter', system-ui, sans-serif",
+        'fonts': 'https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap',
+    },
+    'oceano_profundo': {
+        'label': 'Oceano Profundo',
+        'page': '#EEF4FA',
+        'surface': '#FFFFFF',
+        'border': '#C8DDEF',
+        'border2': '#A8C8E8',
+        'primary': '#0B4F8A',
+        'accent': '#1A72C4',
+        'accent_bg': '#DFF0FB',
+        'accent_bdr': '#9DCFF0',
+        'ink': '#051E3A',
+        'ink_mid': '#0B4F8A',
+        'ink_light': '#3A6080',
+        'serif': "'Libre Baskerville', Georgia, serif",
+        'sans': "'Inter', system-ui, sans-serif",
+        'fonts': 'https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500&display=swap',
+    },
+    'rosa_editorial': {
+        'label': 'Rosa Editorial',
+        'page': '#FDF6F8',
+        'surface': '#FFFFFF',
+        'border': '#F0D8E0',
+        'border2': '#E8C0CC',
+        'primary': '#8B2252',
+        'accent': '#C4547A',
+        'accent_bg': '#FCEAF0',
+        'accent_bdr': '#F0B8CC',
+        'ink': '#3D0A22',
+        'ink_mid': '#8B2252',
+        'ink_light': '#8B5A6A',
+        'serif': "'Playfair Display', Georgia, serif",
+        'sans': "'Plus Jakarta Sans', system-ui, sans-serif",
+        'fonts': 'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500&display=swap',
+    },
+}
+
+THEME_CHOICES = [(k, v['label']) for k, v in THEMES.items()] + [('personalizado', 'Personalizado')]
+
+
 DEFAULT_TPL_WELCOME = """Hola {nombre},
 
 Gracias por registrarte en {club}. Tu cuenta esta pendiente de aprobacion por un administrador.
@@ -78,14 +186,17 @@ class ClubSettings(models.Model):
     # Identidad
     name = models.CharField(max_length=120, default='Mi Club de Lectura')
     description = models.TextField(blank=True)
-    logo_url = models.URLField(blank=True, help_text='Logo rectangular para la navbar.')
-    icon_url = models.URLField(blank=True, default='', help_text='Icono cuadrado 512x512 para PWA/favicon.')
-    cover_image_url = models.URLField(blank=True, default='', help_text='Imagen de portada para la pagina principal.')
-    primary_color = models.CharField(max_length=7, default='#6f42c1')
-    accent_color = models.CharField(max_length=7, default='#5C3D2E')
+    logo_url = models.URLField(blank=True)
+    icon_url = models.URLField(blank=True, default='')
+    cover_image_url = models.URLField(blank=True, default='')
 
-    # Dominio publico
-    public_domain = models.CharField(max_length=255, blank=True, default='', help_text='Dominio publico sin https://. Ej: miclub.com')
+    # Tema visual
+    theme = models.CharField(max_length=40, default='literario_cafe', choices=THEME_CHOICES)
+    primary_color = models.CharField(max_length=7, default='')
+    accent_color = models.CharField(max_length=7, default='')
+
+    # Dominio
+    public_domain = models.CharField(max_length=255, blank=True, default='')
 
     # Amazon
     affiliate_tag = models.CharField(max_length=120, blank=True, default='')
@@ -101,12 +212,25 @@ class ClubSettings(models.Model):
     smtp_user = models.CharField(max_length=255, blank=True, default='')
     smtp_password = models.CharField(max_length=255, blank=True, default='')
     smtp_use_tls = models.BooleanField(default=True)
-    email_from = models.CharField(max_length=255, blank=True, default='', help_text='Ej: Club de Lectura <club@midominio.com>')
+    email_from = models.CharField(max_length=255, blank=True, default='')
 
-    # Plantillas de correo
+    # Email templates
     email_tpl_welcome = models.TextField(blank=True, default='')
     email_tpl_approved = models.TextField(blank=True, default='')
     email_tpl_invitation = models.TextField(blank=True, default='')
+
+    # SEO & textos
+    meta_description = models.CharField(max_length=260, blank=True, default='')
+    home_welcome_text = models.CharField(max_length=255, blank=True, default='')
+    cta_register_text = models.CharField(max_length=60, blank=True, default='')
+    cta_login_text = models.CharField(max_length=60, blank=True, default='')
+
+    # Footer
+    footer_powered_by_name = models.CharField(max_length=120, blank=True, default='')
+    footer_powered_by_url = models.URLField(blank=True, default='')
+    footer_custom_link_text = models.CharField(max_length=120, blank=True, default='')
+    footer_custom_link_url = models.URLField(blank=True, default='')
+    footer_text = models.CharField(max_length=255, blank=True, default='')
 
     @classmethod
     def get_solo(cls):
@@ -130,6 +254,26 @@ class ClubSettings(models.Model):
     @property
     def smtp_configured(self):
         return bool(self.smtp_host and self.smtp_user and self.smtp_password)
+
+    @property
+    def theme_vars(self):
+        """Returns resolved CSS variables dict for the active theme."""
+        base = THEMES.get(self.theme, THEMES['literario_cafe']).copy()
+        if self.theme == 'personalizado' or (self.primary_color or self.accent_color):
+            if self.primary_color:
+                base['primary'] = self.primary_color
+                base['ink_mid'] = self.primary_color
+            if self.accent_color:
+                base['accent'] = self.accent_color
+        return base
+
+    @property
+    def effective_cta_register(self):
+        return self.cta_register_text or 'Registro'
+
+    @property
+    def effective_cta_login(self):
+        return self.cta_login_text or 'Entrar'
 
     def get_welcome_template(self):
         return self.email_tpl_welcome or DEFAULT_TPL_WELCOME

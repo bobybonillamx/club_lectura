@@ -1,9 +1,9 @@
 ﻿"""
-fix_templates_v4.py
-Escribe todos los templates con el diseno v4 completo.
+fix_templates_v5.py
+Escribe todos los templates con el sistema de temas completo.
 Uso:
-    docker compose cp fix_templates_v4.py web:/app/fix_templates_v4.py
-    docker compose exec web python /app/fix_templates_v4.py
+    docker compose cp fix_templates_v5.py web:/app/fix_templates_v5.py
+    docker compose exec web python /app/fix_templates_v5.py
 """
 import os
 
@@ -13,7 +13,7 @@ os.makedirs(f"{BASE}/auth", exist_ok=True)
 T = {}
 
 # ══════════════════════════════════════════════════════════════
-# BASE.HTML
+# BASE.HTML — injects theme vars from context
 # ══════════════════════════════════════════════════════════════
 T[f"{BASE}/base.html"] = """{% load static %}
 <!doctype html>
@@ -21,23 +21,30 @@ T[f"{BASE}/base.html"] = """{% load static %}
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="{{ club_settings.primary_color }}">
+<meta name="theme-color" content="{{ theme_vars.primary }}">
+{% if club_settings.meta_description %}<meta name="description" content="{{ club_settings.meta_description }}">{% endif %}
 <link rel="manifest" href="/pwa/manifest.json">
 {% if club_settings.icon_url %}<link rel="icon" href="{{ club_settings.icon_url }}">
 {% else %}<link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">{% endif %}
 <title>{{ club_settings.name }}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="{{ theme_vars.fonts }}" rel="stylesheet">
 <style>
 :root{
-  --ink:#1A0F0A;--ink-mid:#3D2B1F;--ink-light:#7A6252;
-  --amber:#B87333;--amber-bg:#FDF3E3;--amber-bdr:#F0D8A8;
-  --green-bg:#EBF5EB;--green-txt:#2D5A2D;
-  --blue-bg:#EEF0F8;--blue-txt:#2D3A6A;
-  --page:#F7F3EE;--surface:#FFFFFF;
-  --border:#EAE0D5;--border2:#DDD4C8;
-  --serif:'Lora',Georgia,serif;--sans:'Inter',system-ui,sans-serif;
+  --page:{{ theme_vars.page }};
+  --surface:{{ theme_vars.surface }};
+  --border:{{ theme_vars.border }};
+  --border2:{{ theme_vars.border2 }};
+  --primary:{{ theme_vars.primary }};
+  --accent:{{ theme_vars.accent }};
+  --accent-bg:{{ theme_vars.accent_bg }};
+  --accent-bdr:{{ theme_vars.accent_bdr }};
+  --ink:{{ theme_vars.ink }};
+  --ink-mid:{{ theme_vars.ink_mid }};
+  --ink-light:{{ theme_vars.ink_light }};
+  --serif:{{ theme_vars.serif }};
+  --sans:{{ theme_vars.sans }};
   --r:8px;--rl:14px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -47,70 +54,76 @@ a{color:inherit;text-decoration:none;}
 p{line-height:1.65;}
 textarea,input,select,button{font-family:var(--sans);}
 
+/* NAV */
 .cl-nav{background:var(--surface);border-bottom:1px solid var(--border);height:56px;display:flex;align-items:center;padding:0 1.5rem;gap:1.25rem;position:sticky;top:0;z-index:200;}
-.cl-logomark{width:32px;height:32px;background:var(--ink-mid);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.cl-logomark{width:32px;height:32px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .cl-brand{font-family:var(--serif);font-size:1rem;font-weight:600;color:var(--ink);letter-spacing:-.01em;}
 .cl-navlink{font-size:.8125rem;color:var(--ink-light);padding:4px 10px;border-radius:6px;transition:color .12s,background .12s;}
-.cl-navlink:hover{color:var(--ink);background:var(--page);}
+.cl-navlink:hover{color:var(--ink);background:var(--accent-bg);}
 
+/* BUTTONS */
 .btn{font-size:.8125rem;font-weight:500;border-radius:var(--r);padding:8px 16px;cursor:pointer;border:none;display:inline-block;transition:opacity .12s,transform .1s;line-height:1.4;white-space:nowrap;}
 .btn:active{transform:scale(.98);}
-.btn-dark{background:var(--ink-mid);color:#F7F3EE;}
-.btn-dark:hover{opacity:.88;color:#F7F3EE;}
+.btn-dark{background:var(--primary);color:var(--page);}
+.btn-dark:hover{opacity:.88;color:var(--page);}
 .btn-ghost{background:transparent;color:var(--ink-light);border:1px solid var(--border2);}
-.btn-ghost:hover{background:var(--page);color:var(--ink);}
-.btn-amber{background:var(--amber);color:#FFF8F0;}
-.btn-amber:hover{opacity:.88;color:#FFF8F0;}
-.btn-red{background:#8B2020;color:#fff;}
-.btn-red:hover{opacity:.88;color:#fff;}
+.btn-ghost:hover{background:var(--accent-bg);color:var(--ink);}
+.btn-accent{background:var(--accent);color:var(--surface);}
+.btn-accent:hover{opacity:.88;color:var(--surface);}
+.btn-danger{background:#8B2020;color:#fff;}
+.btn-danger:hover{opacity:.88;color:#fff;}
 .btn-sm{padding:5px 12px;font-size:.75rem;}
-.btn-green{background:#2D6A2D;color:#fff;}
-.btn-green:hover{opacity:.88;color:#fff;}
 
+/* CARDS */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;}
 .card-body{padding:1.25rem 1.5rem;}
-.card-header{padding:.75rem 1.5rem;border-bottom:1px solid var(--border);background:var(--page);display:flex;align-items:center;justify-content:space-between;}
-.card-header-label{font-size:.6875rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);}
+.card-header{padding:.75rem 1.5rem;border-bottom:1px solid var(--border);background:var(--accent-bg);display:flex;align-items:center;justify-content:space-between;}
+.card-header-label{font-size:.6875rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);}
 
+/* FORMS */
 .field{margin-bottom:1rem;}
 .lbl{font-size:.75rem;font-weight:500;color:var(--ink-light);display:block;margin-bottom:5px;letter-spacing:.02em;}
 .inp,.sel,.txa{font-size:.875rem;color:var(--ink);background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:9px 13px;width:100%;outline:none;transition:border-color .12s,box-shadow .12s;-webkit-appearance:none;appearance:none;}
-.inp:focus,.sel:focus,.txa:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(184,115,51,.12);}
+.inp:focus,.sel:focus,.txa:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 15%,transparent);}
 .txa{resize:vertical;min-height:80px;line-height:1.6;}
 .hint{font-size:.6875rem;color:var(--ink-light);margin-top:4px;line-height:1.5;}
-.inp-color{padding:3px 6px;height:42px;cursor:pointer;}
 
+/* CHIPS */
 .chip{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:.6875rem;font-weight:500;white-space:nowrap;}
-.chip-reading{background:var(--green-bg);color:var(--green-txt);}
-.chip-future{background:var(--amber-bg);color:#7A4F15;border:1px solid var(--amber-bdr);}
-.chip-done{background:var(--blue-bg);color:var(--blue-txt);}
-.chip-muted{background:#F0EDE8;color:var(--ink-light);}
+.chip-reading{background:#EBF5EB;color:#2D5A2D;}
+.chip-future{background:var(--accent-bg);color:var(--accent);border:1px solid var(--accent-bdr);}
+.chip-done{background:#EEF0F8;color:#2D3A6A;}
+.chip-muted{background:var(--page);color:var(--ink-light);border:1px solid var(--border);}
 
+/* EYEBROW */
+.eyebrow{font-size:.6875rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:.375rem;}
+
+/* SIDEBAR NAV */
 .sidenav-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:var(--r);font-size:.875rem;color:var(--ink-light);transition:background .12s,color .12s;margin-bottom:2px;}
-.sidenav-item:hover{background:var(--page);color:var(--ink);}
-.sidenav-item.active{background:var(--page);color:var(--ink);font-weight:500;border-left:2px solid var(--amber);border-radius:0 var(--r) var(--r) 0;padding-left:10px;}
-.badge-count{background:var(--amber-bg);color:#7A4F15;border:1px solid var(--amber-bdr);font-size:.625rem;padding:1px 6px;border-radius:10px;font-weight:600;}
+.sidenav-item:hover{background:var(--accent-bg);color:var(--ink);}
+.sidenav-item.active{background:var(--accent-bg);color:var(--ink);font-weight:500;border-left:2px solid var(--accent);border-radius:0 var(--r) var(--r) 0;padding-left:10px;}
+.badge-count{background:var(--accent-bg);color:var(--accent);border:1px solid var(--accent-bdr);font-size:.625rem;padding:1px 6px;border-radius:10px;font-weight:600;}
 
+/* ALERTS */
 .alert{padding:.75rem 1rem;border-radius:var(--r);font-size:.875rem;margin-bottom:1rem;}
-.alert-info{background:var(--amber-bg);border:1px solid var(--amber-bdr);color:#5C3A10;}
-.alert-ok{background:var(--green-bg);border:1px solid #BAD9B5;color:#1F4D1F;}
-.alert-err{background:#FBEAEA;border:1px solid #E8BABA;color:#5C1A1A;}
+.alert-info{background:var(--accent-bg);border:1px solid var(--accent-bdr);color:var(--ink);}
 
+/* GRID */
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;}
 .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;}
 @media(max-width:680px){.g2,.g3,.g4{grid-template-columns:1fr;}}
-@media(max-width:900px){.g3{grid-template-columns:1fr 1fr;} .g4{grid-template-columns:1fr 1fr;}}
+@media(max-width:900px){.g3{grid-template-columns:1fr 1fr;}.g4{grid-template-columns:1fr 1fr;}}
 
+/* STATS */
 .stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1rem;text-align:center;}
 .stat-num{font-family:var(--serif);font-size:1.75rem;font-weight:600;color:var(--ink);line-height:1;}
 .stat-lbl{font-size:.6875rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-light);margin-top:4px;}
 
-.section-eyebrow{font-size:.6875rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--amber);margin-bottom:.375rem;}
-
 details summary{list-style:none;cursor:pointer;}
 details summary::-webkit-details-marker{display:none;}
 
+/* FOOTER */
 .cl-footer{border-top:1px solid var(--border);padding:1.5rem;text-align:center;font-size:.8125rem;color:var(--ink-light);background:var(--surface);margin-top:3rem;}
 .cl-footer a{color:var(--ink-light);}
 .cl-footer a:hover{color:var(--ink);}
@@ -119,12 +132,13 @@ details summary::-webkit-details-marker{display:none;}
 </style>
 </head>
 <body>
+
 <nav class="cl-nav">
   <div class="cl-logomark">
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-      <rect x="3" y="4" width="12" height="2" rx="1" fill="#F7F3EE"/>
-      <rect x="3" y="8" width="12" height="2" rx="1" fill="#F7F3EE"/>
-      <rect x="3" y="12" width="8" height="2" rx="1" fill="#F7F3EE"/>
+      <rect x="3" y="4" width="12" height="2" rx="1" fill="white" fill-opacity=".9"/>
+      <rect x="3" y="8" width="12" height="2" rx="1" fill="white" fill-opacity=".9"/>
+      <rect x="3" y="12" width="8" height="2" rx="1" fill="white" fill-opacity=".9"/>
     </svg>
   </div>
   {% if club_settings.nav_logo %}
@@ -143,22 +157,36 @@ details summary::-webkit-details-marker{display:none;}
         <button class="btn btn-dark">Salir</button>
       </form>
     {% else %}
-      <a href="/login/" class="btn btn-ghost">Entrar</a>
-      <a href="/registro/" class="btn btn-dark">Registro</a>
+      <a href="/login/" class="btn btn-ghost">{{ club_settings.effective_cta_login }}</a>
+      <a href="/registro/" class="btn btn-dark">{{ club_settings.effective_cta_register }}</a>
     {% endif %}
   </div>
 </nav>
+
 <main style="max-width:1200px;margin:0 auto;padding:2rem 1.5rem;">
   {% if messages %}{% for message in messages %}
     <div class="alert alert-info">{{ message }}</div>
   {% endfor %}{% endif %}
   {% block content %}{% endblock %}
 </main>
+
 <footer class="cl-footer">
-  Powered by <a href="https://goldtech.mx" target="_blank" rel="noopener">Gold Tech Mx</a>
-  &nbsp;&middot;&nbsp;
-  <a href="https://github.com/bobybonillamx/club_lectura" target="_blank" rel="noopener">GitHub</a>
+  {% if club_settings.footer_text %}<p style="margin-bottom:.5rem;">{{ club_settings.footer_text }}</p>{% endif %}
+  <div style="display:flex;justify-content:center;align-items:center;gap:1rem;flex-wrap:wrap;">
+    {% if club_settings.footer_powered_by_name %}
+      Powered by <a href="{{ club_settings.footer_powered_by_url }}" target="_blank" rel="noopener">{{ club_settings.footer_powered_by_name }}</a>
+    {% else %}
+      Powered by <a href="https://goldtech.mx" target="_blank" rel="noopener">Gold Tech Mx</a>
+    {% endif %}
+    &nbsp;&middot;&nbsp;
+    <a href="https://github.com/bobybonillamx/club_lectura" target="_blank" rel="noopener">GitHub</a>
+    {% if club_settings.footer_custom_link_text and club_settings.footer_custom_link_url %}
+      &nbsp;&middot;&nbsp;
+      <a href="{{ club_settings.footer_custom_link_url }}" target="_blank" rel="noopener">{{ club_settings.footer_custom_link_text }}</a>
+    {% endif %}
+  </div>
 </footer>
+
 <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/pwa/sw.js');</script>
 </body>
 </html>"""
@@ -171,18 +199,17 @@ T[f"{BASE}/home.html"] = """{% extends 'base.html' %}
 
 {% if club_settings.cover_image_url %}
 <div style="margin:-2rem -1.5rem 2rem;height:320px;overflow:hidden;position:relative;">
-  <img src="{{ club_settings.cover_image_url }}" alt="{{ club_settings.name }}"
-    style="width:100%;height:100%;object-fit:cover;display:block;">
-  <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(26,15,10,.7) 0%,transparent 60%);"></div>
+  <img src="{{ club_settings.cover_image_url }}" alt="{{ club_settings.name }}" style="width:100%;height:100%;object-fit:cover;display:block;">
+  <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.65) 0%,transparent 60%);"></div>
   <div style="position:absolute;bottom:2rem;left:2rem;">
-    <p class="section-eyebrow" style="color:rgba(247,243,238,.75);">Bienvenido</p>
-    <h1 style="font-size:2.25rem;color:#F7F3EE;text-shadow:0 1px 3px rgba(0,0,0,.4);">{{ club_settings.name }}</h1>
-    {% if club_settings.description %}<p style="color:rgba(247,243,238,.85);max-width:480px;font-size:.9375rem;margin-top:.375rem;">{{ club_settings.description }}</p>{% endif %}
+    <p class="eyebrow" style="color:rgba(255,255,255,.75);">{% if club_settings.home_welcome_text %}{{ club_settings.home_welcome_text }}{% else %}Bienvenido{% endif %}</p>
+    <h1 style="font-size:2.25rem;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.4);">{{ club_settings.name }}</h1>
+    {% if club_settings.description %}<p style="color:rgba(255,255,255,.85);max-width:480px;font-size:.9375rem;margin-top:.375rem;">{{ club_settings.description }}</p>{% endif %}
   </div>
 </div>
 {% else %}
 <section style="padding:1.5rem 0 2rem;">
-  <p class="section-eyebrow">Bienvenido</p>
+  <p class="eyebrow">{% if club_settings.home_welcome_text %}{{ club_settings.home_welcome_text }}{% else %}Bienvenido{% endif %}</p>
   <h1 style="font-size:2rem;margin-bottom:.375rem;">{{ club_settings.name }}</h1>
   {% if club_settings.description %}<p style="color:var(--ink-light);max-width:520px;font-size:.9375rem;">{{ club_settings.description }}</p>{% endif %}
 </section>
@@ -190,14 +217,14 @@ T[f"{BASE}/home.html"] = """{% extends 'base.html' %}
 
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;max-width:600px;margin-bottom:2rem;">
   <div class="card card-body">
-    <p class="section-eyebrow" style="margin-bottom:.375rem;">Leyendo ahora</p>
+    <p class="eyebrow" style="margin-bottom:.375rem;">Leyendo ahora</p>
     {% if current_book %}
       <p style="font-family:var(--serif);font-size:.9375rem;color:var(--ink);font-weight:600;margin-bottom:2px;">{{ current_book.title }}</p>
       <p style="font-size:.8125rem;color:var(--ink-light);font-style:italic;">{{ current_book.author }}</p>
     {% else %}<p style="font-size:.875rem;color:var(--ink-light);">Sin libro activo</p>{% endif %}
   </div>
   <div class="card card-body">
-    <p class="section-eyebrow" style="margin-bottom:.375rem;">Proximo evento</p>
+    <p class="eyebrow" style="margin-bottom:.375rem;">Proximo evento</p>
     {% if next_event %}
       <p style="font-family:var(--serif);font-size:.9375rem;color:var(--ink);font-weight:600;margin-bottom:2px;">{{ next_event.title }}</p>
       <p style="font-size:.8125rem;color:var(--ink-light);">{{ next_event.starts_at|date:"j M, H:i" }}</p>
@@ -207,13 +234,13 @@ T[f"{BASE}/home.html"] = """{% extends 'base.html' %}
 
 <div style="display:grid;grid-template-columns:1fr 300px;gap:2rem;">
   <div>
-    <p class="section-eyebrow" style="margin-bottom:1rem;">Biblioteca del club</p>
+    <p class="eyebrow" style="margin-bottom:1rem;">Biblioteca del club</p>
     {% for book in books %}
     <div class="card" style="margin-bottom:.875rem;display:flex;">
       {% if book.cover_url %}
         <img src="{{ book.cover_url }}" alt="{{ book.title }}" style="width:72px;height:108px;object-fit:cover;flex-shrink:0;border-radius:14px 0 0 14px;">
       {% else %}
-        <div style="width:72px;height:108px;background:var(--page);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;">&#128214;</div>
+        <div style="width:72px;height:108px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;">&#128214;</div>
       {% endif %}
       <div style="flex:1;padding:1rem 1.125rem;">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.5rem;">
@@ -224,7 +251,7 @@ T[f"{BASE}/home.html"] = """{% extends 'base.html' %}
           <span class="chip {% if book.status == 'reading' %}chip-reading{% elif book.status == 'completed' %}chip-done{% else %}chip-future{% endif %}">{{ book.get_status_display }}</span>
         </div>
         {% if book.status == 'future' and book.allow_voting %}
-        <div style="background:var(--amber-bg);border:1px solid var(--amber-bdr);border-radius:var(--r);padding:.5rem .75rem;margin-bottom:.5rem;font-size:.8125rem;color:#7A4F15;">
+        <div style="background:var(--accent-bg);border:1px solid var(--accent-bdr);border-radius:var(--r);padding:.5rem .75rem;margin-bottom:.5rem;font-size:.8125rem;color:var(--accent);">
           Votacion abierta &middot; {{ book.votes.count }} voto{{ book.votes.count|pluralize:"s" }}
         </div>
         {% endif %}
@@ -239,7 +266,7 @@ T[f"{BASE}/home.html"] = """{% extends 'base.html' %}
         <div style="margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--border);">
           {% for review in approved %}{% if review.is_approved %}
           <p style="font-size:.8125rem;color:var(--ink-light);line-height:1.5;">
-            <span style="color:#B87333;">{% for i in "12345" %}{% if forloop.counter <= review.rating %}&#9733;{% else %}&#9734;{% endif %}{% endfor %}</span>
+            <span style="color:var(--accent);">{% for i in "12345" %}{% if forloop.counter <= review.rating %}&#9733;{% else %}&#9734;{% endif %}{% endfor %}</span>
             <strong style="color:var(--ink);margin:0 3px;">{{ review.user.username }}</strong>&mdash; {{ review.comment|truncatechars:90 }}
           </p>
           {% endif %}{% endfor %}
@@ -249,9 +276,10 @@ T[f"{BASE}/home.html"] = """{% extends 'base.html' %}
     </div>
     {% empty %}<p style="color:var(--ink-light);">Aun no hay libros registrados.</p>{% endfor %}
   </div>
+
   <aside>
     <div class="card card-body" style="margin-bottom:1rem;">
-      <p class="section-eyebrow" style="margin-bottom:.875rem;">Proximos eventos</p>
+      <p class="eyebrow" style="margin-bottom:.875rem;">Proximos eventos</p>
       {% for event in events %}
       <div style="padding:.625rem 0;{% if not forloop.last %}border-bottom:1px solid var(--border);{% endif %}">
         <p style="font-family:var(--serif);font-size:.875rem;color:var(--ink);font-weight:600;margin-bottom:2px;">{{ event.title }}</p>
@@ -262,7 +290,7 @@ T[f"{BASE}/home.html"] = """{% extends 'base.html' %}
     </div>
     {% if links %}
     <div class="card card-body" style="margin-bottom:1rem;">
-      <p class="section-eyebrow" style="margin-bottom:.75rem;">Redes del club</p>
+      <p class="eyebrow" style="margin-bottom:.75rem;">Redes del club</p>
       {% for link in links %}
       <a href="{{ link.url }}" target="_blank" rel="noopener" style="display:block;font-size:.875rem;color:var(--ink-light);padding:3px 0;">&#8599; {{ link.network }}</a>
       {% endfor %}
@@ -279,7 +307,7 @@ T[f"{BASE}/home.html"] = """{% extends 'base.html' %}
 T[f"{BASE}/books_page.html"] = """{% extends 'base.html' %}
 {% block content %}
 <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
-  <div><p class="section-eyebrow" style="margin-bottom:.25rem;">Biblioteca</p><h1 style="font-size:1.75rem;">Libros del club</h1></div>
+  <div><p class="eyebrow" style="margin-bottom:.25rem;">Biblioteca</p><h1 style="font-size:1.75rem;">Libros del club</h1></div>
 </div>
 <form method="get" action="/libros/" style="display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:2rem;">
   <input type="text" name="q" value="{{ query|default:'' }}" class="inp" placeholder="Buscar por titulo o autor..." style="max-width:280px;width:100%;">
@@ -294,9 +322,9 @@ T[f"{BASE}/books_page.html"] = """{% extends 'base.html' %}
 </form>
 {% for book in books %}
 <a href="/libros/{{ book.id }}/" style="display:block;text-decoration:none;margin-bottom:.75rem;">
-  <div class="card" style="{% if book.status == 'future' and book.allow_voting %}border-color:var(--amber-bdr);{% endif %}transition:box-shadow .15s;" onmouseover="this.style.boxShadow='0 4px 16px rgba(26,15,10,.07)'" onmouseout="this.style.boxShadow=''">
+  <div class="card" style="{% if book.status == 'future' and book.allow_voting %}border-color:var(--accent-bdr);{% endif %}transition:box-shadow .15s;" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.07)'" onmouseout="this.style.boxShadow=''">
     {% if book.status == 'future' and book.allow_voting %}
-    <div style="background:var(--amber-bg);border-bottom:1px solid var(--amber-bdr);padding:.375rem 1.25rem;font-size:.75rem;color:#7A4F15;display:flex;align-items:center;gap:.5rem;">
+    <div style="background:var(--accent-bg);border-bottom:1px solid var(--accent-bdr);padding:.375rem 1.25rem;font-size:.75rem;color:var(--accent);display:flex;align-items:center;gap:.5rem;">
       &#128717; <strong>Votacion abierta</strong> &mdash; {{ book.votes.count }} voto{{ book.votes.count|pluralize:"s" }} &middot; Entra para votar
     </div>
     {% endif %}
@@ -304,7 +332,7 @@ T[f"{BASE}/books_page.html"] = """{% extends 'base.html' %}
       {% if book.cover_url %}
         <img src="{{ book.cover_url }}" alt="{{ book.title }}" style="width:48px;height:72px;object-fit:cover;flex-shrink:0;">
       {% else %}
-        <div style="width:48px;height:72px;background:var(--page);display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0;">&#128214;</div>
+        <div style="width:48px;height:72px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0;">&#128214;</div>
       {% endif %}
       <div style="flex:1;padding:.875rem 1.125rem;display:flex;justify-content:space-between;align-items:center;gap:.75rem;">
         <div>
@@ -330,7 +358,7 @@ T[f"{BASE}/book_detail.html"] = """{% extends 'base.html' %}
     {% if book.cover_url %}
       <img src="{{ book.cover_url }}" alt="{{ book.title }}" style="width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:12px;max-width:200px;">
     {% else %}
-      <div style="width:100%;aspect-ratio:2/3;background:var(--page);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:3rem;max-width:200px;">&#128214;</div>
+      <div style="width:100%;aspect-ratio:2/3;background:var(--accent-bg);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:3rem;max-width:200px;">&#128214;</div>
     {% endif %}
   </div>
   <div>
@@ -344,7 +372,7 @@ T[f"{BASE}/book_detail.html"] = """{% extends 'base.html' %}
       {% if book.pdf_url %}
         {% if user.is_authenticated %}
           {% if user.is_approved or user.is_superuser %}
-            <a href="{{ book.pdf_url }}" class="btn btn-amber btn-sm" target="_blank" rel="noopener">&#128196; Descargar PDF</a>
+            <a href="{{ book.pdf_url }}" class="btn btn-accent btn-sm" target="_blank" rel="noopener">&#128196; Descargar PDF</a>
           {% else %}
             <span class="chip chip-muted">PDF disponible para miembros aprobados</span>
           {% endif %}
@@ -354,18 +382,18 @@ T[f"{BASE}/book_detail.html"] = """{% extends 'base.html' %}
       {% endif %}
     </div>
     {% if book.status == 'future' and book.allow_voting %}
-    <div style="background:var(--amber-bg);border:1px solid var(--amber-bdr);border-radius:12px;padding:1.25rem 1.5rem;max-width:460px;">
-      <p class="section-eyebrow" style="margin-bottom:.5rem;">Votacion abierta</p>
+    <div style="background:var(--accent-bg);border:1px solid var(--accent-bdr);border-radius:12px;padding:1.25rem 1.5rem;max-width:460px;">
+      <p class="eyebrow" style="margin-bottom:.5rem;">Votacion abierta</p>
       <p style="font-family:var(--serif);font-size:1.0625rem;color:var(--ink);margin-bottom:.375rem;">Quieres que leamos este libro?</p>
       <p style="font-size:.875rem;color:var(--ink-light);margin-bottom:1rem;">Puedes votar por todos los libros que quieras. El mas votado sera el proximo.</p>
-      <p style="font-size:1.5rem;font-family:var(--serif);font-weight:600;color:var(--amber);margin-bottom:.875rem;">{{ book.votes.count }} voto{{ book.votes.count|pluralize:"s" }}</p>
+      <p style="font-size:1.5rem;font-family:var(--serif);font-weight:600;color:var(--accent);margin-bottom:.875rem;">{{ book.votes.count }} voto{{ book.votes.count|pluralize:"s" }}</p>
       {% if user_vote %}
-        <p style="font-size:.9375rem;color:var(--green-txt);">&#10003; Ya votaste por este libro</p>
+        <p style="font-size:.9375rem;color:#2D5A2D;">&#10003; Ya votaste por este libro</p>
       {% elif user.is_authenticated %}
         {% if user.is_approved or user.is_superuser %}
         <form action="/libros/{{ book.id }}/votar/" method="post">{% csrf_token %}
           <input type="hidden" name="next" value="/libros/{{ book.id }}/">
-          <button class="btn btn-amber">Votar por este libro</button>
+          <button class="btn btn-accent">Votar por este libro</button>
         </form>
         {% else %}
           <p style="font-size:.875rem;color:var(--ink-light);">Tu cuenta esta pendiente de aprobacion para votar.</p>
@@ -380,12 +408,12 @@ T[f"{BASE}/book_detail.html"] = """{% extends 'base.html' %}
 <hr style="border:none;border-top:1px solid var(--border);margin:0 0 2rem;">
 <div style="display:grid;grid-template-columns:1fr 360px;gap:2rem;">
   <div>
-    <p class="section-eyebrow" style="margin-bottom:1rem;">Resenas</p>
+    <p class="eyebrow" style="margin-bottom:1rem;">Resenas</p>
     {% for review in approved_reviews %}
     <div class="card card-body" style="margin-bottom:.875rem;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.375rem;">
         <strong style="font-size:.9375rem;color:var(--ink);">{{ review.user.username }}</strong>
-        <span style="color:#B87333;font-size:.875rem;">{% for i in "12345" %}{% if forloop.counter <= review.rating %}&#9733;{% else %}&#9734;{% endif %}{% endfor %}</span>
+        <span style="color:var(--accent);font-size:.875rem;">{% for i in "12345" %}{% if forloop.counter <= review.rating %}&#9733;{% else %}&#9734;{% endif %}{% endfor %}</span>
       </div>
       <p style="font-size:.9375rem;color:var(--ink-mid);line-height:1.6;margin-bottom:.375rem;">{{ review.comment }}</p>
       <p style="font-size:.75rem;color:var(--ink-light);">{{ review.created_at|date:"j M Y" }}</p>
@@ -394,7 +422,7 @@ T[f"{BASE}/book_detail.html"] = """{% extends 'base.html' %}
   </div>
   {% if user.is_authenticated %}{% if user.is_approved or user.is_superuser %}
   <div>
-    <div class="card" style="background:var(--page);">
+    <div class="card">
       <div class="card-header"><span class="card-header-label">Escribe tu resena</span></div>
       <div class="card-body">
         <form action="/libros/{{ book.id }}/resena/" method="post">{% csrf_token %}
@@ -425,9 +453,9 @@ T[f"{BASE}/book_detail.html"] = """{% extends 'base.html' %}
 # ══════════════════════════════════════════════════════════════
 T[f"{BASE}/events_page.html"] = """{% extends 'base.html' %}
 {% block content %}
-<p class="section-eyebrow" style="margin-bottom:.375rem;">Agenda</p>
+<p class="eyebrow" style="margin-bottom:.375rem;">Agenda</p>
 <h1 style="font-size:1.75rem;margin-bottom:2rem;">Eventos del club</h1>
-<p class="section-eyebrow" style="margin-bottom:.875rem;">Proximos</p>
+<p class="eyebrow" style="margin-bottom:.875rem;">Proximos</p>
 {% for e in upcoming %}
 <div class="card card-body" style="margin-bottom:.875rem;">
   <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;">
@@ -444,7 +472,7 @@ T[f"{BASE}/events_page.html"] = """{% extends 'base.html' %}
 </div>
 {% empty %}<p style="color:var(--ink-light);margin-bottom:1.5rem;">Sin eventos proximos.</p>{% endfor %}
 <hr style="border:none;border-top:1px solid var(--border);margin:1.5rem 0;">
-<p class="section-eyebrow" style="margin-bottom:.875rem;">Pasados</p>
+<p class="eyebrow" style="margin-bottom:.875rem;">Pasados</p>
 {% for e in past %}
 <div class="card card-body" style="margin-bottom:.625rem;opacity:.72;">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
@@ -459,7 +487,7 @@ T[f"{BASE}/events_page.html"] = """{% extends 'base.html' %}
 {% endblock %}"""
 
 # ══════════════════════════════════════════════════════════════
-# DASHBOARD
+# DASHBOARD — with theme selector in inicio
 # ══════════════════════════════════════════════════════════════
 T[f"{BASE}/dashboard.html"] = """{% extends 'base.html' %}
 {% block content %}
@@ -467,7 +495,7 @@ T[f"{BASE}/dashboard.html"] = """{% extends 'base.html' %}
 
   <aside style="position:sticky;top:72px;">
     <div class="card card-body" style="padding:1rem;">
-      <p class="section-eyebrow" style="margin-bottom:.75rem;">Panel de control</p>
+      <p class="eyebrow" style="margin-bottom:.75rem;">Panel de control</p>
       <a href="/dashboard/?seccion=inicio"        class="sidenav-item {% if seccion == 'inicio'        %}active{% endif %}">Inicio</a>
       <a href="/dashboard/?seccion=stats"         class="sidenav-item {% if seccion == 'stats'         %}active{% endif %}">Estadisticas</a>
       <a href="/dashboard/?seccion=libros"        class="sidenav-item {% if seccion == 'libros'        %}active{% endif %}">Libros</a>
@@ -480,6 +508,7 @@ T[f"{BASE}/dashboard.html"] = """{% extends 'base.html' %}
       </a>
       <a href="/dashboard/?seccion=integraciones" class="sidenav-item {% if seccion == 'integraciones' %}active{% endif %}">Integraciones</a>
       <a href="/dashboard/?seccion=correos"       class="sidenav-item {% if seccion == 'correos'       %}active{% endif %}">Correos</a>
+      <a href="/dashboard/?seccion=apariencia"    class="sidenav-item {% if seccion == 'apariencia'    %}active{% endif %}">Apariencia</a>
       <a href="/dashboard/?seccion=perfil"        class="sidenav-item {% if seccion == 'perfil'        %}active{% endif %}">Mi perfil</a>
     </div>
   </aside>
@@ -489,44 +518,45 @@ T[f"{BASE}/dashboard.html"] = """{% extends 'base.html' %}
     <!-- ══ INICIO ══ -->
     {% if seccion == 'inicio' %}
     <h2 style="margin-bottom:1.5rem;">Configuracion del club</h2>
-
     <div class="card" style="margin-bottom:1.25rem;">
-      <div class="card-header"><span class="card-header-label">Identidad y apariencia</span></div>
+      <div class="card-header"><span class="card-header-label">Identidad</span></div>
       <div class="card-body">
         <form action="/dashboard/configuracion/" method="post">{% csrf_token %}
           <input type="hidden" name="seccion" value="inicio">
           <div class="g2" style="margin-bottom:1rem;">
-            <div class="field"><label class="lbl">Nombre del club</label><input class="inp" name="name" value="{{ settings_form.name.value|default:'' }}"></div>
-            <div class="field"><label class="lbl">Color principal</label><input type="color" class="inp inp-color" name="primary_color" value="{{ settings_form.primary_color.value|default:'#6f42c1' }}"></div>
+            <div class="field"><label class="lbl">Nombre del club</label><input class="inp" name="name" value="{{ cfg.name }}"></div>
+            <div class="field"><label class="lbl">Meta descripcion (SEO)</label><input class="inp" name="meta_description" value="{{ cfg.meta_description }}" placeholder="Describe tu club para Google..."><p class="hint">Max 160 caracteres recomendado.</p></div>
           </div>
           <div class="field" style="margin-bottom:1rem;">
             <label class="lbl">Descripcion publica</label>
-            <textarea class="txa" name="description" rows="3">{{ settings_form.description.value|default:'' }}</textarea>
+            <textarea class="txa" name="description" rows="2">{{ cfg.description }}</textarea>
           </div>
           <div class="field" style="margin-bottom:1rem;">
-            <label class="lbl">Imagen de portada (pagina principal)</label>
-            <input class="inp" name="cover_image_url" value="{{ settings_form.cover_image_url.value|default:'' }}" placeholder="https://...">
-            <p class="hint">Imagen horizontal que aparece como hero en la pagina de inicio. Recomendado: 1400x500px o mayor.</p>
-            {% if club_settings.cover_image_url %}
-            <img src="{{ club_settings.cover_image_url }}" alt="portada" style="margin-top:.75rem;width:100%;max-height:120px;object-fit:cover;border-radius:var(--r);border:1px solid var(--border);">
-            {% endif %}
+            <label class="lbl">Mensaje de bienvenida (encabezado de la home)</label>
+            <input class="inp" name="home_welcome_text" value="{{ cfg.home_welcome_text }}" placeholder="Bienvenido">
+          </div>
+          <div class="field" style="margin-bottom:1rem;">
+            <label class="lbl">Imagen de portada (hero de la home)</label>
+            <input class="inp" name="cover_image_url" value="{{ cfg.cover_image_url }}" placeholder="https://...">
+            <p class="hint">Imagen horizontal 1400x500px o mayor. Si se deja vacio se muestra solo el texto.</p>
+            {% if cfg.cover_image_url %}<img src="{{ cfg.cover_image_url }}" style="margin-top:.75rem;width:100%;max-height:100px;object-fit:cover;border-radius:var(--r);border:1px solid var(--border);">{% endif %}
           </div>
           <div class="g2" style="margin-bottom:1rem;">
             <div class="field">
               <label class="lbl">Logo navbar (rectangular)</label>
-              <input class="inp" name="logo_url" value="{{ settings_form.logo_url.value|default:'' }}" placeholder="https://...">
-              <p class="hint">PNG transparente, max 300x80px. Se muestra en la barra de navegacion.</p>
+              <input class="inp" name="logo_url" value="{{ cfg.logo_url }}" placeholder="https://...">
+              <p class="hint">PNG transparente, max 300x80px.</p>
             </div>
             <div class="field">
-              <label class="lbl">Icono PWA (cuadrado)</label>
-              <input class="inp" name="icon_url" value="{{ settings_form.icon_url.value|default:'' }}" placeholder="https://...">
-              <p class="hint">512x512px. Favicon y acceso directo en movil. Si no hay logo, tambien se usa en la navbar.</p>
+              <label class="lbl">Icono PWA / favicon (cuadrado)</label>
+              <input class="inp" name="icon_url" value="{{ cfg.icon_url }}" placeholder="https://...">
+              <p class="hint">512x512px. Acceso directo en movil. Usado en navbar si no hay logo.</p>
             </div>
           </div>
           {% if cfg.nav_logo or cfg.icon_url %}
-          <div style="display:flex;gap:1rem;align-items:flex-start;padding:.875rem 1rem;background:var(--page);border-radius:var(--r);margin-bottom:1rem;">
-            {% if cfg.nav_logo %}<div style="text-align:center;"><p class="hint" style="margin-bottom:4px;">Logo navbar</p><img src="{{ cfg.nav_logo }}" alt="logo" style="height:40px;width:auto;object-fit:contain;max-width:160px;"></div>{% endif %}
-            {% if cfg.icon_url %}<div style="text-align:center;"><p class="hint" style="margin-bottom:4px;">Icono PWA</p><img src="{{ cfg.icon_url }}" alt="icono" style="width:48px;height:48px;object-fit:cover;border-radius:10px;border:1px solid var(--border);"></div>{% endif %}
+          <div style="display:flex;gap:1rem;padding:.875rem 1rem;background:var(--page);border-radius:var(--r);margin-bottom:1rem;">
+            {% if cfg.nav_logo %}<div style="text-align:center;"><p class="hint" style="margin-bottom:4px;">Logo navbar</p><img src="{{ cfg.nav_logo }}" style="height:36px;width:auto;max-width:160px;object-fit:contain;"></div>{% endif %}
+            {% if cfg.icon_url %}<div style="text-align:center;"><p class="hint" style="margin-bottom:4px;">Icono PWA</p><img src="{{ cfg.icon_url }}" style="width:44px;height:44px;object-fit:cover;border-radius:10px;border:1px solid var(--border);"></div>{% endif %}
           </div>
           {% endif %}
           <button class="btn btn-dark">Guardar identidad</button>
@@ -534,12 +564,26 @@ T[f"{BASE}/dashboard.html"] = """{% extends 'base.html' %}
       </div>
     </div>
 
+    <div class="card" style="margin-bottom:1.25rem;">
+      <div class="card-header"><span class="card-header-label">Textos del sitio</span></div>
+      <div class="card-body">
+        <form action="/dashboard/configuracion/" method="post">{% csrf_token %}
+          <input type="hidden" name="seccion" value="inicio">
+          <div class="g2" style="margin-bottom:1rem;">
+            <div class="field"><label class="lbl">Boton de registro</label><input class="inp" name="cta_register_text" value="{{ cfg.cta_register_text }}" placeholder="Registro"></div>
+            <div class="field"><label class="lbl">Boton de login</label><input class="inp" name="cta_login_text" value="{{ cfg.cta_login_text }}" placeholder="Entrar"></div>
+          </div>
+          <button class="btn btn-dark">Guardar textos</button>
+        </form>
+      </div>
+    </div>
+
     <div class="card">
-      <div class="card-header"><span class="card-header-label">Redes sociales del club</span></div>
+      <div class="card-header"><span class="card-header-label">Redes sociales</span></div>
       <div class="card-body">
         <form action="/integraciones/redes/nueva/" method="post" style="margin-bottom:1rem;">{% csrf_token %}
           <div style="display:grid;grid-template-columns:1fr 2fr auto;gap:.75rem;align-items:end;">
-            <div class="field" style="margin-bottom:0;"><label class="lbl">Red social</label><input class="inp" name="network" placeholder="Instagram, WhatsApp..."></div>
+            <div class="field" style="margin-bottom:0;"><label class="lbl">Red social</label><input class="inp" name="network" placeholder="Instagram..."></div>
             <div class="field" style="margin-bottom:0;"><label class="lbl">URL</label><input class="inp" name="url" type="url" placeholder="https://..."></div>
             <button class="btn btn-ghost">Agregar</button>
           </div>
@@ -548,17 +592,101 @@ T[f"{BASE}/dashboard.html"] = """{% extends 'base.html' %}
         <div style="border-top:1px solid var(--border);padding-top:.875rem;">
           {% for link in social_links %}
           <div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;{% if not forloop.last %}border-bottom:1px solid var(--border);{% endif %}">
-            <div>
-              <span style="font-weight:500;font-size:.875rem;color:var(--ink);">{{ link.network }}</span>
-              <a href="{{ link.url }}" target="_blank" rel="noopener" style="font-size:.8125rem;color:var(--ink-light);margin-left:.5rem;">{{ link.url|truncatechars:40 }}</a>
-            </div>
-            <form action="/integraciones/redes/{{ link.id }}/eliminar/" method="post" style="margin:0;">{% csrf_token %}
-              <button class="btn btn-ghost btn-sm" style="color:#8B2020;">Eliminar</button>
-            </form>
+            <div><span style="font-weight:500;font-size:.875rem;color:var(--ink);">{{ link.network }}</span><a href="{{ link.url }}" target="_blank" rel="noopener" style="font-size:.8125rem;color:var(--ink-light);margin-left:.5rem;">{{ link.url|truncatechars:40 }}</a></div>
+            <form action="/integraciones/redes/{{ link.id }}/eliminar/" method="post" style="margin:0;">{% csrf_token %}<button class="btn btn-ghost btn-sm" style="color:#8B2020;">Eliminar</button></form>
           </div>
           {% endfor %}
         </div>
-        {% else %}<p style="font-size:.875rem;color:var(--ink-light);">Sin redes registradas aun.</p>{% endif %}
+        {% else %}<p style="font-size:.875rem;color:var(--ink-light);">Sin redes registradas.</p>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- ══ APARIENCIA ══ -->
+    {% if seccion == 'apariencia' %}
+    <h2 style="margin-bottom:.5rem;">Apariencia</h2>
+    <p style="color:var(--ink-light);font-size:.875rem;margin-bottom:1.5rem;">Elige un tema predefinido. Si quieres ajustes finos sobre el tema, puedes sobreescribir los colores despues.</p>
+
+    <form action="/dashboard/configuracion/" method="post">{% csrf_token %}
+      <input type="hidden" name="seccion" value="apariencia">
+
+      <div class="card" style="margin-bottom:1.25rem;">
+        <div class="card-header"><span class="card-header-label">Tema predefinido</span></div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.875rem;margin-bottom:1.25rem;">
+
+            {% for theme_key, theme_label in theme_choices %}
+            <label style="cursor:pointer;">
+              <input type="radio" name="theme" value="{{ theme_key }}" {% if cfg.theme == theme_key %}checked{% endif %} style="position:absolute;opacity:0;width:0;height:0;">
+              <div style="border:2px solid {% if cfg.theme == theme_key %}var(--accent){% else %}var(--border){% endif %};border-radius:12px;overflow:hidden;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='{% if cfg.theme == theme_key %}var(--accent){% else %}var(--border){% endif %}'">
+                <div style="height:80px;background:{{ theme_key|theme_page_color }};padding:.75rem;display:flex;flex-direction:column;justify-content:space-between;">
+                  <div style="height:12px;background:{{ theme_key|theme_primary_color }};border-radius:4px;width:60%;opacity:.9;"></div>
+                  <div>
+                    <div style="height:8px;background:{{ theme_key|theme_ink_color }};border-radius:3px;width:80%;opacity:.7;margin-bottom:4px;"></div>
+                    <div style="height:6px;background:{{ theme_key|theme_ink_color }};border-radius:3px;width:55%;opacity:.4;"></div>
+                  </div>
+                  <div style="height:14px;background:{{ theme_key|theme_primary_color }};border-radius:4px;width:40%;"></div>
+                </div>
+                <div style="padding:.625rem .75rem;background:white;">
+                  <p style="font-size:.8125rem;font-weight:500;color:#111;margin-bottom:1px;">{{ theme_label }}</p>
+                  {% if cfg.theme == theme_key %}<p style="font-size:.6875rem;color:var(--accent);">Activo</p>{% endif %}
+                </div>
+              </div>
+            </label>
+            {% endfor %}
+
+          </div>
+          <button class="btn btn-dark" type="submit">Aplicar tema</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-header-label">Ajustes finos de color (opcional)</span></div>
+        <div class="card-body">
+          <p style="font-size:.875rem;color:var(--ink-light);margin-bottom:1rem;">Sobreescribe colores especificos del tema. Dejar en blanco para usar los del tema seleccionado.</p>
+          <div class="g2" style="margin-bottom:1rem;">
+            <div class="field">
+              <label class="lbl">Color primario (botones, nav icon)</label>
+              <div style="display:flex;gap:.5rem;align-items:center;">
+                <input type="color" class="inp" name="primary_color" value="{{ cfg.primary_color|default:'#3D2B1F' }}" style="width:52px;height:42px;padding:3px 6px;cursor:pointer;flex-shrink:0;">
+                <input type="text" class="inp" id="primary_color_hex" value="{{ cfg.primary_color }}" placeholder="Dejar vacio para usar el del tema" style="flex:1;" oninput="document.querySelector('[name=primary_color]').value=this.value">
+              </div>
+            </div>
+            <div class="field">
+              <label class="lbl">Color acento (links, chips, eyebrows)</label>
+              <div style="display:flex;gap:.5rem;align-items:center;">
+                <input type="color" class="inp" name="accent_color" value="{{ cfg.accent_color|default:'#B87333' }}" style="width:52px;height:42px;padding:3px 6px;cursor:pointer;flex-shrink:0;">
+                <input type="text" class="inp" id="accent_color_hex" value="{{ cfg.accent_color }}" placeholder="Dejar vacio para usar el del tema" style="flex:1;" oninput="document.querySelector('[name=accent_color]').value=this.value">
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;gap:.75rem;">
+            <button class="btn btn-dark" type="submit">Guardar colores</button>
+            <a href="/dashboard/reset-colores/" class="btn btn-ghost btn-sm">Restablecer colores del tema</a>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <div class="card" style="margin-top:1.25rem;">
+      <div class="card-header"><span class="card-header-label">Footer</span></div>
+      <div class="card-body">
+        <form action="/dashboard/configuracion/" method="post">{% csrf_token %}
+          <input type="hidden" name="seccion" value="apariencia">
+          <div class="g2" style="margin-bottom:1rem;">
+            <div class="field"><label class="lbl">Powered by — nombre</label><input class="inp" name="footer_powered_by_name" value="{{ cfg.footer_powered_by_name }}" placeholder="Gold Tech Mx"></div>
+            <div class="field"><label class="lbl">Powered by — URL</label><input class="inp" name="footer_powered_by_url" value="{{ cfg.footer_powered_by_url }}" type="url" placeholder="https://goldtech.mx"></div>
+          </div>
+          <div class="g2" style="margin-bottom:1rem;">
+            <div class="field"><label class="lbl">Link adicional — texto</label><input class="inp" name="footer_custom_link_text" value="{{ cfg.footer_custom_link_text }}" placeholder="Terminos de uso"></div>
+            <div class="field"><label class="lbl">Link adicional — URL</label><input class="inp" name="footer_custom_link_url" value="{{ cfg.footer_custom_link_url }}" type="url" placeholder="https://..."></div>
+          </div>
+          <div class="field" style="margin-bottom:1rem;">
+            <label class="lbl">Texto libre del footer</label>
+            <input class="inp" name="footer_text" value="{{ cfg.footer_text }}" placeholder="Copyright 2025 Mi Club de Lectura">
+          </div>
+          <button class="btn btn-dark">Guardar footer</button>
+        </form>
       </div>
     </div>
     {% endif %}
@@ -568,8 +696,8 @@ T[f"{BASE}/dashboard.html"] = """{% extends 'base.html' %}
     <h2 style="margin-bottom:1.5rem;">Estadisticas</h2>
     <div class="g4" style="margin-bottom:1.5rem;">
       <div class="stat"><div class="stat-num">{{ stats.total_books }}</div><div class="stat-lbl">Libros totales</div></div>
-      <div class="stat"><div class="stat-num" style="color:var(--green-txt);">{{ stats.books_read }}</div><div class="stat-lbl">Leidos</div></div>
-      <div class="stat"><div class="stat-num" style="color:var(--amber);">{{ stats.total_votes }}</div><div class="stat-lbl">Votos</div></div>
+      <div class="stat"><div class="stat-num" style="color:#2D6A2D;">{{ stats.books_read }}</div><div class="stat-lbl">Leidos</div></div>
+      <div class="stat"><div class="stat-num" style="color:var(--accent);">{{ stats.total_votes }}</div><div class="stat-lbl">Votos</div></div>
       <div class="stat"><div class="stat-num">{{ stats.approved_users }}</div><div class="stat-lbl">Miembros</div></div>
     </div>
     {% if stats.top_voted %}
@@ -591,9 +719,9 @@ T[f"{BASE}/dashboard.html"] = """{% extends 'base.html' %}
       <div class="card-body" style="padding:0;">
         {% for r in stats.recent_reviews %}
         <div style="padding:.875rem 1.5rem;{% if not forloop.last %}border-bottom:1px solid var(--border);{% endif %}">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:2px;">
             <span style="font-family:var(--serif);font-size:.875rem;font-weight:600;color:var(--ink);">{{ r.book.title }}</span>
-            <span style="color:#B87333;font-size:.875rem;">{% for i in "12345" %}{% if forloop.counter <= r.rating %}&#9733;{% else %}&#9734;{% endif %}{% endfor %}</span>
+            <span style="color:var(--accent);font-size:.875rem;">{% for i in "12345" %}{% if forloop.counter <= r.rating %}&#9733;{% else %}&#9734;{% endif %}{% endfor %}</span>
           </div>
           <p style="font-size:.8125rem;color:var(--ink-light);">{{ r.user.username }} &middot; {{ r.created_at|date:"j M" }}</p>
           <p style="font-size:.875rem;color:var(--ink-mid);margin-top:4px;">{{ r.comment|truncatechars:120 }}</p>
@@ -612,28 +740,28 @@ T[f"{BASE}/dashboard.html"] = """{% extends 'base.html' %}
       <div class="card-body">
         <form action="/libros/nuevo/" method="post">{% csrf_token %}
           <div class="g2" style="margin-bottom:1rem;">
-            <div class="field"><label class="lbl">Titulo *</label><input class="inp" name="title" placeholder="Titulo del libro" required></div>
-            <div class="field"><label class="lbl">Autor</label><input class="inp" name="author" placeholder="Se busca automaticamente si se deja vacio"></div>
+            <div class="field"><label class="lbl">Titulo *</label><input class="inp" name="title" required></div>
+            <div class="field"><label class="lbl">Autor</label><input class="inp" name="author" placeholder="Se busca automaticamente"></div>
           </div>
           <div class="g3" style="margin-bottom:1rem;">
-            <div class="field"><label class="lbl">Estado</label><select class="sel" name="status"><option value="future">Por leer / En votacion</option><option value="reading">Leyendo ahora</option><option value="completed">Ya lo leimos</option></select></div>
+            <div class="field"><label class="lbl">Estado</label><select class="sel" name="status"><option value="future">Por leer / Votacion</option><option value="reading">Leyendo</option><option value="completed">Leido</option></select></div>
             <div class="field"><label class="lbl">Visibilidad</label><select class="sel" name="visibility"><option value="public">Publico</option><option value="private">Solo miembros</option><option value="admins">Solo admins</option></select></div>
-            <div class="field"><label class="lbl">Permitir votos</label><select class="sel" name="allow_voting"><option value="True">Si</option><option value="False">No</option></select></div>
+            <div class="field"><label class="lbl">Votos</label><select class="sel" name="allow_voting"><option value="True">Permitidos</option><option value="False">Desactivados</option></select></div>
           </div>
-          <div class="field" style="margin-bottom:1rem;"><label class="lbl">Descripcion</label><textarea class="txa" name="description" rows="2" placeholder="Se busca automaticamente si se deja vacio"></textarea></div>
+          <div class="field" style="margin-bottom:1rem;"><label class="lbl">Descripcion</label><textarea class="txa" name="description" rows="2" placeholder="Se busca automaticamente"></textarea></div>
           <div class="g2" style="margin-bottom:1rem;">
-            <div class="field"><label class="lbl">URL portada</label><input class="inp" name="cover_url" type="url" placeholder="Se busca automaticamente"></div>
-            <div class="field"><label class="lbl">URL Amazon</label><input class="inp" name="amazon_url" type="url" placeholder="Se genera con tag de afiliado"></div>
+            <div class="field"><label class="lbl">URL portada</label><input class="inp" name="cover_url" type="url"></div>
+            <div class="field"><label class="lbl">URL Amazon</label><input class="inp" name="amazon_url" type="url"></div>
           </div>
           <div class="g2" style="margin-bottom:1rem;">
-            <div class="field"><label class="lbl">URL PDF <span style="color:var(--ink-light);font-weight:400;">(solo miembros activos)</span></label><input class="inp" name="pdf_url" type="url" placeholder="https://..."></div>
-            <div class="field"><label class="lbl">URL video relacionado</label><input class="inp" name="external_video_url" type="url" placeholder="https://youtube.com/..."></div>
+            <div class="field"><label class="lbl">URL PDF (solo miembros activos)</label><input class="inp" name="pdf_url" type="url"></div>
+            <div class="field"><label class="lbl">URL video</label><input class="inp" name="external_video_url" type="url"></div>
           </div>
           <div style="display:flex;align-items:center;gap:1rem;">
             <button class="btn btn-dark">Guardar libro</button>
             <label style="display:flex;align-items:center;gap:.5rem;font-size:.875rem;color:var(--ink-light);cursor:pointer;">
-              <input type="checkbox" name="reemplazar_leyendo_actual" style="accent-color:var(--amber);width:16px;height:16px;">
-              Mover libros "Leyendo" actuales a "Leido"
+              <input type="checkbox" name="reemplazar_leyendo_actual" style="accent-color:var(--accent);width:16px;height:16px;">
+              Mover libros "Leyendo" a "Leido"
             </label>
           </div>
         </form>
@@ -643,9 +771,9 @@ T[f"{BASE}/dashboard.html"] = """{% extends 'base.html' %}
       <div class="card-header"><span class="card-header-label">Libros registrados</span></div>
       {% for b in books %}
       <div style="border-bottom:{% if not forloop.last %}1px solid var(--border){% else %}none{% endif %};">
-        <div style="display:flex;gap:0;">
-          {% if b.cover_url %}<img src="{{ b.cover_url }}" alt="{{ b.title }}" style="width:52px;height:78px;object-fit:cover;flex-shrink:0;">
-          {% else %}<div style="width:52px;height:78px;background:var(--page);display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0;">&#128214;</div>{% endif %}
+        <div style="display:flex;">
+          {% if b.cover_url %}<img src="{{ b.cover_url }}" alt="" style="width:52px;height:78px;object-fit:cover;flex-shrink:0;">
+          {% else %}<div style="width:52px;height:78px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0;">&#128214;</div>{% endif %}
           <div style="flex:1;padding:.875rem 1rem;">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;flex-wrap:wrap;">
               <div>
@@ -653,15 +781,13 @@ T[f"{BASE}/dashboard.html"] = """{% extends 'base.html' %}
                 <span style="font-size:.8125rem;color:var(--ink-light);font-style:italic;margin-left:.5rem;">{{ b.author }}</span>
                 <span class="chip {% if b.status == 'reading' %}chip-reading{% elif b.status == 'completed' %}chip-done{% else %}chip-future{% endif %}" style="margin-left:.5rem;">{{ b.get_status_display }}</span>
               </div>
-              <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+              <div style="display:flex;gap:.5rem;">
                 <a href="/libros/{{ b.id }}/" class="btn btn-ghost btn-sm">Ver</a>
-                <form action="/libros/{{ b.id }}/eliminar/" method="post" style="margin:0;" onsubmit="return confirm('Eliminar este libro?')">{% csrf_token %}
-                  <button class="btn btn-ghost btn-sm" style="color:#8B2020;">Eliminar</button>
-                </form>
+                <form action="/libros/{{ b.id }}/eliminar/" method="post" style="margin:0;" onsubmit="return confirm('Eliminar?')">{% csrf_token %}<button class="btn btn-ghost btn-sm" style="color:#8B2020;">Eliminar</button></form>
               </div>
             </div>
             <details style="margin-top:.75rem;">
-              <summary style="font-size:.8125rem;color:var(--amber);display:inline-flex;align-items:center;gap:4px;">&#9998; Editar datos</summary>
+              <summary style="font-size:.8125rem;color:var(--accent);display:inline-flex;align-items:center;gap:4px;">&#9998; Editar</summary>
               <form action="/libros/{{ b.id }}/editar/" method="post" style="margin-top:.75rem;">{% csrf_token %}
                 <div class="g2" style="margin-bottom:.75rem;">
                   <div class="field"><label class="lbl">Titulo</label><input class="inp" name="title" value="{{ b.title }}"></div>
@@ -677,7 +803,7 @@ T[f"{BASE}/dashboard.html"] = """{% extends 'base.html' %}
                   <div class="field"><label class="lbl">URL Amazon</label><input class="inp" name="amazon_url" value="{{ b.amazon_url }}" type="url"></div>
                 </div>
                 <div class="g2" style="margin-bottom:.75rem;">
-                  <div class="field"><label class="lbl">URL PDF (solo miembros)</label><input class="inp" name="pdf_url" value="{{ b.pdf_url }}" type="url"></div>
+                  <div class="field"><label class="lbl">URL PDF</label><input class="inp" name="pdf_url" value="{{ b.pdf_url }}" type="url"></div>
                   <div class="field"><label class="lbl">URL video</label><input class="inp" name="external_video_url" value="{{ b.external_video_url }}" type="url"></div>
                 </div>
                 <div class="field" style="margin-bottom:.75rem;"><label class="lbl">Descripcion</label><textarea class="txa" name="description" rows="2">{{ b.description }}</textarea></div>
@@ -687,7 +813,7 @@ T[f"{BASE}/dashboard.html"] = """{% extends 'base.html' %}
           </div>
         </div>
       </div>
-      {% empty %}<div style="padding:2rem 1.5rem;color:var(--ink-light);font-size:.875rem;">Aun no hay libros. Agrega el primero arriba.</div>{% endfor %}
+      {% empty %}<div style="padding:2rem 1.5rem;color:var(--ink-light);font-size:.875rem;">Sin libros registrados.</div>{% endfor %}
     </div>
     {% endif %}
 
@@ -699,18 +825,18 @@ T[f"{BASE}/dashboard.html"] = """{% extends 'base.html' %}
       <div class="card-body">
         <form action="/eventos/nuevo/" method="post">{% csrf_token %}
           <div class="g2" style="margin-bottom:1rem;">
-            <div class="field"><label class="lbl">Titulo *</label><input class="inp" name="title" placeholder="Nombre del evento" required></div>
-            <div class="field"><label class="lbl">Tipo de evento</label><input class="inp" name="event_type" placeholder="Sesion, intercambio, cine..."></div>
+            <div class="field"><label class="lbl">Titulo *</label><input class="inp" name="title" required></div>
+            <div class="field"><label class="lbl">Tipo</label><input class="inp" name="event_type" placeholder="Sesion, intercambio, cine..."></div>
           </div>
           <div class="g2" style="margin-bottom:1rem;">
             <div class="field"><label class="lbl">Fecha y hora *</label><input class="inp" name="starts_at" type="datetime-local" required></div>
             <div class="field"><label class="lbl">Visibilidad</label><select class="sel" name="visibility"><option value="public">Publico</option><option value="private">Solo miembros</option><option value="admins">Solo admins</option></select></div>
           </div>
           <div class="g2" style="margin-bottom:1rem;">
-            <div class="field"><label class="lbl">Lugar</label><input class="inp" name="location" placeholder="Direccion o enlace de videollamada"></div>
-            <div class="field"><label class="lbl">Video relacionado</label><input class="inp" name="external_video_url" type="url" placeholder="https://..."></div>
+            <div class="field"><label class="lbl">Lugar</label><input class="inp" name="location" placeholder="Direccion o link"></div>
+            <div class="field"><label class="lbl">Video</label><input class="inp" name="external_video_url" type="url"></div>
           </div>
-          <div class="field" style="margin-bottom:1rem;"><label class="lbl">Descripcion</label><textarea class="txa" name="description" rows="2" placeholder="Detalles del evento..."></textarea></div>
+          <div class="field" style="margin-bottom:1rem;"><label class="lbl">Descripcion</label><textarea class="txa" name="description" rows="2"></textarea></div>
           <button class="btn btn-dark">Guardar evento</button>
         </form>
       </div>
@@ -725,12 +851,10 @@ T[f"{BASE}/dashboard.html"] = """{% extends 'base.html' %}
             <span class="chip chip-muted" style="margin-left:.5rem;">{{ e.event_type }}</span>
             <div style="font-size:.8125rem;color:var(--ink-light);margin-top:3px;">{{ e.starts_at|date:"j M Y, H:i" }}{% if e.location %} &middot; {{ e.location }}{% endif %}</div>
           </div>
-          <form action="/eventos/{{ e.id }}/eliminar/" method="post" style="margin:0;" onsubmit="return confirm('Eliminar este evento?')">{% csrf_token %}
-            <button class="btn btn-ghost btn-sm" style="color:#8B2020;">Eliminar</button>
-          </form>
+          <form action="/eventos/{{ e.id }}/eliminar/" method="post" style="margin:0;" onsubmit="return confirm('Eliminar?')">{% csrf_token %}<button class="btn btn-ghost btn-sm" style="color:#8B2020;">Eliminar</button></form>
         </div>
         <details style="margin-top:.75rem;">
-          <summary style="font-size:.8125rem;color:var(--amber);display:inline-flex;align-items:center;gap:4px;">&#9998; Editar</summary>
+          <summary style="font-size:.8125rem;color:var(--accent);display:inline-flex;align-items:center;gap:4px;">&#9998; Editar</summary>
           <form action="/eventos/{{ e.id }}/editar/" method="post" style="margin-top:.75rem;">{% csrf_token %}
             <div class="g2" style="margin-bottom:.75rem;">
               <div class="field"><label class="lbl">Titulo</label><input class="inp" name="title" value="{{ e.title }}"></div>
@@ -745,11 +869,11 @@ T[f"{BASE}/dashboard.html"] = """{% extends 'base.html' %}
               <div class="field"><label class="lbl">Video</label><input class="inp" name="external_video_url" value="{{ e.external_video_url }}" type="url"></div>
             </div>
             <div class="field" style="margin-bottom:.75rem;"><label class="lbl">Descripcion</label><textarea class="txa" name="description" rows="2">{{ e.description }}</textarea></div>
-            <button class="btn btn-dark btn-sm">Guardar cambios</button>
+            <button class="btn btn-dark btn-sm">Guardar</button>
           </form>
         </details>
       </div>
-      {% empty %}<div style="padding:2rem 1.5rem;color:var(--ink-light);font-size:.875rem;">Sin eventos registrados aun.</div>{% endfor %}
+      {% empty %}<div style="padding:2rem 1.5rem;color:var(--ink-light);font-size:.875rem;">Sin eventos.</div>{% endfor %}
     </div>
     {% endif %}
 
@@ -761,30 +885,29 @@ T[f"{BASE}/dashboard.html"] = """{% extends 'base.html' %}
       <div class="card-body">
         <form action="/admin/invitar/" method="post">{% csrf_token %}
           <div style="display:grid;grid-template-columns:1fr 1fr 140px auto;gap:.75rem;align-items:end;">
-            <div class="field" style="margin-bottom:0;"><label class="lbl">Nombre completo</label><input class="inp" name="name" placeholder="Ana Torres" required></div>
-            <div class="field" style="margin-bottom:0;"><label class="lbl">Correo</label><input class="inp" name="email" type="email" placeholder="ana@correo.com" required></div>
+            <div class="field" style="margin-bottom:0;"><label class="lbl">Nombre completo</label><input class="inp" name="name" required></div>
+            <div class="field" style="margin-bottom:0;"><label class="lbl">Correo</label><input class="inp" name="email" type="email" required></div>
             <div class="field" style="margin-bottom:0;"><label class="lbl">Rol</label><select class="sel" name="role"><option value="user">Usuario</option><option value="admin">Admin</option></select></div>
             <button class="btn btn-dark">Invitar</button>
           </div>
-          <p class="hint" style="margin-top:.5rem;">Se genera una contrasena temporal y se envia por correo si SMTP esta configurado.</p>
         </form>
       </div>
     </div>
     {% if users_pending %}
-    <div class="card" style="margin-bottom:1.25rem;border-color:var(--amber-bdr);">
-      <div class="card-header" style="background:var(--amber-bg);border-color:var(--amber-bdr);"><span class="card-header-label">Pendientes de aprobacion ({{ users_pending.count }})</span></div>
+    <div class="card" style="margin-bottom:1.25rem;border-color:var(--accent-bdr);">
+      <div class="card-header"><span class="card-header-label">Pendientes ({{ users_pending.count }})</span></div>
       <div class="card-body" style="padding:0;">
         {% for u in users_pending %}
         <div style="display:flex;justify-content:space-between;align-items:center;padding:.875rem 1.5rem;{% if not forloop.last %}border-bottom:1px solid var(--border);{% endif %}">
           <div><span style="font-weight:500;color:var(--ink);">{{ u.username }}</span><span style="font-size:.8125rem;color:var(--ink-light);margin-left:.5rem;">{{ u.email }}</span></div>
-          <form action="/usuarios/{{ u.id }}/aprobar/" method="post" style="margin:0;">{% csrf_token %}<button class="btn btn-amber btn-sm">Aprobar</button></form>
+          <form action="/usuarios/{{ u.id }}/aprobar/" method="post" style="margin:0;">{% csrf_token %}<button class="btn btn-accent btn-sm">Aprobar</button></form>
         </div>
         {% endfor %}
       </div>
     </div>
     {% endif %}
     <div class="card">
-      <div class="card-header"><span class="card-header-label">Miembros actuales ({{ users_all|length }})</span></div>
+      <div class="card-header"><span class="card-header-label">Miembros ({{ users_all|length }})</span></div>
       <div class="card-body" style="padding:0;">
         {% for u in users_all %}
         <div style="padding:.875rem 1.5rem;{% if not forloop.last %}border-bottom:1px solid var(--border);{% endif %}">
@@ -794,9 +917,7 @@ T[f"{BASE}/dashboard.html"] = """{% extends 'base.html' %}
               <span style="font-size:.75rem;color:var(--ink-light);margin-left:.5rem;">{{ u.role }}</span>
               {% if u.is_approved %}<span class="chip chip-reading" style="margin-left:.5rem;font-size:.625rem;">activo</span>{% else %}<span class="chip chip-muted" style="margin-left:.5rem;font-size:.625rem;">pendiente</span>{% endif %}
             </div>
-            <form action="/usuarios/{{ u.id }}/eliminar/" method="post" style="margin:0;" onsubmit="return confirm('Eliminar a {{ u.username }}?')">{% csrf_token %}
-              <button class="btn btn-ghost btn-sm" style="color:#8B2020;">Eliminar</button>
-            </form>
+            <form action="/usuarios/{{ u.id }}/eliminar/" method="post" style="margin:0;" onsubmit="return confirm('Eliminar a {{ u.username }}?')">{% csrf_token %}<button class="btn btn-ghost btn-sm" style="color:#8B2020;">Eliminar</button></form>
           </div>
           <form action="/usuarios/{{ u.id }}/editar/" method="post">{% csrf_token %}
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:.75rem;align-items:end;">
@@ -821,49 +942,45 @@ T[f"{BASE}/dashboard.html"] = """{% extends 'base.html' %}
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.5rem;">
           <div><span style="font-family:var(--serif);font-size:.9375rem;font-weight:600;color:var(--ink);">{{ r.book.title }}</span><span style="font-size:.8125rem;color:var(--ink-light);margin-left:.5rem;">por {{ r.user.username }}</span></div>
           <div style="display:flex;align-items:center;gap:.5rem;">
-            <span style="color:#B87333;font-size:.875rem;">{% for i in "12345" %}{% if forloop.counter <= r.rating %}&#9733;{% else %}&#9734;{% endif %}{% endfor %}</span>
+            <span style="color:var(--accent);font-size:.875rem;">{% for i in "12345" %}{% if forloop.counter <= r.rating %}&#9733;{% else %}&#9734;{% endif %}{% endfor %}</span>
             {% if r.is_approved %}<span class="chip chip-reading" style="font-size:.625rem;">Aprobada</span>{% elif r.is_flagged %}<span class="chip chip-future" style="font-size:.625rem;">Marcada</span>{% else %}<span class="chip chip-muted" style="font-size:.625rem;">Pendiente</span>{% endif %}
           </div>
         </div>
         <p style="font-size:.9375rem;color:var(--ink-mid);margin-bottom:1rem;line-height:1.55;">{{ r.comment }}</p>
-        <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;">
-          <form action="/resenas/{{ r.id }}/aprobar/" method="post" style="margin:0;display:flex;gap:.5rem;align-items:center;">{% csrf_token %}
-            <input class="inp" name="moderation_note" placeholder="Nota opcional" style="width:160px;font-size:.8125rem;padding:6px 10px;">
-            <button class="btn btn-amber btn-sm">Aprobar</button>
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+          <form action="/resenas/{{ r.id }}/aprobar/" method="post" style="margin:0;display:flex;gap:.5rem;">{% csrf_token %}
+            <input class="inp" name="moderation_note" placeholder="Nota opcional" style="width:150px;font-size:.8125rem;padding:6px 10px;">
+            <button class="btn btn-accent btn-sm">Aprobar</button>
           </form>
-          <form action="/resenas/{{ r.id }}/marcar/" method="post" style="margin:0;display:flex;gap:.5rem;align-items:center;">{% csrf_token %}
-            <input class="inp" name="moderation_note" placeholder="Motivo" required style="width:160px;font-size:.8125rem;padding:6px 10px;">
+          <form action="/resenas/{{ r.id }}/marcar/" method="post" style="margin:0;display:flex;gap:.5rem;">{% csrf_token %}
+            <input class="inp" name="moderation_note" placeholder="Motivo" required style="width:150px;font-size:.8125rem;padding:6px 10px;">
             <button class="btn btn-ghost btn-sm">Marcar</button>
           </form>
-          <form action="/resenas/{{ r.id }}/eliminar/" method="post" style="margin:0;" onsubmit="return confirm('Eliminar esta resena?')">{% csrf_token %}
-            <button class="btn btn-ghost btn-sm" style="color:#8B2020;">Eliminar</button>
-          </form>
+          <form action="/resenas/{{ r.id }}/eliminar/" method="post" style="margin:0;" onsubmit="return confirm('Eliminar?')">{% csrf_token %}<button class="btn btn-ghost btn-sm" style="color:#8B2020;">Eliminar</button></form>
         </div>
       </div>
     </div>
-    {% empty %}<div class="card card-body" style="color:var(--ink-light);">No hay resenas por moderar.</div>{% endfor %}
+    {% empty %}<div class="card card-body" style="color:var(--ink-light);">Sin resenas.</div>{% endfor %}
     {% endif %}
 
     <!-- ══ INTEGRACIONES ══ -->
     {% if seccion == 'integraciones' %}
     <h2 style="margin-bottom:1.5rem;">Integraciones</h2>
-
     <div class="card" style="margin-bottom:1.25rem;">
       <div class="card-header"><span class="card-header-label">Dominio publico</span></div>
       <div class="card-body">
         <form action="/dashboard/configuracion/" method="post">{% csrf_token %}
           <input type="hidden" name="seccion" value="integraciones">
-          <div class="field" style="max-width:420px;">
-            <label class="lbl">Dominio del sitio</label>
-            <input class="inp" name="public_domain" value="{{ cfg.public_domain }}" placeholder="miclub.com o club.midominio.com">
-            <p class="hint">Sin https://. Se usa en los enlaces de correos y en el manifest de la PWA. Si usas Cloudflare Tunnel solo pon el dominio que tienes configurado en el tunel.</p>
+          <div class="field" style="max-width:400px;">
+            <label class="lbl">Dominio del sitio (sin https://)</label>
+            <input class="inp" name="public_domain" value="{{ cfg.public_domain }}" placeholder="miclub.com">
+            <p class="hint">Con Cloudflare Tunnel pon el dominio configurado en el tunel. Se usa en correos y PWA.</p>
           </div>
-          <p style="font-size:.8125rem;color:var(--ink-light);margin-bottom:1rem;">URL actual del sitio: <strong style="color:var(--ink);">{{ cfg.public_url }}</strong></p>
-          <button class="btn btn-dark">Guardar dominio</button>
+          <p style="font-size:.8125rem;color:var(--ink-light);margin-bottom:1rem;">URL actual: <strong style="color:var(--ink);">{{ cfg.public_url }}</strong></p>
+          <button class="btn btn-dark">Guardar</button>
         </form>
       </div>
     </div>
-
     <div class="card" style="margin-bottom:1.25rem;">
       <div class="card-header"><span class="card-header-label">Amazon afiliados</span></div>
       <div class="card-body">
@@ -872,13 +989,12 @@ T[f"{BASE}/dashboard.html"] = """{% extends 'base.html' %}
           <div class="field" style="max-width:360px;">
             <label class="lbl">Tag de afiliado</label>
             <input class="inp" name="affiliate_tag" value="{{ cfg.affiliate_tag }}" placeholder="tu-tag-20">
-            <p class="hint">Si se deja vacio se usara el tag predeterminado del sistema. Los enlaces de todos los libros se actualizan automaticamente.</p>
+            <p class="hint">Si se deja vacio se usara el tag predeterminado del sistema.</p>
           </div>
           <button class="btn btn-dark" style="margin-top:.5rem;">Guardar</button>
         </form>
       </div>
     </div>
-
     <div class="card" style="margin-bottom:1.25rem;">
       <div class="card-header">
         <span class="card-header-label">Servidor de correo SMTP</span>
@@ -889,52 +1005,44 @@ T[f"{BASE}/dashboard.html"] = """{% extends 'base.html' %}
           <input type="hidden" name="seccion" value="integraciones">
           <div class="g2" style="margin-bottom:1rem;">
             <div class="field"><label class="lbl">Servidor SMTP</label><input class="inp" name="smtp_host" value="{{ cfg.smtp_host }}" placeholder="smtp.gmail.com"></div>
-            <div class="field"><label class="lbl">Puerto</label><input class="inp" name="smtp_port" type="number" value="{{ cfg.smtp_port }}" placeholder="587"></div>
+            <div class="field"><label class="lbl">Puerto</label><input class="inp" name="smtp_port" type="number" value="{{ cfg.smtp_port }}"></div>
           </div>
           <div class="g2" style="margin-bottom:1rem;">
-            <div class="field"><label class="lbl">Usuario SMTP</label><input class="inp" name="smtp_user" value="{{ cfg.smtp_user }}" placeholder="tu@gmail.com"></div>
-            <div class="field"><label class="lbl">Contrasena o App Password</label><input class="inp" name="smtp_password" type="password" value="{{ cfg.smtp_password }}" placeholder="Contrasena de aplicacion"></div>
+            <div class="field"><label class="lbl">Usuario</label><input class="inp" name="smtp_user" value="{{ cfg.smtp_user }}" placeholder="tu@gmail.com"></div>
+            <div class="field"><label class="lbl">Contrasena / App Password</label><input class="inp" name="smtp_password" type="password" value="{{ cfg.smtp_password }}"></div>
           </div>
           <div class="g2" style="margin-bottom:1rem;">
-            <div class="field">
-              <label class="lbl">Remitente</label>
-              <input class="inp" name="email_from" value="{{ cfg.email_from }}" placeholder="Club de Lectura &lt;club@midominio.com&gt;">
-              <p class="hint">Nombre y correo que aparece como remitente en todos los correos.</p>
-            </div>
+            <div class="field"><label class="lbl">Remitente</label><input class="inp" name="email_from" value="{{ cfg.email_from }}" placeholder="Mi Club &lt;club@midominio.com&gt;"></div>
             <div class="field" style="display:flex;align-items:flex-end;padding-bottom:.25rem;">
               <label style="display:flex;align-items:center;gap:.5rem;font-size:.875rem;color:var(--ink-mid);cursor:pointer;">
-                <input type="checkbox" name="smtp_use_tls" {% if cfg.smtp_use_tls %}checked{% endif %} style="accent-color:var(--amber);width:18px;height:18px;">
-                Usar TLS (recomendado)
+                <input type="checkbox" name="smtp_use_tls" {% if cfg.smtp_use_tls %}checked{% endif %} style="accent-color:var(--accent);width:18px;height:18px;">
+                Usar TLS
               </label>
             </div>
           </div>
           <div style="display:flex;gap:.75rem;align-items:center;">
             <button class="btn btn-dark">Guardar SMTP</button>
-            {% if cfg.smtp_configured %}
-            <a href="/integraciones/smtp/test/" class="btn btn-ghost btn-sm">Enviar correo de prueba</a>
-            {% endif %}
+            {% if cfg.smtp_configured %}<a href="/integraciones/smtp/test/" class="btn btn-ghost btn-sm">Enviar correo de prueba a {{ user.email }}</a>{% endif %}
           </div>
-          {% if cfg.smtp_configured %}<p class="hint" style="margin-top:.5rem;">El correo de prueba se enviara a {{ user.email }}</p>{% endif %}
         </form>
       </div>
     </div>
-
     {% if settings_form.google_login_enabled %}
     <div class="card">
       <div class="card-header"><span class="card-header-label">Google OAuth</span></div>
       <div class="card-body">
         <form action="/dashboard/configuracion/" method="post">{% csrf_token %}
           <input type="hidden" name="seccion" value="integraciones">
-          <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;padding:.75rem 1rem;background:var(--page);border-radius:var(--r);">
-            <input type="checkbox" id="g_enabled" name="google_login_enabled" {% if cfg.google_login_enabled %}checked{% endif %} style="width:18px;height:18px;accent-color:var(--amber);cursor:pointer;">
-            <label for="g_enabled" style="font-size:.875rem;color:var(--ink);cursor:pointer;">Habilitar inicio de sesion con Google</label>
+          <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;padding:.75rem 1rem;background:var(--accent-bg);border-radius:var(--r);">
+            <input type="checkbox" id="g_en" name="google_login_enabled" {% if cfg.google_login_enabled %}checked{% endif %} style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer;">
+            <label for="g_en" style="font-size:.875rem;cursor:pointer;">Habilitar inicio de sesion con Google</label>
           </div>
           <div class="g2" style="margin-bottom:1rem;">
-            <div class="field"><label class="lbl">Google Client ID</label><input class="inp" name="google_client_id" value="{{ cfg.google_client_id }}" placeholder="xxxx.apps.googleusercontent.com"></div>
-            <div class="field"><label class="lbl">Google Client Secret</label><input class="inp" name="google_client_secret" type="password" value="{{ cfg.google_client_secret }}" placeholder="GOCSPX-..."></div>
+            <div class="field"><label class="lbl">Google Client ID</label><input class="inp" name="google_client_id" value="{{ cfg.google_client_id }}"></div>
+            <div class="field"><label class="lbl">Google Client Secret</label><input class="inp" name="google_client_secret" type="password" value="{{ cfg.google_client_secret }}"></div>
           </div>
-          <p class="hint" style="margin-bottom:1rem;">Redirect URI para Google Cloud Console: <code style="background:var(--page);padding:2px 6px;border-radius:4px;">{{ request.scheme }}://{{ request.get_host }}/accounts/google/login/callback/</code></p>
-          <button class="btn btn-dark">Guardar Google OAuth</button>
+          <p class="hint" style="margin-bottom:1rem;">Redirect URI: <code style="background:var(--page);padding:2px 6px;border-radius:4px;">{{ request.scheme }}://{{ request.get_host }}/accounts/google/login/callback/</code></p>
+          <button class="btn btn-dark">Guardar</button>
         </form>
       </div>
     </div>
@@ -944,83 +1052,45 @@ T[f"{BASE}/dashboard.html"] = """{% extends 'base.html' %}
     <!-- ══ CORREOS ══ -->
     {% if seccion == 'correos' %}
     <h2 style="margin-bottom:.5rem;">Plantillas de correo</h2>
-    <p style="color:var(--ink-light);font-size:.875rem;margin-bottom:1.5rem;">Personaliza los correos que el sistema envia automaticamente. Variables disponibles: <code style="background:var(--page);padding:1px 5px;border-radius:4px;">{nombre}</code> <code style="background:var(--page);padding:1px 5px;border-radius:4px;">{club}</code> <code style="background:var(--page);padding:1px 5px;border-radius:4px;">{url}</code> <code style="background:var(--page);padding:1px 5px;border-radius:4px;">{usuario}</code> <code style="background:var(--page);padding:1px 5px;border-radius:4px;">{contrasena}</code></p>
-
+    <p style="color:var(--ink-light);font-size:.875rem;margin-bottom:1.5rem;">Variables disponibles: <code style="background:var(--accent-bg);padding:1px 6px;border-radius:4px;">{nombre}</code> <code style="background:var(--accent-bg);padding:1px 6px;border-radius:4px;">{club}</code> <code style="background:var(--accent-bg);padding:1px 6px;border-radius:4px;">{url}</code> <code style="background:var(--accent-bg);padding:1px 6px;border-radius:4px;">{usuario}</code> <code style="background:var(--accent-bg);padding:1px 6px;border-radius:4px;">{contrasena}</code></p>
     {% if not cfg.smtp_configured %}
-    <div class="alert alert-err" style="margin-bottom:1.5rem;">Para que los correos se envien necesitas configurar el servidor SMTP en <a href="/dashboard/?seccion=integraciones" style="color:#5C1A1A;text-decoration:underline;">Integraciones</a>.</div>
+    <div class="alert alert-info" style="margin-bottom:1.5rem;">Para enviar correos configura SMTP en <a href="/dashboard/?seccion=integraciones" style="text-decoration:underline;">Integraciones</a>.</div>
     {% endif %}
-
     <form action="/dashboard/configuracion/" method="post">{% csrf_token %}
       <input type="hidden" name="seccion" value="correos">
-
       <div class="card" style="margin-bottom:1.25rem;">
-        <div class="card-header">
-          <span class="card-header-label">Bienvenida (al registrarse)</span>
-          <span style="font-size:.75rem;color:var(--ink-light);">Se envia al usuario al crear su cuenta</span>
-        </div>
-        <div class="card-body">
-          <div class="field">
-            <label class="lbl">Texto del correo</label>
-            <textarea class="txa" name="email_tpl_welcome" rows="8" style="font-family:monospace;font-size:.8125rem;">{% if cfg.email_tpl_welcome %}{{ cfg.email_tpl_welcome }}{% else %}{{ default_tpl_welcome }}{% endif %}</textarea>
-          </div>
-        </div>
+        <div class="card-header"><span class="card-header-label">Bienvenida (al registrarse)</span></div>
+        <div class="card-body"><div class="field"><label class="lbl">Texto del correo</label><textarea class="txa" name="email_tpl_welcome" rows="8" style="font-family:monospace;font-size:.8125rem;">{% if cfg.email_tpl_welcome %}{{ cfg.email_tpl_welcome }}{% else %}{{ default_tpl_welcome }}{% endif %}</textarea></div></div>
       </div>
-
       <div class="card" style="margin-bottom:1.25rem;">
-        <div class="card-header">
-          <span class="card-header-label">Aprobacion de cuenta</span>
-          <span style="font-size:.75rem;color:var(--ink-light);">Se envia cuando un admin aprueba a un usuario</span>
-        </div>
-        <div class="card-body">
-          <div class="field">
-            <label class="lbl">Texto del correo</label>
-            <textarea class="txa" name="email_tpl_approved" rows="8" style="font-family:monospace;font-size:.8125rem;">{% if cfg.email_tpl_approved %}{{ cfg.email_tpl_approved }}{% else %}{{ default_tpl_approved }}{% endif %}</textarea>
-          </div>
-        </div>
+        <div class="card-header"><span class="card-header-label">Cuenta aprobada</span></div>
+        <div class="card-body"><div class="field"><label class="lbl">Texto del correo</label><textarea class="txa" name="email_tpl_approved" rows="8" style="font-family:monospace;font-size:.8125rem;">{% if cfg.email_tpl_approved %}{{ cfg.email_tpl_approved }}{% else %}{{ default_tpl_approved }}{% endif %}</textarea></div></div>
       </div>
-
       <div class="card" style="margin-bottom:1.5rem;">
-        <div class="card-header">
-          <span class="card-header-label">Invitacion</span>
-          <span style="font-size:.75rem;color:var(--ink-light);">Se envia al invitar a un nuevo usuario desde el panel</span>
-        </div>
-        <div class="card-body">
-          <div class="field">
-            <label class="lbl">Texto del correo</label>
-            <textarea class="txa" name="email_tpl_invitation" rows="10" style="font-family:monospace;font-size:.8125rem;">{% if cfg.email_tpl_invitation %}{{ cfg.email_tpl_invitation }}{% else %}{{ default_tpl_invitation }}{% endif %}</textarea>
-          </div>
-        </div>
+        <div class="card-header"><span class="card-header-label">Invitacion</span></div>
+        <div class="card-body"><div class="field"><label class="lbl">Texto del correo</label><textarea class="txa" name="email_tpl_invitation" rows="10" style="font-family:monospace;font-size:.8125rem;">{% if cfg.email_tpl_invitation %}{{ cfg.email_tpl_invitation }}{% else %}{{ default_tpl_invitation }}{% endif %}</textarea></div></div>
       </div>
-
-      <div style="display:flex;gap:.75rem;align-items:center;">
-        <button class="btn btn-dark">Guardar plantillas</button>
-        <a href="/dashboard/?seccion=correos" class="btn btn-ghost btn-sm">Restaurar predeterminados</a>
-      </div>
+      <button class="btn btn-dark">Guardar plantillas</button>
     </form>
     {% endif %}
 
     <!-- ══ PERFIL ══ -->
     {% if seccion == 'perfil' %}
     <h2 style="margin-bottom:1.5rem;">Mi perfil</h2>
-    <div class="card" style="max-width:560px;">
+    <div class="card" style="max-width:540px;">
       <div class="card-header"><span class="card-header-label">Datos personales</span></div>
       <div class="card-body">
         <form action="/perfil/editar/" method="post">{% csrf_token %}
           <div class="g2" style="margin-bottom:1rem;">
             <div class="field"><label class="lbl">Nombre completo</label><input class="inp" name="full_name" value="{{ user.full_name }}"></div>
-            <div class="field"><label class="lbl">Correo electronico</label><input class="inp" name="email" type="email" value="{{ user.email }}"></div>
+            <div class="field"><label class="lbl">Correo</label><input class="inp" name="email" type="email" value="{{ user.email }}"></div>
           </div>
-          <div class="field" style="margin-bottom:1rem;"><label class="lbl">Libro favorito</label><input class="inp" name="favorite_book" value="{{ user.favorite_book }}" placeholder="El libro que mas te ha marcado"></div>
-          <div class="field" style="margin-bottom:1rem;"><label class="lbl">Biografia</label><textarea class="txa" name="bio" rows="3" placeholder="Cuentanos un poco de ti como lector...">{{ user.bio }}</textarea></div>
+          <div class="field" style="margin-bottom:1rem;"><label class="lbl">Libro favorito</label><input class="inp" name="favorite_book" value="{{ user.favorite_book }}"></div>
+          <div class="field" style="margin-bottom:1rem;"><label class="lbl">Biografia</label><textarea class="txa" name="bio" rows="3">{{ user.bio }}</textarea></div>
           <div class="field" style="margin-bottom:1.25rem;">
-            <label class="lbl">URL de foto de perfil</label>
+            <label class="lbl">URL foto de perfil</label>
             <input class="inp" name="avatar_url" type="url" value="{{ user.avatar_url }}" placeholder="https://...">
-            {% if user.avatar_url %}
-            <div style="margin-top:.75rem;display:flex;align-items:center;gap:.75rem;">
-              <img src="{{ user.avatar_url }}" alt="avatar" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid var(--border);">
-              <span class="hint">Foto actual</span>
-            </div>
-            {% endif %}
+            {% if user.avatar_url %}<div style="margin-top:.75rem;display:flex;align-items:center;gap:.75rem;"><img src="{{ user.avatar_url }}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid var(--border);"><span class="hint">Foto actual</span></div>{% endif %}
           </div>
           <button class="btn btn-dark">Guardar perfil</button>
         </form>
@@ -1038,61 +1108,55 @@ T[f"{BASE}/dashboard.html"] = """{% extends 'base.html' %}
 T[f"{BASE}/auth/login.html"] = """{% extends 'base.html' %}
 {% block content %}
 <div style="max-width:400px;margin:2rem auto;">
-  <p class="section-eyebrow" style="margin-bottom:.375rem;">Acceso</p>
+  <p class="eyebrow" style="margin-bottom:.375rem;">Acceso</p>
   <h1 style="font-size:1.5rem;margin-bottom:1.5rem;">Entrar al club</h1>
   <div class="card card-body">
     <form method="post">{% csrf_token %}{{ form.as_p }}
-      <button class="btn btn-dark" style="width:100%;margin-top:.5rem;">Entrar</button>
+      <button class="btn btn-dark" style="width:100%;margin-top:.5rem;">{{ club_settings.effective_cta_login }}</button>
     </form>
     {% if club_settings.google_login_enabled and club_settings.google_client_id and club_settings.google_client_secret %}
     <div style="display:flex;align-items:center;gap:.75rem;margin:1rem 0;">
-      <div style="flex:1;height:1px;background:var(--border);"></div>
-      <span style="font-size:.8125rem;color:var(--ink-light);">o</span>
-      <div style="flex:1;height:1px;background:var(--border);"></div>
+      <div style="flex:1;height:1px;background:var(--border);"></div><span style="font-size:.8125rem;color:var(--ink-light);">o</span><div style="flex:1;height:1px;background:var(--border);"></div>
     </div>
     <a href="/accounts/google/login/" class="btn btn-ghost" style="width:100%;text-align:center;display:block;">Entrar con Google</a>
     {% endif %}
   </div>
-  <p style="text-align:center;font-size:.875rem;color:var(--ink-light);margin-top:1.25rem;">No tienes cuenta? <a href="/registro/" style="color:var(--ink);font-weight:500;">Registrate</a></p>
+  <p style="text-align:center;font-size:.875rem;color:var(--ink-light);margin-top:1.25rem;">No tienes cuenta? <a href="/registro/" style="color:var(--ink);font-weight:500;">{{ club_settings.effective_cta_register }}</a></p>
 </div>
 {% endblock %}"""
 
 T[f"{BASE}/auth/register.html"] = """{% extends 'base.html' %}
 {% block content %}
 <div style="max-width:440px;margin:2rem auto;">
-  <p class="section-eyebrow" style="margin-bottom:.375rem;">Unete</p>
-  <h1 style="font-size:1.5rem;margin-bottom:1.5rem;">Crear cuenta</h1>
+  <p class="eyebrow" style="margin-bottom:.375rem;">Unete</p>
+  <h1 style="font-size:1.5rem;margin-bottom:1.5rem;">{{ club_settings.effective_cta_register }}</h1>
   <div class="card card-body">
     <form method="post">{% csrf_token %}{{ form.as_p }}
       <button class="btn btn-dark" style="width:100%;margin-top:.5rem;">Crear cuenta</button>
     </form>
   </div>
-  <p style="text-align:center;font-size:.875rem;color:var(--ink-light);margin-top:1rem;">Tu cuenta quedara pendiente de aprobacion por un administrador.</p>
-  <p style="text-align:center;font-size:.875rem;color:var(--ink-light);">Ya tienes cuenta? <a href="/login/" style="color:var(--ink);font-weight:500;">Entrar</a></p>
+  <p style="text-align:center;font-size:.875rem;color:var(--ink-light);margin-top:1rem;">Tu cuenta quedara pendiente de aprobacion.</p>
+  <p style="text-align:center;font-size:.875rem;color:var(--ink-light);">Ya tienes cuenta? <a href="/login/" style="color:var(--ink);font-weight:500;">{{ club_settings.effective_cta_login }}</a></p>
 </div>
 {% endblock %}"""
 
-# ══════════════════════════════════════════════════════════════
-# PENDING USERS (standalone)
-# ══════════════════════════════════════════════════════════════
 T[f"{BASE}/pending_users.html"] = """{% extends 'base.html' %}
 {% block content %}
 <h2 style="margin-bottom:1.5rem;">Usuarios pendientes</h2>
 {% for u in users %}
 <div class="card card-body" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
   <div><span style="font-weight:500;color:var(--ink);">{{ u.username }}</span><span style="font-size:.8125rem;color:var(--ink-light);margin-left:.5rem;">{{ u.email }}</span></div>
-  <form action="/usuarios/{{ u.id }}/aprobar/" method="post" style="margin:0;">{% csrf_token %}<button class="btn btn-amber btn-sm">Aprobar</button></form>
+  <form action="/usuarios/{{ u.id }}/aprobar/" method="post" style="margin:0;">{% csrf_token %}<button class="btn btn-accent btn-sm">Aprobar</button></form>
 </div>
 {% empty %}<div class="card card-body" style="color:var(--ink-light);">Sin usuarios pendientes.</div>{% endfor %}
 {% endblock %}"""
 
 # ══════════════════════════════════════════════════════════════
-# WRITE FILES
+# WRITE
 # ══════════════════════════════════════════════════════════════
 for path, content in T.items():
     with open(path, "w", encoding="utf-8") as f:
         f.write(content.strip())
     print(f"OK  {path}")
 
-print(f"\n{len(T)} templates escritos correctamente.")
-print("Recarga el navegador sin necesidad de rebuild.")
+print(f"\n{len(T)} templates escritos. Recarga el navegador.")

@@ -35,6 +35,7 @@ urlpatterns = [
     path('integraciones/redes/<int:link_id>/eliminar/', views.delete_social_link, name='delete_social_link'),
     path('integraciones/smtp/test/', views.test_smtp, name='test_smtp'),
     path('perfil/editar/', views.edit_profile, name='edit_profile'),
+    path('dashboard/reset-colores/', views.reset_colors, name='reset_colors'),
     path('pwa/manifest.json', views.manifest, name='manifest'),
     path('pwa/sw.js', views.service_worker, name='service_worker'),
 ]

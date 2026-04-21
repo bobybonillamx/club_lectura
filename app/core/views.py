@@ -212,6 +212,7 @@ def dashboard(request):
         'stats': _build_stats(),
         'cfg': cfg,
         # Default templates for the email section
+        'theme_choices': [(k, v['label']) for k, v in __import__('core.models', fromlist=['THEMES']).THEMES.items()],
         'default_tpl_welcome': DEFAULT_TPL_WELCOME,
         'default_tpl_approved': DEFAULT_TPL_APPROVED,
         'default_tpl_invitation': DEFAULT_TPL_INVITATION,
@@ -592,6 +593,19 @@ def edit_profile(request):
 # ─────────────────────────────────────────
 # PWA
 # ─────────────────────────────────────────
+
+
+@login_required
+def reset_colors(request):
+    if not request.user.is_admin_like():
+        return HttpResponseForbidden('Solo admins.')
+    cfg = ClubSettings.get_solo()
+    cfg.primary_color = ''
+    cfg.accent_color = ''
+    cfg.save(update_fields=['primary_color', 'accent_color'])
+    messages.success(request, 'Colores restablecidos al tema seleccionado.')
+    return redirect('/dashboard/?seccion=apariencia')
+
 
 def manifest(request):
     import json as _json
