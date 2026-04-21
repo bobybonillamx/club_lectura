@@ -1,4 +1,4 @@
-import os
+﻿import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -125,3 +125,18 @@ PUBLIC_BASE_URL = os.getenv('PUBLIC_BASE_URL', 'http://localhost:8787')
 DEFAULT_AFFILIATE_TAG = 'bobybonilla0b-20'
 POWERED_BY_NAME = 'Gold Tech Mx'
 POWERED_BY_URL = 'https://goldtech.mx'
+
+# ── Email ──────────────────────────────────────
+# By default uses console backend (prints to logs).
+# Set EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend in .env
+# and configure the SMTP_* variables to send real emails.
+EMAIL_BACKEND = os.getenv(
+    'EMAIL_BACKEND',
+    'django.core.mail.backends.console.EmailBackend',
+)
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'true').lower() == 'true'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'Club de Lectura <noreply@clublectura.local>')

@@ -1,7 +1,26 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Entrar</h2>
-<form method="post">{% csrf_token %}{{ form.as_p }}<button class="btn btn-club">Entrar</button></form>
-{% if club_settings.google_login_enabled and club_settings.google_client_id and club_settings.google_client_secret %}<hr>
-<a class="btn btn-outline-dark" href="/accounts/google/login/">Entrar con Google</a>{% endif %}
+<div style="max-width:400px;margin:2rem auto;">
+    <p class="section-label">Acceso</p>
+    <h1 style="font-size:1.5rem;margin-bottom:1.5rem;">Entrar al club</h1>
+
+    <div class="card-warm card-warm-body">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button class="btn-primary-warm w-100" style="margin-top:0.5rem;">Entrar</button>
+        </form>
+
+        {% if club_settings.google_login_enabled and club_settings.google_client_id and club_settings.google_client_secret %}
+        <hr class="divider">
+        <a href="/accounts/google/login/" class="btn-outline-warm w-100" style="text-align:center;display:block;">
+            Entrar con Google
+        </a>
+        {% endif %}
+    </div>
+
+    <p style="text-align:center;font-size:0.875rem;color:var(--ink-light);margin-top:1.25rem;">
+        ¿No tienes cuenta? <a href="/registro/" style="color:var(--ink);">Regístrate</a>
+    </p>
+</div>
 {% endblock %}

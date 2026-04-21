@@ -43,7 +43,7 @@ class ClubSettings(models.Model):
     logo_url = models.URLField(blank=True)
     affiliate_tag = models.CharField(max_length=120, blank=True, default='')
     primary_color = models.CharField(max_length=7, default='#6f42c1')
-    accent_color = models.CharField(max_length=7, default='#212529')
+    accent_color = models.CharField(max_length=7, default='#5C3D2E')
     google_login_enabled = models.BooleanField(default=False)
     google_client_id = models.CharField(max_length=255, blank=True, default='')
     google_client_secret = models.CharField(max_length=255, blank=True, default='')
@@ -123,12 +123,11 @@ class Review(models.Model):
     rating = models.PositiveSmallIntegerField(default=5)
     comment = models.TextField()
     is_approved = models.BooleanField(default=False)
-    avatar_url = models.URLField(blank=True)
-    bio = models.TextField(blank=True)
-    favorite_book = models.CharField(max_length=255, blank=True)
     is_flagged = models.BooleanField(default=False)
     moderation_note = models.CharField(max_length=255, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    # NOTE: avatar_url / bio / favorite_book removed — those live on User, not Review.
 
 
 class Invitation(models.Model):
@@ -143,6 +142,10 @@ class SocialLink(models.Model):
     network = models.CharField(max_length=80)
     url = models.URLField()
 
+
+# ──────────────────────────────────────────────
+# Utility functions
+# ──────────────────────────────────────────────
 
 def build_amazon_url(title: str, affiliate_tag: str) -> str:
     query = urlencode({'k': title, 'tag': affiliate_tag})
@@ -161,7 +164,6 @@ def fetch_book_metadata(title: str) -> dict:
     metadata = fetch_from_google_books(title)
     if metadata.get('cover_url'):
         return metadata
-
     metadata_open = fetch_from_open_library(title)
     for key in ('cover_url', 'description', 'author'):
         if not metadata.get(key):
@@ -176,7 +178,6 @@ def fetch_from_google_books(title: str) -> dict:
     items = data.get('items') or []
     if not items:
         return {}
-
     info = items[0].get('volumeInfo', {})
     image_links = info.get('imageLinks', {})
     authors = info.get('authors') or []
@@ -194,7 +195,6 @@ def fetch_from_open_library(title: str) -> dict:
     docs = data.get('docs') or []
     if not docs:
         return {}
-
     first = docs[0]
     cover_id = first.get('cover_i')
     authors = first.get('author_name') or []

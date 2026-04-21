@@ -1,5 +1,22 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Registro</h2>
-<form method="post">{% csrf_token %}{{ form.as_p }}<button class="btn btn-club">Crear cuenta</button></form>
+<div style="max-width:440px;margin:2rem auto;">
+    <p class="section-label">Únete</p>
+    <h1 style="font-size:1.5rem;margin-bottom:1.5rem;">Crear cuenta</h1>
+
+    <div class="card-warm card-warm-body">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button class="btn-primary-warm w-100" style="margin-top:0.5rem;">Crear cuenta</button>
+        </form>
+    </div>
+
+    <p style="text-align:center;font-size:0.875rem;color:var(--ink-light);margin-top:1.25rem;">
+        Tu cuenta quedará pendiente de aprobación por un administrador.
+    </p>
+    <p style="text-align:center;font-size:0.875rem;color:var(--ink-light);">
+        ¿Ya tienes cuenta? <a href="/login/" style="color:var(--ink);">Entrar</a>
+    </p>
+</div>
 {% endblock %}
