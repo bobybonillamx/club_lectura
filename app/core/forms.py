@@ -12,21 +12,16 @@ class RegisterForm(UserCreationForm):
 
 
 class BookForm(forms.ModelForm):
-    reemplazar_leyendo_actual = forms.BooleanField(required=False, help_text='Si marcas esto, los otros libros en "Leyendo" pasarán a "Leído".')
+    reemplazar_leyendo_actual = forms.BooleanField(
+        required=False,
+        help_text='Mover libros actuales "Leyendo" a "Leido".'
+    )
 
     class Meta:
         model = Book
         fields = [
-            'title',
-            'author',
-            'status',
-            'visibility',
-            'allow_voting',
-            'description',
-            'amazon_url',
-            'cover_url',
-            'external_video_url',
-            'pdf_url',
+            'title', 'author', 'status', 'visibility', 'allow_voting',
+            'description', 'amazon_url', 'cover_url', 'external_video_url', 'pdf_url',
         ]
 
 
@@ -48,7 +43,11 @@ class ReviewForm(forms.ModelForm):
 class ClubSettingsForm(forms.ModelForm):
     class Meta:
         model = ClubSettings
-        fields = ['name', 'description', 'logo_url', 'primary_color', 'accent_color', 'affiliate_tag', 'google_login_enabled', 'google_client_id', 'google_client_secret']
+        fields = [
+            'name', 'description', 'logo_url', 'icon_url',
+            'primary_color', 'accent_color', 'affiliate_tag',
+            'google_login_enabled', 'google_client_id', 'google_client_secret',
+        ]
         widgets = {
             'primary_color': forms.TextInput(attrs={'type': 'color'}),
             'accent_color': forms.TextInput(attrs={'type': 'color'}),

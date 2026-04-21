@@ -8,7 +8,7 @@ from django.utils import timezone
 
 
 class Visibility(models.TextChoices):
-    PUBLIC = 'public', 'Público'
+    PUBLIC = 'public', 'Publico'
     PRIVATE = 'private', 'Privado'
     ADMINS = 'admins', 'Solo admins'
 
@@ -40,7 +40,8 @@ class User(AbstractUser):
 class ClubSettings(models.Model):
     name = models.CharField(max_length=120, default='Mi Club de Lectura')
     description = models.TextField(blank=True)
-    logo_url = models.URLField(blank=True)
+    logo_url = models.URLField(blank=True, help_text='Logo rectangular para la navbar.')
+    icon_url = models.URLField(blank=True, default='', help_text='Icono cuadrado 512x512 para PWA/favicon. Se usa en navbar si logo_url esta vacio.')
     affiliate_tag = models.CharField(max_length=120, blank=True, default='')
     primary_color = models.CharField(max_length=7, default='#6f42c1')
     accent_color = models.CharField(max_length=7, default='#5C3D2E')
@@ -57,9 +58,13 @@ class ClubSettings(models.Model):
     def effective_affiliate_tag(self):
         return self.affiliate_tag or settings.DEFAULT_AFFILIATE_TAG
 
+    @property
+    def nav_logo(self):
+        return self.logo_url or self.icon_url
+
 
 class BookStatus(models.TextChoices):
-    COMPLETED = 'completed', 'Leído'
+    COMPLETED = 'completed', 'Leido'
     READING = 'reading', 'Leyendo'
     FUTURE = 'future', 'Por leer'
 
@@ -84,22 +89,19 @@ class Book(models.Model):
             self.amazon_url = build_amazon_url(self.title, tag)
         else:
             self.amazon_url = apply_affiliate_tag(self.amazon_url, tag)
-
         if not self.cover_url or not self.description or not self.author:
             metadata = fetch_book_metadata(self.title)
             self.cover_url = self.cover_url or metadata.get('cover_url', '')
             self.description = self.description or metadata.get('description', '')
             self.author = self.author or metadata.get('author', '')
-
         if not self.cover_url:
             self.cover_url = f'https://source.unsplash.com/featured/?book,{self.title.replace(" ", ",")}'
-
         super().save(*args, **kwargs)
 
 
 class Event(models.Model):
     title = models.CharField(max_length=255)
-    event_type = models.CharField(max_length=120, help_text='Sesión, intercambio, visita, restaurante, cine, etc.')
+    event_type = models.CharField(max_length=120)
     description = models.TextField(blank=True)
     starts_at = models.DateTimeField()
     visibility = models.CharField(max_length=20, choices=Visibility.choices, default=Visibility.PUBLIC)
@@ -127,8 +129,6 @@ class Review(models.Model):
     moderation_note = models.CharField(max_length=255, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    # NOTE: avatar_url / bio / favorite_book removed — those live on User, not Review.
-
 
 class Invitation(models.Model):
     invited_name = models.CharField(max_length=180)
@@ -143,16 +143,12 @@ class SocialLink(models.Model):
     url = models.URLField()
 
 
-# ──────────────────────────────────────────────
-# Utility functions
-# ──────────────────────────────────────────────
-
-def build_amazon_url(title: str, affiliate_tag: str) -> str:
+def build_amazon_url(title, affiliate_tag):
     query = urlencode({'k': title, 'tag': affiliate_tag})
     return f'https://www.amazon.com.mx/s?{query}'
 
 
-def apply_affiliate_tag(url: str, affiliate_tag: str) -> str:
+def apply_affiliate_tag(url, affiliate_tag):
     parsed = urlparse(url)
     query = parse_qs(parsed.query)
     query['tag'] = [affiliate_tag]
@@ -160,7 +156,7 @@ def apply_affiliate_tag(url: str, affiliate_tag: str) -> str:
     return urlunparse((parsed.scheme, parsed.netloc, parsed.path, parsed.params, new_query, parsed.fragment))
 
 
-def fetch_book_metadata(title: str) -> dict:
+def fetch_book_metadata(title):
     metadata = fetch_from_google_books(title)
     if metadata.get('cover_url'):
         return metadata
@@ -171,7 +167,7 @@ def fetch_book_metadata(title: str) -> dict:
     return metadata
 
 
-def fetch_from_google_books(title: str) -> dict:
+def fetch_from_google_books(title):
     query = quote_plus(title)
     url = f'https://www.googleapis.com/books/v1/volumes?q=intitle:{query}&maxResults=1&langRestrict=es'
     data = _safe_json_get(url)
@@ -188,7 +184,7 @@ def fetch_from_google_books(title: str) -> dict:
     }
 
 
-def fetch_from_open_library(title: str) -> dict:
+def fetch_from_open_library(title):
     query = quote_plus(title)
     url = f'https://openlibrary.org/search.json?title={query}&limit=1'
     data = _safe_json_get(url)
@@ -205,7 +201,7 @@ def fetch_from_open_library(title: str) -> dict:
     }
 
 
-def _safe_json_get(url: str) -> dict:
+def _safe_json_get(url):
     req = Request(url, headers={'User-Agent': 'ClubLecturaBot/1.0'})
     try:
         with urlopen(req, timeout=5) as res:

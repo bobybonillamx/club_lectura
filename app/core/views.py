@@ -220,6 +220,7 @@ def dashboard(request):
         'social_links': SocialLink.objects.all(),
         'pending_reviews_count': Review.objects.filter(is_approved=False).count(),
         'stats': stats,
+        'default_affiliate_tag': settings.DEFAULT_AFFILIATE_TAG,
     }
     return render(request, 'dashboard.html', context)
 
@@ -611,12 +612,26 @@ def edit_profile(request):
 # PWA
 # ──────────────────────────────────────────────
 
-def manifest(_request):
-    return HttpResponse(
-        '{"name":"Club de Lectura","short_name":"Lectura","start_url":"/","display":"standalone",'
-        '"background_color":"#FAF6F0","theme_color":"#6f42c1","icons":[]}',
-        content_type='application/manifest+json',
-    )
+
+def manifest(request):
+    import json as _json
+    cfg = ClubSettings.get_solo()
+    icons = []
+    if cfg.icon_url:
+        icons = [
+            {"src": cfg.icon_url, "sizes": "512x512", "type": "image/png", "purpose": "any maskable"},
+            {"src": cfg.icon_url, "sizes": "192x192", "type": "image/png"},
+        ]
+    data = {
+        "name": cfg.name,
+        "short_name": cfg.name[:12],
+        "start_url": "/",
+        "display": "standalone",
+        "background_color": "#F7F3EE",
+        "theme_color": cfg.primary_color or "#6f42c1",
+        "icons": icons,
+    }
+    return HttpResponse(_json.dumps(data), content_type='application/manifest+json')
 
 
 def service_worker(_request):
