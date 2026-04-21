@@ -162,9 +162,9 @@
                 <div class="col-md-4"><input class="form-control" name="author" value="{{ b.author }}"></div>
                 <div class="col-md-2">
                     <select class="form-select" name="status">
-                        <option value="completed" {% if b.status=="completed" %}selected{% endif %}>Leido</option>
-                        <option value="reading" {% if b.status=="reading" %}selected{% endif %}>Leyendo</option>
-                        <option value="future" {% if b.status=="future" %}selected{% endif %}>Por leer</option>
+                        <option value="completed" {% if b.status == "completed" %}selected{% endif %}>Leido</option>
+                        <option value="reading" {% if b.status == "reading" %}selected{% endif %}>Leyendo</option>
+                        <option value="future" {% if b.status == "future" %}selected{% endif %}>Por leer</option>
                     </select>
                 </div>
                 <div class="col-md-1"><button class="btn-primary-warm w-100" style="padding:0.45rem 0.5rem;">✓</button></div>
