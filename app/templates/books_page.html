@@ -21,7 +21,12 @@
 
 {% for book in books %}
 <a href="/libros/{{ book.id }}/" style="text-decoration:none;display:block;">
-    <div class="card-warm mb-2" style="transition:box-shadow 0.15s;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)'" onmouseout="this.style.boxShadow=''">
+    <div class="card-warm mb-2" style="transition:box-shadow 0.15s;{% if book.status == 'future' and book.allow_voting %}border-color:#C0833A;{% endif %}" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)'" onmouseout="this.style.boxShadow=''">
+        {% if book.status == 'future' and book.allow_voting %}
+        <div style="background:#FEF6E7;border-bottom:1px solid #F0D295;padding:0.4rem 1.25rem;font-size:0.75rem;color:#7A4F0D;display:flex;align-items:center;gap:0.5rem;">
+            <span>🗳</span> <strong>Votación abierta</strong> — {{ book.votes.count }} voto{{ book.votes.count|pluralize:"s" }} · Haz clic para votar
+        </div>
+        {% endif %}
         <div class="card-warm-body d-flex justify-content-between align-items-center gap-3">
             <div style="display:flex;align-items:center;gap:0.875rem;">
                 {% if book.cover_url %}

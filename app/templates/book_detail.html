@@ -33,26 +33,33 @@
         </div>
 
         {% if book.status == book_status.FUTURE and book.allow_voting %}
-        <div class="card-warm card-warm-body mt-4" style="max-width:480px;background:var(--parchment);">
-            <p class="section-label mb-1">Votación abierta</p>
-            <p style="font-size:0.875rem;color:var(--ink-light);margin-bottom:0.75rem;">
-                {{ book.votes.count }} voto{{ book.votes.count|pluralize:"s" }} registrado{{ book.votes.count|pluralize:"s" }}.
-                Puedes votar por varios libros simultáneamente.
+        <div class="card-warm card-warm-body mt-4" style="max-width:480px;border-color:#C0833A;background:#FEF6E7;">
+            <p class="section-label" style="color:#7A4F0D;">Votacion abierta</p>
+            <p style="font-family:var(--serif);font-size:1rem;color:var(--ink);margin-bottom:0.5rem;">
+                ¿Quieres leer este libro en el club?
             </p>
+            <p style="font-size:0.875rem;color:var(--ink-light);margin-bottom:1rem;">
+                Cada miembro aprobado puede votar por todos los libros que quiera. El libro con mas votos sera el proximo en leerse. Tu voto se guarda de inmediato.
+            </p>
+            <div style="font-size:1.1rem;font-family:var(--serif);font-weight:600;color:#7A4F0D;margin-bottom:1rem;">
+                {{ book.votes.count }} voto{{ book.votes.count|pluralize:"s" }} registrado{{ book.votes.count|pluralize:"s" }}
+            </div>
             {% if user_vote %}
-            <span class="badge-warm reading">Ya votaste por este libro ✓</span>
+            <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.9375rem;color:#2D6A2D;">
+                <span style="font-size:1.2rem;">✓</span> Ya votaste por este libro
+            </div>
             {% elif user.is_authenticated %}
             {% if user.is_approved or user.is_superuser %}
             <form action="/libros/{{ book.id }}/votar/" method="post">
                 {% csrf_token %}
                 <input type="hidden" name="next" value="/libros/{{ book.id }}/">
-                <button class="btn-primary-warm">Votar por este libro</button>
+                <button class="btn-primary-warm" style="background:#C0833A;">Votar por este libro</button>
             </form>
             {% else %}
-            <p style="font-size:0.8125rem;color:var(--ink-light);">Tu cuenta está pendiente de aprobación para votar.</p>
+            <p style="font-size:0.8125rem;color:var(--ink-light);">Tu cuenta esta pendiente de aprobacion para votar.</p>
             {% endif %}
             {% else %}
-            <a href="/login/" class="btn-outline-warm">Inicia sesión para votar</a>
+            <a href="/login/" class="btn-outline-warm">Inicia sesion para votar</a>
             {% endif %}
         </div>
         {% endif %}

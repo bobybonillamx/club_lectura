@@ -92,22 +92,7 @@
                 {% endif %}
                 {% endwith %}
 
-                {% if user.is_authenticated and user.is_approved or user.is_superuser %}
-                <form action="/libros/{{ book.id }}/resena/" method="post" style="margin-top:0.75rem;">
-                    {% csrf_token %}
-                    <div class="d-flex gap-2">
-                        <select name="rating" class="form-select" style="width:70px;">
-                            <option value="5">★ 5</option>
-                            <option value="4">★ 4</option>
-                            <option value="3">★ 3</option>
-                            <option value="2">★ 2</option>
-                            <option value="1">★ 1</option>
-                        </select>
-                        <input type="text" name="comment" class="form-control" placeholder="Tu reseña (pasa por moderación)" required>
-                        <button class="btn-outline-warm" type="submit" style="white-space:nowrap;">Enviar</button>
-                    </div>
-                </form>
-                {% endif %}
+                <a href="/libros/{{ book.id }}/" style="font-size:0.8125rem;color:var(--ink-light);display:inline-block;margin-top:0.5rem;">Escribe una reseña →</a>
             </div>
         </div>
         {% empty %}
