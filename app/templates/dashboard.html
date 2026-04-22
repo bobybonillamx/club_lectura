@@ -1,6 +1,5 @@
-{% extends 'base.html' %}
-{% load theme_tags %} 
-{% block content %} 
+{% extends 'base.html' %}{% load theme_tags %}
+{% block content %}
 <div style="display:grid;grid-template-columns:220px 1fr;gap:1.5rem;align-items:start;">
 
   <aside style="position:sticky;top:72px;">
@@ -242,47 +241,90 @@
     {% endif %}
     {% endif %}
 
-        {# ── LIBROS ── #}
-        {% if seccion == 'libros' %}
-        <p class="section-label">Gestión de libros</p>
-        <h2 style="margin-bottom:1.5rem;">Libros</h2>
-        <div class="card-warm card-warm-body mb-4">
-            <p class="section-label">Agregar libro</p>
-            <form action="/libros/nuevo/" method="post">{% csrf_token %}{{ book_form.as_p }}<button class="btn-primary-warm">Guardar libro</button></form>
-        </div>
-
-        {% for b in books %}
-        <div class="card-warm card-warm-body mb-2">
-            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
-                <div>
-                    <strong style="font-family:var(--serif);">{{ b.title }}</strong>
-                    <span class="badge-warm {% if b.status == 'reading' %}reading{% elif b.status == 'completed' %}completed{% else %}future{% endif %} ms-2">{{ b.get_status_display }}</span>
-                    <div style="font-size:0.8125rem;color:var(--ink-light);">{{ b.author }}</div>
-                </div>
-                <div class="d-flex gap-2">
-                    <a href="/libros/{{ b.id }}/" class="btn-outline-warm" style="font-size:0.8125rem;padding:0.3rem 0.75rem;">Ver</a>
-                    <form action="/libros/{{ b.id }}/eliminar/" method="post" style="margin:0;" onsubmit="return confirm('¿Eliminar este libro?')">
-                        {% csrf_token %}
-                        <button class="btn-danger-warm" style="font-size:0.8125rem;padding:0.3rem 0.75rem;">Eliminar</button>
-                    </form>
-                </div>
+    <!-- ══ LIBROS ══ -->
+    {% if seccion == 'libros' %}
+    <h2 style="margin-bottom:1.5rem;">Libros</h2>
+    <div class="card" style="margin-bottom:1.25rem;">
+      <div class="card-header"><span class="card-header-label">Agregar libro</span></div>
+      <div class="card-body">
+        <form action="/libros/nuevo/" method="post">{% csrf_token %}
+          <div class="g2" style="margin-bottom:1rem;">
+            <div class="field"><label class="lbl">Titulo *</label><input class="inp" name="title" required></div>
+            <div class="field"><label class="lbl">Autor</label><input class="inp" name="author" placeholder="Se busca automaticamente"></div>
+          </div>
+          <div class="g3" style="margin-bottom:1rem;">
+            <div class="field"><label class="lbl">Estado</label><select class="sel" name="status"><option value="future">Por leer / Votacion</option><option value="reading">Leyendo</option><option value="completed">Leido</option></select></div>
+            <div class="field"><label class="lbl">Visibilidad</label><select class="sel" name="visibility"><option value="public">Publico</option><option value="private">Solo miembros</option><option value="admins">Solo admins</option></select></div>
+            <div class="field"><label class="lbl">Votos</label><select class="sel" name="allow_voting"><option value="True">Permitidos</option><option value="False">Desactivados</option></select></div>
+          </div>
+          <div class="field" style="margin-bottom:1rem;"><label class="lbl">Descripcion</label><textarea class="txa" name="description" rows="2" placeholder="Se busca automaticamente"></textarea></div>
+          <div class="g2" style="margin-bottom:1rem;">
+            <div class="field"><label class="lbl">URL portada</label><input class="inp" name="cover_url" type="url"></div>
+            <div class="field"><label class="lbl">URL Amazon</label><input class="inp" name="amazon_url" type="url"></div>
+          </div>
+          <div class="g2" style="margin-bottom:1rem;">
+            <div class="field"><label class="lbl">URL PDF (solo miembros activos)</label><input class="inp" name="pdf_url" type="url"></div>
+            <div class="field"><label class="lbl">URL video</label><input class="inp" name="external_video_url" type="url"></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:1rem;">
+            <button class="btn btn-dark">Guardar libro</button>
+            <label style="display:flex;align-items:center;gap:.5rem;font-size:.875rem;color:var(--ink-light);cursor:pointer;">
+              <input type="checkbox" name="reemplazar_leyendo_actual" style="accent-color:var(--accent);width:16px;height:16px;">
+              Mover libros "Leyendo" a "Leido"
+            </label>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-header-label">Libros registrados</span></div>
+      {% for b in books %}
+      <div style="border-bottom:{% if not forloop.last %}1px solid var(--border){% else %}none{% endif %};">
+        <div style="display:flex;">
+          {% if b.cover_url %}<img src="{{ b.cover_url }}" alt="" style="width:52px;height:78px;object-fit:cover;flex-shrink:0;">
+          {% else %}<div style="width:52px;height:78px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0;">&#128214;</div>{% endif %}
+          <div style="flex:1;padding:.875rem 1rem;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;flex-wrap:wrap;">
+              <div>
+                <span style="font-family:var(--serif);font-size:.9375rem;font-weight:600;color:var(--ink);">{{ b.title }}</span>
+                <span style="font-size:.8125rem;color:var(--ink-light);font-style:italic;margin-left:.5rem;">{{ b.author }}</span>
+                <span class="chip {% if b.status == 'reading' %}chip-reading{% elif b.status == 'completed' %}chip-done{% else %}chip-future{% endif %}" style="margin-left:.5rem;">{{ b.get_status_display }}</span>
+              </div>
+              <div style="display:flex;gap:.5rem;">
+                <a href="/libros/{{ b.id }}/" class="btn btn-ghost btn-sm">Ver</a>
+                <form action="/libros/{{ b.id }}/eliminar/" method="post" style="margin:0;" onsubmit="return confirm('Eliminar?')">{% csrf_token %}<button class="btn btn-ghost btn-sm" style="color:#8B2020;">Eliminar</button></form>
+              </div>
             </div>
-            <form action="/libros/{{ b.id }}/editar/" method="post" class="row g-2 mt-2">
-                {% csrf_token %}
-                <div class="col-md-5"><input class="form-control" name="title" value="{{ b.title }}"></div>
-                <div class="col-md-4"><input class="form-control" name="author" value="{{ b.author }}"></div>
-                <div class="col-md-2">
-                    <select class="form-select" name="status">
-                        <option value="completed" {% if b.status == "completed" %}selected{% endif %}>Leido</option>
-                        <option value="reading" {% if b.status == "reading" %}selected{% endif %}>Leyendo</option>
-                        <option value="future" {% if b.status == "future" %}selected{% endif %}>Por leer</option>
-                    </select>
+            <details style="margin-top:.75rem;">
+              <summary style="font-size:.8125rem;color:var(--accent);display:inline-flex;align-items:center;gap:4px;">&#9998; Editar</summary>
+              <form action="/libros/{{ b.id }}/editar/" method="post" style="margin-top:.75rem;">{% csrf_token %}
+                <div class="g2" style="margin-bottom:.75rem;">
+                  <div class="field"><label class="lbl">Titulo</label><input class="inp" name="title" value="{{ b.title }}"></div>
+                  <div class="field"><label class="lbl">Autor</label><input class="inp" name="author" value="{{ b.author }}"></div>
                 </div>
-                <div class="col-md-1"><button class="btn-primary-warm w-100" style="padding:0.45rem 0.5rem;">✓</button></div>
-            </form>
+                <div class="g3" style="margin-bottom:.75rem;">
+                  <div class="field"><label class="lbl">Estado</label><select class="sel" name="status"><option value="future" {% if b.status == "future" %}selected{% endif %}>Por leer</option><option value="reading" {% if b.status == "reading" %}selected{% endif %}>Leyendo</option><option value="completed" {% if b.status == "completed" %}selected{% endif %}>Leido</option></select></div>
+                  <div class="field"><label class="lbl">Visibilidad</label><select class="sel" name="visibility"><option value="public" {% if b.visibility == "public" %}selected{% endif %}>Publico</option><option value="private" {% if b.visibility == "private" %}selected{% endif %}>Solo miembros</option><option value="admins" {% if b.visibility == "admins" %}selected{% endif %}>Solo admins</option></select></div>
+                  <div class="field"><label class="lbl">Votos</label><select class="sel" name="allow_voting"><option value="True" {% if b.allow_voting %}selected{% endif %}>Permitidos</option><option value="False" {% if not b.allow_voting %}selected{% endif %}>Desactivados</option></select></div>
+                </div>
+                <div class="g2" style="margin-bottom:.75rem;">
+                  <div class="field"><label class="lbl">URL portada</label><input class="inp" name="cover_url" value="{{ b.cover_url }}" type="url"></div>
+                  <div class="field"><label class="lbl">URL Amazon</label><input class="inp" name="amazon_url" value="{{ b.amazon_url }}" type="url"></div>
+                </div>
+                <div class="g2" style="margin-bottom:.75rem;">
+                  <div class="field"><label class="lbl">URL PDF</label><input class="inp" name="pdf_url" value="{{ b.pdf_url }}" type="url"></div>
+                  <div class="field"><label class="lbl">URL video</label><input class="inp" name="external_video_url" value="{{ b.external_video_url }}" type="url"></div>
+                </div>
+                <div class="field" style="margin-bottom:.75rem;"><label class="lbl">Descripcion</label><textarea class="txa" name="description" rows="2">{{ b.description }}</textarea></div>
+                <button class="btn btn-dark btn-sm">Guardar cambios</button>
+              </form>
+            </details>
+          </div>
         </div>
-        {% endfor %}
-        {% endif %}
+      </div>
+      {% empty %}<div style="padding:2rem 1.5rem;color:var(--ink-light);font-size:.875rem;">Sin libros registrados.</div>{% endfor %}
+    </div>
+    {% endif %}
 
     <!-- ══ EVENTOS ══ -->
     {% if seccion == 'eventos' %}
