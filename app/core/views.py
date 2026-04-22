@@ -224,22 +224,49 @@ def dashboard(request):
 def update_club_settings(request):
     if not request.user.is_admin_like():
         return HttpResponseForbidden('Solo admins.')
+
     cfg = ClubSettings.get_solo()
-    form = ClubSettingsForm(request.POST, instance=cfg)
-    if request.user.role != Role.SUPERADMIN and not request.user.is_superuser:
+    section = request.POST.get('seccion', 'inicio')
+
+    # Campos por seccion
+    section_fields = {
+        'inicio':       ['name', 'description', 'logo_url', 'icon_url', 'cover_image_url',
+                         'home_welcome_text', 'meta_description',
+                         'cta_register_text', 'cta_login_text'],
+        'apariencia':   ['theme', 'primary_color', 'accent_color',
+                         'footer_powered_by_name', 'footer_powered_by_url',
+                         'footer_custom_link_text', 'footer_custom_link_url', 'footer_text'],
+        'integraciones':['public_domain', 'affiliate_tag',
+                         'google_login_enabled', 'google_client_id', 'google_client_secret',
+                         'smtp_host', 'smtp_port', 'smtp_user', 'smtp_password',
+                         'smtp_use_tls', 'email_from'],
+        'correos':      ['email_tpl_welcome', 'email_tpl_approved', 'email_tpl_invitation'],
+    }
+
+    fields = section_fields.get(section, section_fields['inicio'])
+
+    # Filtrar solo los campos de la seccion
+    post_data = request.POST.copy()
+    form = ClubSettingsForm(post_data, instance=cfg)
+    for field_name in list(form.fields.keys()):
+        if field_name not in fields:
+            form.fields.pop(field_name)
+
+    # Permisos superadmin
+    if not (request.user.role == Role.SUPERADMIN or request.user.is_superuser):
         for f in ('google_login_enabled', 'google_client_id', 'google_client_secret',
-                  'smtp_host', 'smtp_port', 'smtp_user', 'smtp_password', 'smtp_use_tls', 'email_from',
-                  'email_tpl_welcome', 'email_tpl_approved', 'email_tpl_invitation',
-                  'public_domain'):
+                  'smtp_host', 'smtp_port', 'smtp_user', 'smtp_password',
+                  'smtp_use_tls', 'email_from', 'public_domain'):
             form.fields.pop(f, None)
+
     if form.is_valid():
         form.save()
-        if request.user.role == Role.SUPERADMIN or request.user.is_superuser:
+        if section == 'integraciones':
             sync_google_social_app_from_settings()
         messages.success(request, 'Configuracion guardada correctamente.')
     else:
         messages.error(request, f'Error: {form.errors}')
-    section = request.POST.get('seccion', 'inicio')
+
     return redirect(f'/dashboard/?seccion={section}')
 
 
