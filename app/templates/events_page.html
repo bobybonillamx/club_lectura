@@ -1,45 +1,34 @@
 {% extends 'base.html' %}
 {% block content %}
-<p class="section-label mb-0">Agenda</p>
+<p class="eyebrow" style="margin-bottom:.375rem;">Agenda</p>
 <h1 style="font-size:1.75rem;margin-bottom:2rem;">Eventos del club</h1>
-
-<p class="section-label">Próximos</p>
+<p class="eyebrow" style="margin-bottom:.875rem;">Proximos</p>
 {% for e in upcoming %}
-<div class="card-warm card-warm-body mb-3">
-    <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
-        <div>
-            <h3 style="font-size:1.0625rem;margin-bottom:0.25rem;">{{ e.title }}</h3>
-            <div style="font-size:0.8125rem;color:var(--ink-light);">
-                <span class="badge-warm">{{ e.event_type }}</span>
-                <span style="margin-left:0.5rem;">{{ e.starts_at|date:"l j \d\e F, H:i" }}</span>
-                {% if e.location %} · {{ e.location }}{% endif %}
-            </div>
-            {% if e.description %}<p style="margin-top:0.5rem;font-size:0.875rem;color:var(--ink);margin-bottom:0;">{{ e.description }}</p>{% endif %}
-        </div>
-        {% if e.external_video_url %}
-        <a href="{{ e.external_video_url }}" class="btn-outline-warm" target="_blank" rel="noopener" style="white-space:nowrap;flex-shrink:0;">Ver video ↗</a>
-        {% endif %}
+<div class="card card-body" style="margin-bottom:.875rem;">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;">
+    <div>
+      <h3 style="font-size:1.0625rem;margin-bottom:.25rem;">{{ e.title }}</h3>
+      <p style="font-size:.8125rem;color:var(--ink-light);">
+        <span class="chip chip-muted" style="margin-right:.375rem;">{{ e.event_type }}</span>
+        {{ e.starts_at|date:"j M Y, H:i" }}{% if e.location %} &middot; {{ e.location }}{% endif %}
+      </p>
+      {% if e.description %}<p style="font-size:.9375rem;color:var(--ink-mid);margin-top:.5rem;line-height:1.6;">{{ e.description }}</p>{% endif %}
     </div>
+    {% if e.external_video_url %}<a href="{{ e.external_video_url }}" class="btn btn-ghost btn-sm" target="_blank" rel="noopener">Ver video &#8599;</a>{% endif %}
+  </div>
 </div>
-{% empty %}
-<p style="color:var(--ink-light);">Sin eventos próximos.</p>
-{% endfor %}
-
-<hr class="divider">
-<p class="section-label">Pasados</p>
+{% empty %}<p style="color:var(--ink-light);margin-bottom:1.5rem;">Sin eventos proximos.</p>{% endfor %}
+<hr style="border:none;border-top:1px solid var(--border);margin:1.5rem 0;">
+<p class="eyebrow" style="margin-bottom:.875rem;">Pasados</p>
 {% for e in past %}
-<div class="card-warm card-warm-body mb-2" style="opacity:0.75;">
-    <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
-        <div>
-            <strong style="font-family:var(--serif);">{{ e.title }}</strong>
-            <span style="font-size:0.8125rem;color:var(--ink-light);margin-left:0.5rem;">{{ e.event_type }} · {{ e.starts_at|date:"j M Y" }}</span>
-        </div>
-        {% if e.external_video_url %}
-        <a href="{{ e.external_video_url }}" class="btn-outline-warm" target="_blank" rel="noopener" style="font-size:0.8125rem;padding:0.25rem 0.6rem;">Video ↗</a>
-        {% endif %}
+<div class="card card-body" style="margin-bottom:.625rem;opacity:.72;">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
+    <div>
+      <strong style="font-family:var(--serif);color:var(--ink);">{{ e.title }}</strong>
+      <span style="font-size:.8125rem;color:var(--ink-light);margin-left:.5rem;">{{ e.event_type }} &middot; {{ e.starts_at|date:"j M Y" }}</span>
     </div>
+    {% if e.external_video_url %}<a href="{{ e.external_video_url }}" class="btn btn-ghost btn-sm" target="_blank" rel="noopener">Video</a>{% endif %}
+  </div>
 </div>
-{% empty %}
-<p style="color:var(--ink-light);">Sin eventos pasados.</p>
-{% endfor %}
+{% empty %}<p style="color:var(--ink-light);">Sin eventos pasados.</p>{% endfor %}
 {% endblock %}
