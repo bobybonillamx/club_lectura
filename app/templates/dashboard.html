@@ -1,136 +1,246 @@
 {% extends 'base.html' %}
 {% load theme_tags %} 
 {% block content %}
-<div class="row g-4">
+<div style="display:grid;grid-template-columns:220px 1fr;gap:1.5rem;align-items:start;">
 
-    {# ── Sidebar ── #}
-    <div class="col-lg-3">
-        <div class="card-warm card-warm-body position-sticky" style="top:1rem;">
-            <p class="section-label">Panel de control</p>
-            <nav class="side-nav">
-                <a class="{% if seccion == 'inicio' %}active{% endif %}" href="/dashboard/?seccion=inicio">Inicio</a>
-                <a class="{% if seccion == 'stats' %}active{% endif %}" href="/dashboard/?seccion=stats">Estadísticas</a>
-                <a class="{% if seccion == 'libros' %}active{% endif %}" href="/dashboard/?seccion=libros">Libros</a>
-                <a class="{% if seccion == 'eventos' %}active{% endif %}" href="/dashboard/?seccion=eventos">Eventos</a>
-                <a class="{% if seccion == 'usuarios' %}active{% endif %}" href="/dashboard/?seccion=usuarios">
-                    Usuarios
-                    {% if users_pending.count %}<span class="badge-warm future ms-1">{{ users_pending.count }}</span>{% endif %}
-                </a>
-                <a class="{% if seccion == 'resenas' %}active{% endif %}" href="/dashboard/?seccion=resenas">
-                    Reseñas
-                    {% if pending_reviews_count %}<span class="badge-warm future ms-1">{{ pending_reviews_count }}</span>{% endif %}
-                </a>
-                <a class="{% if seccion == 'integraciones' %}active{% endif %}" href="/dashboard/?seccion=integraciones">Integraciones</a>
-                <a class="{% if seccion == 'perfil' %}active{% endif %}" href="/dashboard/?seccion=perfil">Mi perfil</a>
-            </nav>
-        </div>
+  <aside style="position:sticky;top:72px;">
+    <div class="card card-body" style="padding:1rem;">
+      <p class="eyebrow" style="margin-bottom:.75rem;">Panel de control</p>
+      <a href="/dashboard/?seccion=inicio"        class="sidenav-item {% if seccion == 'inicio'        %}active{% endif %}">Inicio</a>
+      <a href="/dashboard/?seccion=stats"         class="sidenav-item {% if seccion == 'stats'         %}active{% endif %}">Estadisticas</a>
+      <a href="/dashboard/?seccion=libros"        class="sidenav-item {% if seccion == 'libros'        %}active{% endif %}">Libros</a>
+      <a href="/dashboard/?seccion=eventos"       class="sidenav-item {% if seccion == 'eventos'       %}active{% endif %}">Eventos</a>
+      <a href="/dashboard/?seccion=usuarios"      class="sidenav-item {% if seccion == 'usuarios'      %}active{% endif %}">
+        Usuarios {% if users_pending.count %}<span class="badge-count">{{ users_pending.count }}</span>{% endif %}
+      </a>
+      <a href="/dashboard/?seccion=resenas"       class="sidenav-item {% if seccion == 'resenas'       %}active{% endif %}">
+        Resenas {% if pending_reviews_count %}<span class="badge-count">{{ pending_reviews_count }}</span>{% endif %}
+      </a>
+      <a href="/dashboard/?seccion=integraciones" class="sidenav-item {% if seccion == 'integraciones' %}active{% endif %}">Integraciones</a>
+      <a href="/dashboard/?seccion=correos"       class="sidenav-item {% if seccion == 'correos'       %}active{% endif %}">Correos</a>
+      <a href="/dashboard/?seccion=apariencia"    class="sidenav-item {% if seccion == 'apariencia'    %}active{% endif %}">Apariencia</a>
+      <a href="/dashboard/?seccion=perfil"        class="sidenav-item {% if seccion == 'perfil'        %}active{% endif %}">Mi perfil</a>
+    </div>
+  </aside>
+
+  <div>
+
+    <!-- ══ INICIO ══ -->
+    {% if seccion == 'inicio' %}
+    <h2 style="margin-bottom:1.5rem;">Configuracion del club</h2>
+    <div class="card" style="margin-bottom:1.25rem;">
+      <div class="card-header"><span class="card-header-label">Identidad</span></div>
+      <div class="card-body">
+        <form action="/dashboard/configuracion/" method="post">{% csrf_token %}
+          <input type="hidden" name="seccion" value="inicio">
+          <div class="g2" style="margin-bottom:1rem;">
+            <div class="field"><label class="lbl">Nombre del club</label><input class="inp" name="name" value="{{ cfg.name }}"></div>
+            <div class="field"><label class="lbl">Meta descripcion (SEO)</label><input class="inp" name="meta_description" value="{{ cfg.meta_description }}" placeholder="Describe tu club para Google..."><p class="hint">Max 160 caracteres recomendado.</p></div>
+          </div>
+          <div class="field" style="margin-bottom:1rem;">
+            <label class="lbl">Descripcion publica</label>
+            <textarea class="txa" name="description" rows="2">{{ cfg.description }}</textarea>
+          </div>
+          <div class="field" style="margin-bottom:1rem;">
+            <label class="lbl">Mensaje de bienvenida (encabezado de la home)</label>
+            <input class="inp" name="home_welcome_text" value="{{ cfg.home_welcome_text }}" placeholder="Bienvenido">
+          </div>
+          <div class="field" style="margin-bottom:1rem;">
+            <label class="lbl">Imagen de portada (hero de la home)</label>
+            <input class="inp" name="cover_image_url" value="{{ cfg.cover_image_url }}" placeholder="https://...">
+            <p class="hint">Imagen horizontal 1400x500px o mayor. Si se deja vacio se muestra solo el texto.</p>
+            {% if cfg.cover_image_url %}<img src="{{ cfg.cover_image_url }}" style="margin-top:.75rem;width:100%;max-height:100px;object-fit:cover;border-radius:var(--r);border:1px solid var(--border);">{% endif %}
+          </div>
+          <div class="g2" style="margin-bottom:1rem;">
+            <div class="field">
+              <label class="lbl">Logo navbar (rectangular)</label>
+              <input class="inp" name="logo_url" value="{{ cfg.logo_url }}" placeholder="https://...">
+              <p class="hint">PNG transparente, max 300x80px.</p>
+            </div>
+            <div class="field">
+              <label class="lbl">Icono PWA / favicon (cuadrado)</label>
+              <input class="inp" name="icon_url" value="{{ cfg.icon_url }}" placeholder="https://...">
+              <p class="hint">512x512px. Acceso directo en movil. Usado en navbar si no hay logo.</p>
+            </div>
+          </div>
+          {% if cfg.nav_logo or cfg.icon_url %}
+          <div style="display:flex;gap:1rem;padding:.875rem 1rem;background:var(--page);border-radius:var(--r);margin-bottom:1rem;">
+            {% if cfg.nav_logo %}<div style="text-align:center;"><p class="hint" style="margin-bottom:4px;">Logo navbar</p><img src="{{ cfg.nav_logo }}" style="height:36px;width:auto;max-width:160px;object-fit:contain;"></div>{% endif %}
+            {% if cfg.icon_url %}<div style="text-align:center;"><p class="hint" style="margin-bottom:4px;">Icono PWA</p><img src="{{ cfg.icon_url }}" style="width:44px;height:44px;object-fit:cover;border-radius:10px;border:1px solid var(--border);"></div>{% endif %}
+          </div>
+          {% endif %}
+          <button class="btn btn-dark">Guardar identidad</button>
+        </form>
+      </div>
     </div>
 
-    {# ── Content ── #}
-    <div class="col-lg-9">
+    <div class="card" style="margin-bottom:1.25rem;">
+      <div class="card-header"><span class="card-header-label">Textos del sitio</span></div>
+      <div class="card-body">
+        <form action="/dashboard/configuracion/" method="post">{% csrf_token %}
+          <input type="hidden" name="seccion" value="inicio">
+          <div class="g2" style="margin-bottom:1rem;">
+            <div class="field"><label class="lbl">Boton de registro</label><input class="inp" name="cta_register_text" value="{{ cfg.cta_register_text }}" placeholder="Registro"></div>
+            <div class="field"><label class="lbl">Boton de login</label><input class="inp" name="cta_login_text" value="{{ cfg.cta_login_text }}" placeholder="Entrar"></div>
+          </div>
+          <button class="btn btn-dark">Guardar textos</button>
+        </form>
+      </div>
+    </div>
 
-        {# ── INICIO ── #}
-        {% if seccion == 'inicio' %}
-        <p class="section-label">Personalización</p>
-        <h2 style="margin-bottom:1.5rem;">Configuración del club</h2>
-        <div class="card-warm card-warm-body mb-4">
-            <form action="/dashboard/configuracion/" method="post" class="row g-3">
-                {% csrf_token %}
-                <input type="hidden" name="seccion" value="inicio">
-                <div class="col-md-6">
-                    <label class="form-label">Nombre del club</label>
-                    {{ settings_form.name }}
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">URL del logo</label>
-                    {{ settings_form.logo_url }}
-                </div>
-                <div class="col-12">
-                    <label class="form-label">Descripción pública</label>
-                    {{ settings_form.description }}
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Color principal</label>
-                    {{ settings_form.primary_color }}
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Color secundario</label>
-                    {{ settings_form.accent_color }}
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Tag de afiliado Amazon</label>
-                    {{ settings_form.affiliate_tag }}
-                </div>
-                <div class="col-12">
-                    <button class="btn-primary-warm">Guardar</button>
-                </div>
-            </form>
+    <div class="card">
+      <div class="card-header"><span class="card-header-label">Redes sociales</span></div>
+      <div class="card-body">
+        <form action="/integraciones/redes/nueva/" method="post" style="margin-bottom:1rem;">{% csrf_token %}
+          <div style="display:grid;grid-template-columns:1fr 2fr auto;gap:.75rem;align-items:end;">
+            <div class="field" style="margin-bottom:0;"><label class="lbl">Red social</label><input class="inp" name="network" placeholder="Instagram..."></div>
+            <div class="field" style="margin-bottom:0;"><label class="lbl">URL</label><input class="inp" name="url" type="url" placeholder="https://..."></div>
+            <button class="btn btn-ghost">Agregar</button>
+          </div>
+        </form>
+        {% if social_links %}
+        <div style="border-top:1px solid var(--border);padding-top:.875rem;">
+          {% for link in social_links %}
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;{% if not forloop.last %}border-bottom:1px solid var(--border);{% endif %}">
+            <div><span style="font-weight:500;font-size:.875rem;color:var(--ink);">{{ link.network }}</span><a href="{{ link.url }}" target="_blank" rel="noopener" style="font-size:.8125rem;color:var(--ink-light);margin-left:.5rem;">{{ link.url|truncatechars:40 }}</a></div>
+            <form action="/integraciones/redes/{{ link.id }}/eliminar/" method="post" style="margin:0;">{% csrf_token %}<button class="btn btn-ghost btn-sm" style="color:#8B2020;">Eliminar</button></form>
+          </div>
+          {% endfor %}
         </div>
-        {% endif %}
+        {% else %}<p style="font-size:.875rem;color:var(--ink-light);">Sin redes registradas.</p>{% endif %}
+      </div>
+    </div>
+    {% endif %}
 
-        {# ── STATS ── #}
-        {% if seccion == 'stats' %}
-        <p class="section-label">Resumen del club</p>
-        <h2 style="margin-bottom:1.5rem;">Estadísticas</h2>
+    <!-- ══ APARIENCIA ══ -->
+    {% if seccion == 'apariencia' %}
+    <h2 style="margin-bottom:.5rem;">Apariencia</h2>
+    <p style="color:var(--ink-light);font-size:.875rem;margin-bottom:1.5rem;">Elige un tema predefinido. Si quieres ajustes finos sobre el tema, puedes sobreescribir los colores despues.</p>
 
-        <div class="row g-3 mb-4">
-            <div class="col-6 col-md-3">
-                <div class="card-warm card-warm-body" style="text-align:center;">
-                    <div style="font-size:1.75rem;font-family:var(--serif);font-weight:600;color:var(--ink);">{{ stats.total_books }}</div>
-                    <div style="font-size:0.75rem;color:var(--ink-light);margin-top:2px;">Libros totales</div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="card-warm card-warm-body" style="text-align:center;">
-                    <div style="font-size:1.75rem;font-family:var(--serif);font-weight:600;color:#2D6A2D;">{{ stats.books_read }}</div>
-                    <div style="font-size:0.75rem;color:var(--ink-light);margin-top:2px;">Leídos</div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="card-warm card-warm-body" style="text-align:center;">
-                    <div style="font-size:1.75rem;font-family:var(--serif);font-weight:600;color:#7A4F0D;">{{ stats.total_votes }}</div>
-                    <div style="font-size:0.75rem;color:var(--ink-light);margin-top:2px;">Votos emitidos</div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="card-warm card-warm-body" style="text-align:center;">
-                    <div style="font-size:1.75rem;font-family:var(--serif);font-weight:600;color:var(--ink);">{{ stats.approved_users }}</div>
-                    <div style="font-size:0.75rem;color:var(--ink-light);margin-top:2px;">Miembros activos</div>
-                </div>
-            </div>
-        </div>
+    <form action="/dashboard/configuracion/" method="post">{% csrf_token %}
+      <input type="hidden" name="seccion" value="apariencia">
 
-        {% if stats.top_voted %}
-        <div class="card-warm card-warm-body mb-4">
-            <p class="section-label">Libros más votados</p>
-            {% for item in stats.top_voted %}
-            <div class="d-flex justify-content-between align-items-center py-2 {% if not forloop.last %}border-bottom{% endif %}" style="border-color:var(--parchment-3) !important;">
-                <div>
-                    <strong style="font-family:var(--serif);">{{ item.title }}</strong>
-                    <span style="font-size:0.8125rem;color:var(--ink-light);margin-left:0.5rem;">{{ item.author }}</span>
+      <div class="card" style="margin-bottom:1.25rem;">
+        <div class="card-header"><span class="card-header-label">Tema predefinido</span></div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.875rem;margin-bottom:1.25rem;">
+
+            {% for theme_key, theme_label in theme_choices %}
+            <label style="cursor:pointer;">
+              <input type="radio" name="theme" value="{{ theme_key }}" {% if cfg.theme == theme_key %}checked{% endif %} style="position:absolute;opacity:0;width:0;height:0;">
+              <div style="border:2px solid {% if cfg.theme == theme_key %}var(--accent){% else %}var(--border){% endif %};border-radius:12px;overflow:hidden;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='{% if cfg.theme == theme_key %}var(--accent){% else %}var(--border){% endif %}'">
+                <div style="height:80px;background:{{ theme_key|theme_page_color }};padding:.75rem;display:flex;flex-direction:column;justify-content:space-between;">
+                  <div style="height:12px;background:{{ theme_key|theme_primary_color }};border-radius:4px;width:60%;opacity:.9;"></div>
+                  <div>
+                    <div style="height:8px;background:{{ theme_key|theme_ink_color }};border-radius:3px;width:80%;opacity:.7;margin-bottom:4px;"></div>
+                    <div style="height:6px;background:{{ theme_key|theme_ink_color }};border-radius:3px;width:55%;opacity:.4;"></div>
+                  </div>
+                  <div style="height:14px;background:{{ theme_key|theme_primary_color }};border-radius:4px;width:40%;"></div>
                 </div>
-                <span class="badge-warm future">{{ item.vote_count }} voto{{ item.vote_count|pluralize:"s" }}</span>
-            </div>
+                <div style="padding:.625rem .75rem;background:white;">
+                  <p style="font-size:.8125rem;font-weight:500;color:#111;margin-bottom:1px;">{{ theme_label }}</p>
+                  {% if cfg.theme == theme_key %}<p style="font-size:.6875rem;color:var(--accent);">Activo</p>{% endif %}
+                </div>
+              </div>
+            </label>
             {% endfor %}
-        </div>
-        {% endif %}
 
-        {% if stats.recent_reviews %}
-        <div class="card-warm card-warm-body">
-            <p class="section-label">Reseñas recientes aprobadas</p>
-            {% for r in stats.recent_reviews %}
-            <div class="py-2 {% if not forloop.last %}border-bottom{% endif %}" style="border-color:var(--parchment-3) !important;">
-                <div class="d-flex justify-content-between">
-                    <strong style="font-size:0.875rem;">{{ r.book.title }}</strong>
-                    <span class="stars" style="font-size:0.8125rem;">{% for i in "12345" %}{% if forloop.counter <= r.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
-                </div>
-                <div style="font-size:0.8125rem;color:var(--ink-light);">{{ r.user.username }} · {{ r.created_at|date:"j M" }}</div>
-                <p style="font-size:0.875rem;margin:0.25rem 0 0;color:var(--ink);">{{ r.comment|truncatechars:120 }}</p>
-            </div>
-            {% endfor %}
+          </div>
+          <button class="btn btn-dark" type="submit">Aplicar tema</button>
         </div>
-        {% endif %}
-        {% endif %}
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-header-label">Ajustes finos de color (opcional)</span></div>
+        <div class="card-body">
+          <p style="font-size:.875rem;color:var(--ink-light);margin-bottom:1rem;">Sobreescribe colores especificos del tema. Dejar en blanco para usar los del tema seleccionado.</p>
+          <div class="g2" style="margin-bottom:1rem;">
+            <div class="field">
+              <label class="lbl">Color primario (botones, nav icon)</label>
+              <div style="display:flex;gap:.5rem;align-items:center;">
+                <input type="color" class="inp" name="primary_color" value="{{ cfg.primary_color|default:'#3D2B1F' }}" style="width:52px;height:42px;padding:3px 6px;cursor:pointer;flex-shrink:0;">
+                <input type="text" class="inp" id="primary_color_hex" value="{{ cfg.primary_color }}" placeholder="Dejar vacio para usar el del tema" style="flex:1;" oninput="document.querySelector('[name=primary_color]').value=this.value">
+              </div>
+            </div>
+            <div class="field">
+              <label class="lbl">Color acento (links, chips, eyebrows)</label>
+              <div style="display:flex;gap:.5rem;align-items:center;">
+                <input type="color" class="inp" name="accent_color" value="{{ cfg.accent_color|default:'#B87333' }}" style="width:52px;height:42px;padding:3px 6px;cursor:pointer;flex-shrink:0;">
+                <input type="text" class="inp" id="accent_color_hex" value="{{ cfg.accent_color }}" placeholder="Dejar vacio para usar el del tema" style="flex:1;" oninput="document.querySelector('[name=accent_color]').value=this.value">
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;gap:.75rem;">
+            <button class="btn btn-dark" type="submit">Guardar colores</button>
+            <a href="/dashboard/reset-colores/" class="btn btn-ghost btn-sm">Restablecer colores del tema</a>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <div class="card" style="margin-top:1.25rem;">
+      <div class="card-header"><span class="card-header-label">Footer</span></div>
+      <div class="card-body">
+        <form action="/dashboard/configuracion/" method="post">{% csrf_token %}
+          <input type="hidden" name="seccion" value="apariencia">
+          <div class="g2" style="margin-bottom:1rem;">
+            <div class="field"><label class="lbl">Powered by — nombre</label><input class="inp" name="footer_powered_by_name" value="{{ cfg.footer_powered_by_name }}" placeholder="Gold Tech Mx"></div>
+            <div class="field"><label class="lbl">Powered by — URL</label><input class="inp" name="footer_powered_by_url" value="{{ cfg.footer_powered_by_url }}" type="url" placeholder="https://goldtech.mx"></div>
+          </div>
+          <div class="g2" style="margin-bottom:1rem;">
+            <div class="field"><label class="lbl">Link adicional — texto</label><input class="inp" name="footer_custom_link_text" value="{{ cfg.footer_custom_link_text }}" placeholder="Terminos de uso"></div>
+            <div class="field"><label class="lbl">Link adicional — URL</label><input class="inp" name="footer_custom_link_url" value="{{ cfg.footer_custom_link_url }}" type="url" placeholder="https://..."></div>
+          </div>
+          <div class="field" style="margin-bottom:1rem;">
+            <label class="lbl">Texto libre del footer</label>
+            <input class="inp" name="footer_text" value="{{ cfg.footer_text }}" placeholder="Copyright 2025 Mi Club de Lectura">
+          </div>
+          <button class="btn btn-dark">Guardar footer</button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- ══ STATS ══ -->
+    {% if seccion == 'stats' %}
+    <h2 style="margin-bottom:1.5rem;">Estadisticas</h2>
+    <div class="g4" style="margin-bottom:1.5rem;">
+      <div class="stat"><div class="stat-num">{{ stats.total_books }}</div><div class="stat-lbl">Libros totales</div></div>
+      <div class="stat"><div class="stat-num" style="color:#2D6A2D;">{{ stats.books_read }}</div><div class="stat-lbl">Leidos</div></div>
+      <div class="stat"><div class="stat-num" style="color:var(--accent);">{{ stats.total_votes }}</div><div class="stat-lbl">Votos</div></div>
+      <div class="stat"><div class="stat-num">{{ stats.approved_users }}</div><div class="stat-lbl">Miembros</div></div>
+    </div>
+    {% if stats.top_voted %}
+    <div class="card" style="margin-bottom:1.25rem;">
+      <div class="card-header"><span class="card-header-label">Mas votados</span></div>
+      <div class="card-body" style="padding:0;">
+        {% for item in stats.top_voted %}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:.875rem 1.5rem;{% if not forloop.last %}border-bottom:1px solid var(--border);{% endif %}">
+          <div><span style="font-family:var(--serif);font-size:.9375rem;color:var(--ink);">{{ item.title }}</span><span style="font-size:.8125rem;color:var(--ink-light);margin-left:.5rem;font-style:italic;">{{ item.author }}</span></div>
+          <span class="chip chip-future">{{ item.vote_count }} voto{{ item.vote_count|pluralize:"s" }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    {% if stats.recent_reviews %}
+    <div class="card">
+      <div class="card-header"><span class="card-header-label">Resenas recientes</span></div>
+      <div class="card-body" style="padding:0;">
+        {% for r in stats.recent_reviews %}
+        <div style="padding:.875rem 1.5rem;{% if not forloop.last %}border-bottom:1px solid var(--border);{% endif %}">
+          <div style="display:flex;justify-content:space-between;margin-bottom:2px;">
+            <span style="font-family:var(--serif);font-size:.875rem;font-weight:600;color:var(--ink);">{{ r.book.title }}</span>
+            <span style="color:var(--accent);font-size:.875rem;">{% for i in "12345" %}{% if forloop.counter <= r.rating %}&#9733;{% else %}&#9734;{% endif %}{% endfor %}</span>
+          </div>
+          <p style="font-size:.8125rem;color:var(--ink-light);">{{ r.user.username }} &middot; {{ r.created_at|date:"j M" }}</p>
+          <p style="font-size:.875rem;color:var(--ink-mid);margin-top:4px;">{{ r.comment|truncatechars:120 }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
 
         {# ── LIBROS ── #}
         {% if seccion == 'libros' %}
@@ -163,9 +273,9 @@
                 <div class="col-md-4"><input class="form-control" name="author" value="{{ b.author }}"></div>
                 <div class="col-md-2">
                     <select class="form-select" name="status">
-                        <option value="completed" {% if b.status= ="completed" %}selected{% endif %}>Leido</option>
-                        <option value="reading" {% if b.status= ="reading" %}selected{% endif %}>Leyendo</option>
-                        <option value="future" {% if b.status= ="future" %}selected{% endif %}>Por leer</option>
+                        <option value="completed" {% if b.status == "completed" %}selected{% endif %}>Leido</option>
+                        <option value="reading" {% if b.status == "reading" %}selected{% endif %}>Leyendo</option>
+                        <option value="future" {% if b.status == "future" %}selected{% endif %}>Por leer</option>
                     </select>
                 </div>
                 <div class="col-md-1"><button class="btn-primary-warm w-100" style="padding:0.45rem 0.5rem;">✓</button></div>
@@ -174,223 +284,287 @@
         {% endfor %}
         {% endif %}
 
-        {# ── EVENTOS ── #}
-        {% if seccion == 'eventos' %}
-        <p class="section-label">Gestión de eventos</p>
-        <h2 style="margin-bottom:1.5rem;">Eventos</h2>
-        <div class="card-warm card-warm-body mb-4">
-            <p class="section-label">Agregar evento</p>
-            <form action="/eventos/nuevo/" method="post">{% csrf_token %}{{ event_form.as_p }}<button class="btn-primary-warm">Guardar evento</button></form>
-        </div>
-        {% for e in events_all %}
-        <div class="card-warm card-warm-body mb-2">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <div>
-                    <strong style="font-family:var(--serif);">{{ e.title }}</strong>
-                    <div style="font-size:0.8125rem;color:var(--ink-light);">{{ e.event_type }} · {{ e.starts_at|date:"j M Y, H:i" }}</div>
-                </div>
-                <form action="/eventos/{{ e.id }}/eliminar/" method="post" style="margin:0;" onsubmit="return confirm('¿Eliminar este evento?')">
-                    {% csrf_token %}
-                    <button class="btn-danger-warm" style="font-size:0.8125rem;padding:0.3rem 0.75rem;">Eliminar</button>
-                </form>
-            </div>
-        </div>
-        {% endfor %}
-        {% endif %}
-
-        {# ── USUARIOS ── #}
-        {% if seccion == 'usuarios' %}
-        <p class="section-label">Gestión de miembros</p>
-        <h2 style="margin-bottom:1.5rem;">Usuarios</h2>
-
-        <div class="card-warm card-warm-body mb-4">
-            <p class="section-label">Invitar usuario</p>
-            <form action="/admin/invitar/" method="post" class="row g-2">
-                {% csrf_token %}
-                <div class="col-md-4">
-                    <label class="form-label">Nombre completo</label>
-                    <input class="form-control" name="name" placeholder="Ej. Ana Torres" required>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Correo electrónico</label>
-                    <input class="form-control" name="email" type="email" placeholder="ana@correo.com" required>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Rol</label>
-                    <select class="form-select" name="role">
-                        <option value="user">Usuario</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button class="btn-primary-warm w-100">Invitar</button>
-                </div>
-            </form>
-        </div>
-
-        {% if users_pending %}
-        <div class="card-warm card-warm-body mb-4" style="border-color:#F0D295;">
-            <p class="section-label">Pendientes de aprobación</p>
-            {% for u in users_pending %}
-            <div class="d-flex justify-content-between align-items-center py-2 {% if not forloop.last %}border-bottom{% endif %}" style="border-color:var(--parchment-3) !important;">
-                <div>
-                    <strong>{{ u.username }}</strong>
-                    <span style="font-size:0.8125rem;color:var(--ink-light);margin-left:0.5rem;">{{ u.email }}</span>
-                </div>
-                <form action="/usuarios/{{ u.id }}/aprobar/" method="post" style="margin:0;">
-                    {% csrf_token %}
-                    <button class="btn-primary-warm" style="font-size:0.8125rem;padding:0.3rem 0.75rem;">Aprobar</button>
-                </form>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-
-        <div class="card-warm card-warm-body">
-            <p class="section-label">Miembros actuales</p>
-            {% for u in users_all %}
-            <div class="py-3 {% if not forloop.last %}border-bottom{% endif %}" style="border-color:var(--parchment-3) !important;">
-                <form action="/usuarios/{{ u.id }}/editar/" method="post" class="row g-2 align-items-end">
-                    {% csrf_token %}
-                    <div class="col-md-3">
-                        <label class="form-label">Nombre</label>
-                        <input class="form-control" name="full_name" value="{{ u.full_name }}">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Correo</label>
-                        <input class="form-control" name="email" value="{{ u.email }}">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Libro favorito</label>
-                        <input class="form-control" name="favorite_book" value="{{ u.favorite_book }}">
-                    </div>
-                    <div class="col-md-2 d-flex gap-1">
-                        <button class="btn-primary-warm flex-fill" style="font-size:0.8125rem;padding:0.4rem 0;">✓</button>
-                        <form action="/usuarios/{{ u.id }}/eliminar/" method="post" style="margin:0;" onsubmit="return confirm('¿Eliminar a {{ u.username }}?')">
-                            {% csrf_token %}
-                            <button class="btn-danger-warm" style="font-size:0.8125rem;padding:0.4rem 0.6rem;">✕</button>
-                        </form>
-                    </div>
-                </form>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-
-        {# ── RESEÑAS ── #}
-        {% if seccion == 'resenas' %}
-        <p class="section-label">Moderación</p>
-        <h2 style="margin-bottom:1.5rem;">Reseñas</h2>
-        {% for r in reviews_all %}
-        <div class="card-warm card-warm-body mb-3">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-                <div>
-                    <strong style="font-family:var(--serif);">{{ r.book.title }}</strong>
-                    <span style="font-size:0.8125rem;color:var(--ink-light);margin-left:0.5rem;">{{ r.user.username }}</span>
-                </div>
-                <span class="stars" style="font-size:0.875rem;">{% for i in "12345" %}{% if forloop.counter <= r.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
-            </div>
-            <p style="font-size:0.9375rem;color:var(--ink);margin-bottom:0.75rem;">{{ r.comment }}</p>
-            {% if r.is_flagged %}
-            <span class="badge-warm future mb-2">Marcada · {{ r.moderation_note }}</span>
-            {% elif r.is_approved %}
-            <span class="badge-warm reading mb-2">Aprobada</span>
-            {% else %}
-            <span class="badge-warm mb-2">Pendiente</span>
-            {% endif %}
-            <div class="d-flex gap-2 flex-wrap mt-2">
-                <form action="/resenas/{{ r.id }}/aprobar/" method="post" style="margin:0;">
-                    {% csrf_token %}
-                    <input name="moderation_note" class="form-control d-inline" style="width:180px;display:inline-block;font-size:0.8125rem;" placeholder="Nota (opcional)">
-                    <button class="btn-primary-warm ms-1" style="font-size:0.8125rem;">Aprobar</button>
-                </form>
-                <form action="/resenas/{{ r.id }}/marcar/" method="post" style="margin:0;">
-                    {% csrf_token %}
-                    <input name="moderation_note" class="form-control d-inline" style="width:180px;display:inline-block;font-size:0.8125rem;" placeholder="Motivo" required>
-                    <button class="btn-outline-warm ms-1" style="font-size:0.8125rem;">Marcar</button>
-                </form>
-                <form action="/resenas/{{ r.id }}/eliminar/" method="post" style="margin:0;" onsubmit="return confirm('¿Eliminar reseña?')">
-                    {% csrf_token %}
-                    <button class="btn-danger-warm" style="font-size:0.8125rem;">Eliminar</button>
-                </form>
-            </div>
-        </div>
-        {% empty %}
-        <p style="color:var(--ink-light);">No hay reseñas.</p>
-        {% endfor %}
-        {% endif %}
-
-        {# ── INTEGRACIONES ── #}
-        {% if seccion == 'integraciones' %}
-        <p class="section-label">Integraciones</p>
-        <h2 style="margin-bottom:1.5rem;">Google & redes sociales</h2>
-
-        {% if settings_form.google_login_enabled %}
-        <div class="card-warm card-warm-body mb-4">
-            <p class="section-label">Google OAuth</p>
-            <form action="/dashboard/configuracion/" method="post" class="row g-3">
-                {% csrf_token %}
-                <input type="hidden" name="seccion" value="integraciones">
-                <div class="col-12 d-flex align-items-center gap-2">
-                    {{ settings_form.google_login_enabled }}
-                    <label class="form-label mb-0">Habilitar inicio de sesión con Google</label>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Google Client ID</label>
-                    {{ settings_form.google_client_id }}
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Google Client Secret</label>
-                    {{ settings_form.google_client_secret }}
-                </div>
-                <div class="col-12"><button class="btn-primary-warm">Guardar Google OAuth</button></div>
-            </form>
-        </div>
-        {% endif %}
-
-        <div class="card-warm card-warm-body">
-            <p class="section-label">Redes sociales</p>
-            <form action="/integraciones/redes/nueva/" method="post" class="row g-2 mb-3">
-                {% csrf_token %}
-                <div class="col-md-4">
-                    <label class="form-label">Red social</label>
-                    {{ social_form.network }}
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">URL</label>
-                    {{ social_form.url }}
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button class="btn-primary-warm w-100">Agregar</button>
-                </div>
-            </form>
-            {% for link in social_links %}
-            <div class="d-flex justify-content-between align-items-center py-2 {% if not forloop.last %}border-bottom{% endif %}" style="border-color:var(--parchment-3) !important;">
-                <span style="font-size:0.875rem;">{{ link.network }} — {{ link.url }}</span>
-                <form action="/integraciones/redes/{{ link.id }}/eliminar/" method="post" style="margin:0;">
-                    {% csrf_token %}
-                    <button class="btn-danger-warm" style="font-size:0.8125rem;padding:0.25rem 0.6rem;">Eliminar</button>
-                </form>
-            </div>
-            {% empty %}
-            <p style="color:var(--ink-light);margin:0;font-size:0.875rem;">Sin redes registradas.</p>
-            {% endfor %}
-        </div>
-        {% endif %}
-
-        {# ── PERFIL ── #}
-        {% if seccion == 'perfil' %}
-        <p class="section-label">Tu cuenta</p>
-        <h2 style="margin-bottom:1.5rem;">Mi perfil</h2>
-        <div class="card-warm card-warm-body" style="max-width:520px;">
-            <form action="/perfil/editar/" method="post">
-                {% csrf_token %}
-                {{ profile_form.as_p }}
-                <button class="btn-primary-warm mt-2">Guardar perfil</button>
-            </form>
-        </div>
-        {% endif %}
-
+    <!-- ══ EVENTOS ══ -->
+    {% if seccion == 'eventos' %}
+    <h2 style="margin-bottom:1.5rem;">Eventos</h2>
+    <div class="card" style="margin-bottom:1.25rem;">
+      <div class="card-header"><span class="card-header-label">Agregar evento</span></div>
+      <div class="card-body">
+        <form action="/eventos/nuevo/" method="post">{% csrf_token %}
+          <div class="g2" style="margin-bottom:1rem;">
+            <div class="field"><label class="lbl">Titulo *</label><input class="inp" name="title" required></div>
+            <div class="field"><label class="lbl">Tipo</label><input class="inp" name="event_type" placeholder="Sesion, intercambio, cine..."></div>
+          </div>
+          <div class="g2" style="margin-bottom:1rem;">
+            <div class="field"><label class="lbl">Fecha y hora *</label><input class="inp" name="starts_at" type="datetime-local" required></div>
+            <div class="field"><label class="lbl">Visibilidad</label><select class="sel" name="visibility"><option value="public">Publico</option><option value="private">Solo miembros</option><option value="admins">Solo admins</option></select></div>
+          </div>
+          <div class="g2" style="margin-bottom:1rem;">
+            <div class="field"><label class="lbl">Lugar</label><input class="inp" name="location" placeholder="Direccion o link"></div>
+            <div class="field"><label class="lbl">Video</label><input class="inp" name="external_video_url" type="url"></div>
+          </div>
+          <div class="field" style="margin-bottom:1rem;"><label class="lbl">Descripcion</label><textarea class="txa" name="description" rows="2"></textarea></div>
+          <button class="btn btn-dark">Guardar evento</button>
+        </form>
+      </div>
     </div>
+    <div class="card">
+      <div class="card-header"><span class="card-header-label">Eventos registrados</span></div>
+      {% for e in events_all %}
+      <div style="border-bottom:{% if not forloop.last %}1px solid var(--border){% else %}none{% endif %};padding:.875rem 1.5rem;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;flex-wrap:wrap;">
+          <div>
+            <span style="font-family:var(--serif);font-size:.9375rem;font-weight:600;color:var(--ink);">{{ e.title }}</span>
+            <span class="chip chip-muted" style="margin-left:.5rem;">{{ e.event_type }}</span>
+            <div style="font-size:.8125rem;color:var(--ink-light);margin-top:3px;">{{ e.starts_at|date:"j M Y, H:i" }}{% if e.location %} &middot; {{ e.location }}{% endif %}</div>
+          </div>
+          <form action="/eventos/{{ e.id }}/eliminar/" method="post" style="margin:0;" onsubmit="return confirm('Eliminar?')">{% csrf_token %}<button class="btn btn-ghost btn-sm" style="color:#8B2020;">Eliminar</button></form>
+        </div>
+        <details style="margin-top:.75rem;">
+          <summary style="font-size:.8125rem;color:var(--accent);display:inline-flex;align-items:center;gap:4px;">&#9998; Editar</summary>
+          <form action="/eventos/{{ e.id }}/editar/" method="post" style="margin-top:.75rem;">{% csrf_token %}
+            <div class="g2" style="margin-bottom:.75rem;">
+              <div class="field"><label class="lbl">Titulo</label><input class="inp" name="title" value="{{ e.title }}"></div>
+              <div class="field"><label class="lbl">Tipo</label><input class="inp" name="event_type" value="{{ e.event_type }}"></div>
+            </div>
+            <div class="g2" style="margin-bottom:.75rem;">
+              <div class="field"><label class="lbl">Fecha y hora</label><input class="inp" name="starts_at" type="datetime-local" value="{{ e.starts_at|date:'Y-m-d' }}T{{ e.starts_at|date:'H:i' }}"></div>
+              <div class="field"><label class="lbl">Visibilidad</label><select class="sel" name="visibility"><option value="public" {% if e.visibility == "public" %}selected{% endif %}>Publico</option><option value="private" {% if e.visibility == "private" %}selected{% endif %}>Solo miembros</option><option value="admins" {% if e.visibility == "admins" %}selected{% endif %}>Solo admins</option></select></div>
+            </div>
+            <div class="g2" style="margin-bottom:.75rem;">
+              <div class="field"><label class="lbl">Lugar</label><input class="inp" name="location" value="{{ e.location }}"></div>
+              <div class="field"><label class="lbl">Video</label><input class="inp" name="external_video_url" value="{{ e.external_video_url }}" type="url"></div>
+            </div>
+            <div class="field" style="margin-bottom:.75rem;"><label class="lbl">Descripcion</label><textarea class="txa" name="description" rows="2">{{ e.description }}</textarea></div>
+            <button class="btn btn-dark btn-sm">Guardar</button>
+          </form>
+        </details>
+      </div>
+      {% empty %}<div style="padding:2rem 1.5rem;color:var(--ink-light);font-size:.875rem;">Sin eventos.</div>{% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ══ USUARIOS ══ -->
+    {% if seccion == 'usuarios' %}
+    <h2 style="margin-bottom:1.5rem;">Usuarios</h2>
+    <div class="card" style="margin-bottom:1.25rem;">
+      <div class="card-header"><span class="card-header-label">Invitar usuario</span></div>
+      <div class="card-body">
+        <form action="/admin/invitar/" method="post">{% csrf_token %}
+          <div style="display:grid;grid-template-columns:1fr 1fr 140px auto;gap:.75rem;align-items:end;">
+            <div class="field" style="margin-bottom:0;"><label class="lbl">Nombre completo</label><input class="inp" name="name" required></div>
+            <div class="field" style="margin-bottom:0;"><label class="lbl">Correo</label><input class="inp" name="email" type="email" required></div>
+            <div class="field" style="margin-bottom:0;"><label class="lbl">Rol</label><select class="sel" name="role"><option value="user">Usuario</option><option value="admin">Admin</option></select></div>
+            <button class="btn btn-dark">Invitar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    {% if users_pending %}
+    <div class="card" style="margin-bottom:1.25rem;border-color:var(--accent-bdr);">
+      <div class="card-header"><span class="card-header-label">Pendientes ({{ users_pending.count }})</span></div>
+      <div class="card-body" style="padding:0;">
+        {% for u in users_pending %}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:.875rem 1.5rem;{% if not forloop.last %}border-bottom:1px solid var(--border);{% endif %}">
+          <div><span style="font-weight:500;color:var(--ink);">{{ u.username }}</span><span style="font-size:.8125rem;color:var(--ink-light);margin-left:.5rem;">{{ u.email }}</span></div>
+          <form action="/usuarios/{{ u.id }}/aprobar/" method="post" style="margin:0;">{% csrf_token %}<button class="btn btn-accent btn-sm">Aprobar</button></form>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    <div class="card">
+      <div class="card-header"><span class="card-header-label">Miembros ({{ users_all|length }})</span></div>
+      <div class="card-body" style="padding:0;">
+        {% for u in users_all %}
+        <div style="padding:.875rem 1.5rem;{% if not forloop.last %}border-bottom:1px solid var(--border);{% endif %}">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
+            <div>
+              <span style="font-weight:500;color:var(--ink);">{{ u.username }}</span>
+              <span style="font-size:.75rem;color:var(--ink-light);margin-left:.5rem;">{{ u.role }}</span>
+              {% if u.is_approved %}<span class="chip chip-reading" style="margin-left:.5rem;font-size:.625rem;">activo</span>{% else %}<span class="chip chip-muted" style="margin-left:.5rem;font-size:.625rem;">pendiente</span>{% endif %}
+            </div>
+            <form action="/usuarios/{{ u.id }}/eliminar/" method="post" style="margin:0;" onsubmit="return confirm('Eliminar a {{ u.username }}?')">{% csrf_token %}<button class="btn btn-ghost btn-sm" style="color:#8B2020;">Eliminar</button></form>
+          </div>
+          <form action="/usuarios/{{ u.id }}/editar/" method="post">{% csrf_token %}
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:.75rem;align-items:end;">
+              <div class="field" style="margin-bottom:0;"><label class="lbl">Nombre</label><input class="inp" name="full_name" value="{{ u.full_name }}"></div>
+              <div class="field" style="margin-bottom:0;"><label class="lbl">Correo</label><input class="inp" name="email" value="{{ u.email }}"></div>
+              <div class="field" style="margin-bottom:0;"><label class="lbl">Libro favorito</label><input class="inp" name="favorite_book" value="{{ u.favorite_book }}"></div>
+              <button class="btn btn-ghost btn-sm">Guardar</button>
+            </div>
+          </form>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- ══ RESENAS ══ -->
+    {% if seccion == 'resenas' %}
+    <h2 style="margin-bottom:1.5rem;">Moderacion de resenas</h2>
+    {% for r in reviews_all %}
+    <div class="card" style="margin-bottom:1rem;">
+      <div class="card-body">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.5rem;">
+          <div><span style="font-family:var(--serif);font-size:.9375rem;font-weight:600;color:var(--ink);">{{ r.book.title }}</span><span style="font-size:.8125rem;color:var(--ink-light);margin-left:.5rem;">por {{ r.user.username }}</span></div>
+          <div style="display:flex;align-items:center;gap:.5rem;">
+            <span style="color:var(--accent);font-size:.875rem;">{% for i in "12345" %}{% if forloop.counter <= r.rating %}&#9733;{% else %}&#9734;{% endif %}{% endfor %}</span>
+            {% if r.is_approved %}<span class="chip chip-reading" style="font-size:.625rem;">Aprobada</span>{% elif r.is_flagged %}<span class="chip chip-future" style="font-size:.625rem;">Marcada</span>{% else %}<span class="chip chip-muted" style="font-size:.625rem;">Pendiente</span>{% endif %}
+          </div>
+        </div>
+        <p style="font-size:.9375rem;color:var(--ink-mid);margin-bottom:1rem;line-height:1.55;">{{ r.comment }}</p>
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+          <form action="/resenas/{{ r.id }}/aprobar/" method="post" style="margin:0;display:flex;gap:.5rem;">{% csrf_token %}
+            <input class="inp" name="moderation_note" placeholder="Nota opcional" style="width:150px;font-size:.8125rem;padding:6px 10px;">
+            <button class="btn btn-accent btn-sm">Aprobar</button>
+          </form>
+          <form action="/resenas/{{ r.id }}/marcar/" method="post" style="margin:0;display:flex;gap:.5rem;">{% csrf_token %}
+            <input class="inp" name="moderation_note" placeholder="Motivo" required style="width:150px;font-size:.8125rem;padding:6px 10px;">
+            <button class="btn btn-ghost btn-sm">Marcar</button>
+          </form>
+          <form action="/resenas/{{ r.id }}/eliminar/" method="post" style="margin:0;" onsubmit="return confirm('Eliminar?')">{% csrf_token %}<button class="btn btn-ghost btn-sm" style="color:#8B2020;">Eliminar</button></form>
+        </div>
+      </div>
+    </div>
+    {% empty %}<div class="card card-body" style="color:var(--ink-light);">Sin resenas.</div>{% endfor %}
+    {% endif %}
+
+    <!-- ══ INTEGRACIONES ══ -->
+    {% if seccion == 'integraciones' %}
+    <h2 style="margin-bottom:1.5rem;">Integraciones</h2>
+    <div class="card" style="margin-bottom:1.25rem;">
+      <div class="card-header"><span class="card-header-label">Dominio publico</span></div>
+      <div class="card-body">
+        <form action="/dashboard/configuracion/" method="post">{% csrf_token %}
+          <input type="hidden" name="seccion" value="integraciones">
+          <div class="field" style="max-width:400px;">
+            <label class="lbl">Dominio del sitio (sin https://)</label>
+            <input class="inp" name="public_domain" value="{{ cfg.public_domain }}" placeholder="miclub.com">
+            <p class="hint">Con Cloudflare Tunnel pon el dominio configurado en el tunel. Se usa en correos y PWA.</p>
+          </div>
+          <p style="font-size:.8125rem;color:var(--ink-light);margin-bottom:1rem;">URL actual: <strong style="color:var(--ink);">{{ cfg.public_url }}</strong></p>
+          <button class="btn btn-dark">Guardar</button>
+        </form>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:1.25rem;">
+      <div class="card-header"><span class="card-header-label">Amazon afiliados</span></div>
+      <div class="card-body">
+        <form action="/dashboard/configuracion/" method="post">{% csrf_token %}
+          <input type="hidden" name="seccion" value="integraciones">
+          <div class="field" style="max-width:360px;">
+            <label class="lbl">Tag de afiliado</label>
+            <input class="inp" name="affiliate_tag" value="{{ cfg.affiliate_tag }}" placeholder="tu-tag-20">
+            <p class="hint">Si se deja vacio se usara el tag predeterminado del sistema.</p>
+          </div>
+          <button class="btn btn-dark" style="margin-top:.5rem;">Guardar</button>
+        </form>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:1.25rem;">
+      <div class="card-header">
+        <span class="card-header-label">Servidor de correo SMTP</span>
+        {% if cfg.smtp_configured %}<span class="chip chip-reading" style="font-size:.625rem;">Configurado</span>{% else %}<span class="chip chip-muted" style="font-size:.625rem;">Sin configurar</span>{% endif %}
+      </div>
+      <div class="card-body">
+        <form action="/dashboard/configuracion/" method="post">{% csrf_token %}
+          <input type="hidden" name="seccion" value="integraciones">
+          <div class="g2" style="margin-bottom:1rem;">
+            <div class="field"><label class="lbl">Servidor SMTP</label><input class="inp" name="smtp_host" value="{{ cfg.smtp_host }}" placeholder="smtp.gmail.com"></div>
+            <div class="field"><label class="lbl">Puerto</label><input class="inp" name="smtp_port" type="number" value="{{ cfg.smtp_port }}"></div>
+          </div>
+          <div class="g2" style="margin-bottom:1rem;">
+            <div class="field"><label class="lbl">Usuario</label><input class="inp" name="smtp_user" value="{{ cfg.smtp_user }}" placeholder="tu@gmail.com"></div>
+            <div class="field"><label class="lbl">Contrasena / App Password</label><input class="inp" name="smtp_password" type="password" value="{{ cfg.smtp_password }}"></div>
+          </div>
+          <div class="g2" style="margin-bottom:1rem;">
+            <div class="field"><label class="lbl">Remitente</label><input class="inp" name="email_from" value="{{ cfg.email_from }}" placeholder="Mi Club &lt;club@midominio.com&gt;"></div>
+            <div class="field" style="display:flex;align-items:flex-end;padding-bottom:.25rem;">
+              <label style="display:flex;align-items:center;gap:.5rem;font-size:.875rem;color:var(--ink-mid);cursor:pointer;">
+                <input type="checkbox" name="smtp_use_tls" {% if cfg.smtp_use_tls %}checked{% endif %} style="accent-color:var(--accent);width:18px;height:18px;">
+                Usar TLS
+              </label>
+            </div>
+          </div>
+          <div style="display:flex;gap:.75rem;align-items:center;">
+            <button class="btn btn-dark">Guardar SMTP</button>
+            {% if cfg.smtp_configured %}<a href="/integraciones/smtp/test/" class="btn btn-ghost btn-sm">Enviar correo de prueba a {{ user.email }}</a>{% endif %}
+          </div>
+        </form>
+      </div>
+    </div>
+    {% if settings_form.google_login_enabled %}
+    <div class="card">
+      <div class="card-header"><span class="card-header-label">Google OAuth</span></div>
+      <div class="card-body">
+        <form action="/dashboard/configuracion/" method="post">{% csrf_token %}
+          <input type="hidden" name="seccion" value="integraciones">
+          <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;padding:.75rem 1rem;background:var(--accent-bg);border-radius:var(--r);">
+            <input type="checkbox" id="g_en" name="google_login_enabled" {% if cfg.google_login_enabled %}checked{% endif %} style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer;">
+            <label for="g_en" style="font-size:.875rem;cursor:pointer;">Habilitar inicio de sesion con Google</label>
+          </div>
+          <div class="g2" style="margin-bottom:1rem;">
+            <div class="field"><label class="lbl">Google Client ID</label><input class="inp" name="google_client_id" value="{{ cfg.google_client_id }}"></div>
+            <div class="field"><label class="lbl">Google Client Secret</label><input class="inp" name="google_client_secret" type="password" value="{{ cfg.google_client_secret }}"></div>
+          </div>
+          <p class="hint" style="margin-bottom:1rem;">Redirect URI: <code style="background:var(--page);padding:2px 6px;border-radius:4px;">{{ request.scheme }}://{{ request.get_host }}/accounts/google/login/callback/</code></p>
+          <button class="btn btn-dark">Guardar</button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <!-- ══ CORREOS ══ -->
+    {% if seccion == 'correos' %}
+    <h2 style="margin-bottom:.5rem;">Plantillas de correo</h2>
+    <p style="color:var(--ink-light);font-size:.875rem;margin-bottom:1.5rem;">Variables disponibles: <code style="background:var(--accent-bg);padding:1px 6px;border-radius:4px;">{nombre}</code> <code style="background:var(--accent-bg);padding:1px 6px;border-radius:4px;">{club}</code> <code style="background:var(--accent-bg);padding:1px 6px;border-radius:4px;">{url}</code> <code style="background:var(--accent-bg);padding:1px 6px;border-radius:4px;">{usuario}</code> <code style="background:var(--accent-bg);padding:1px 6px;border-radius:4px;">{contrasena}</code></p>
+    {% if not cfg.smtp_configured %}
+    <div class="alert alert-info" style="margin-bottom:1.5rem;">Para enviar correos configura SMTP en <a href="/dashboard/?seccion=integraciones" style="text-decoration:underline;">Integraciones</a>.</div>
+    {% endif %}
+    <form action="/dashboard/configuracion/" method="post">{% csrf_token %}
+      <input type="hidden" name="seccion" value="correos">
+      <div class="card" style="margin-bottom:1.25rem;">
+        <div class="card-header"><span class="card-header-label">Bienvenida (al registrarse)</span></div>
+        <div class="card-body"><div class="field"><label class="lbl">Texto del correo</label><textarea class="txa" name="email_tpl_welcome" rows="8" style="font-family:monospace;font-size:.8125rem;">{% if cfg.email_tpl_welcome %}{{ cfg.email_tpl_welcome }}{% else %}{{ default_tpl_welcome }}{% endif %}</textarea></div></div>
+      </div>
+      <div class="card" style="margin-bottom:1.25rem;">
+        <div class="card-header"><span class="card-header-label">Cuenta aprobada</span></div>
+        <div class="card-body"><div class="field"><label class="lbl">Texto del correo</label><textarea class="txa" name="email_tpl_approved" rows="8" style="font-family:monospace;font-size:.8125rem;">{% if cfg.email_tpl_approved %}{{ cfg.email_tpl_approved }}{% else %}{{ default_tpl_approved }}{% endif %}</textarea></div></div>
+      </div>
+      <div class="card" style="margin-bottom:1.5rem;">
+        <div class="card-header"><span class="card-header-label">Invitacion</span></div>
+        <div class="card-body"><div class="field"><label class="lbl">Texto del correo</label><textarea class="txa" name="email_tpl_invitation" rows="10" style="font-family:monospace;font-size:.8125rem;">{% if cfg.email_tpl_invitation %}{{ cfg.email_tpl_invitation }}{% else %}{{ default_tpl_invitation }}{% endif %}</textarea></div></div>
+      </div>
+      <button class="btn btn-dark">Guardar plantillas</button>
+    </form>
+    {% endif %}
+
+    <!-- ══ PERFIL ══ -->
+    {% if seccion == 'perfil' %}
+    <h2 style="margin-bottom:1.5rem;">Mi perfil</h2>
+    <div class="card" style="max-width:540px;">
+      <div class="card-header"><span class="card-header-label">Datos personales</span></div>
+      <div class="card-body">
+        <form action="/perfil/editar/" method="post">{% csrf_token %}
+          <div class="g2" style="margin-bottom:1rem;">
+            <div class="field"><label class="lbl">Nombre completo</label><input class="inp" name="full_name" value="{{ user.full_name }}"></div>
+            <div class="field"><label class="lbl">Correo</label><input class="inp" name="email" type="email" value="{{ user.email }}"></div>
+          </div>
+          <div class="field" style="margin-bottom:1rem;"><label class="lbl">Libro favorito</label><input class="inp" name="favorite_book" value="{{ user.favorite_book }}"></div>
+          <div class="field" style="margin-bottom:1rem;"><label class="lbl">Biografia</label><textarea class="txa" name="bio" rows="3">{{ user.bio }}</textarea></div>
+          <div class="field" style="margin-bottom:1.25rem;">
+            <label class="lbl">URL foto de perfil</label>
+            <input class="inp" name="avatar_url" type="url" value="{{ user.avatar_url }}" placeholder="https://...">
+            {% if user.avatar_url %}<div style="margin-top:.75rem;display:flex;align-items:center;gap:.75rem;"><img src="{{ user.avatar_url }}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid var(--border);"><span class="hint">Foto actual</span></div>{% endif %}
+          </div>
+          <button class="btn btn-dark">Guardar perfil</button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
 </div>
 {% endblock %}

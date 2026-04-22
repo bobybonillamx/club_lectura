@@ -1,117 +1,97 @@
 {% extends 'base.html' %}
 {% block content %}
-<a href="/libros/" class="btn-outline-warm mb-4" style="display:inline-block;">← Volver</a>
-
-<div class="row g-4">
-    <div class="col-md-3">
-        {% if book.cover_url %}
-        <img src="{{ book.cover_url }}" alt="{{ book.title }}" class="book-cover" style="width:100%;max-width:220px;height:auto;aspect-ratio:2/3;object-fit:cover;border-radius:10px;">
+<a href="/libros/" class="btn btn-ghost btn-sm" style="margin-bottom:1.5rem;display:inline-block;">&#8592; Volver</a>
+<div style="display:grid;grid-template-columns:200px 1fr;gap:2rem;margin-bottom:2rem;">
+  <div>
+    {% if book.cover_url %}
+      <img src="{{ book.cover_url }}" alt="{{ book.title }}" style="width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:12px;max-width:200px;">
+    {% else %}
+      <div style="width:100%;aspect-ratio:2/3;background:var(--accent-bg);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:3rem;max-width:200px;">&#128214;</div>
+    {% endif %}
+  </div>
+  <div>
+    <span class="chip {% if book.status == 'reading' %}chip-reading{% elif book.status == 'completed' %}chip-done{% else %}chip-future{% endif %}" style="margin-bottom:.75rem;display:inline-flex;">{{ book.get_status_display }}</span>
+    <h1 style="font-size:1.75rem;margin-bottom:.25rem;">{{ book.title }}</h1>
+    {% if book.author %}<p style="font-size:1rem;color:var(--ink-light);font-style:italic;margin-bottom:1rem;">{{ book.author }}</p>{% endif %}
+    {% if book.description %}<p style="line-height:1.75;color:var(--ink-mid);max-width:580px;margin-bottom:1.25rem;">{{ book.description }}</p>{% endif %}
+    <div style="display:flex;flex-wrap:wrap;gap:.625rem;margin-bottom:1.5rem;">
+      {% if book.amazon_url %}<a href="{{ book.amazon_url }}" class="btn btn-ghost btn-sm" target="_blank" rel="noopener">Ver en Amazon &#8599;</a>{% endif %}
+      {% if book.external_video_url %}<a href="{{ book.external_video_url }}" class="btn btn-ghost btn-sm" target="_blank" rel="noopener">Video &#8599;</a>{% endif %}
+      {% if book.pdf_url %}
+        {% if user.is_authenticated %}
+          {% if user.is_approved or user.is_superuser %}
+            <a href="{{ book.pdf_url }}" class="btn btn-accent btn-sm" target="_blank" rel="noopener">&#128196; Descargar PDF</a>
+          {% else %}
+            <span class="chip chip-muted">PDF disponible para miembros aprobados</span>
+          {% endif %}
         {% else %}
-        <div style="width:100%;max-width:220px;aspect-ratio:2/3;background:var(--parchment-2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:3rem;">📖</div>
+          <a href="/login/" class="btn btn-ghost btn-sm">Inicia sesion para acceder al PDF</a>
         {% endif %}
+      {% endif %}
     </div>
-
-    <div class="col-md-9">
-        <span class="badge-warm {% if book.status == 'reading' %}reading{% elif book.status == 'completed' %}completed{% else %}future{% endif %} mb-2">{{ book.get_status_display }}</span>
-        <h1 style="font-size:1.75rem;margin-bottom:0.25rem;">{{ book.title }}</h1>
-        {% if book.author %}<p style="font-size:1rem;color:var(--ink-light);margin-bottom:1rem;font-style:italic;">{{ book.author }}</p>{% endif %}
-
-        {% if book.description %}
-        <p style="line-height:1.75;color:var(--ink);max-width:600px;">{{ book.description }}</p>
+    {% if book.status == 'future' and book.allow_voting %}
+    <div style="background:var(--accent-bg);border:1px solid var(--accent-bdr);border-radius:12px;padding:1.25rem 1.5rem;max-width:460px;">
+      <p class="eyebrow" style="margin-bottom:.5rem;">Votacion abierta</p>
+      <p style="font-family:var(--serif);font-size:1.0625rem;color:var(--ink);margin-bottom:.375rem;">Quieres que leamos este libro?</p>
+      <p style="font-size:.875rem;color:var(--ink-light);margin-bottom:1rem;">Puedes votar por todos los libros que quieras. El mas votado sera el proximo.</p>
+      <p style="font-size:1.5rem;font-family:var(--serif);font-weight:600;color:var(--accent);margin-bottom:.875rem;">{{ book.votes.count }} voto{{ book.votes.count|pluralize:"s" }}</p>
+      {% if user_vote %}
+        <p style="font-size:.9375rem;color:#2D5A2D;">&#10003; Ya votaste por este libro</p>
+      {% elif user.is_authenticated %}
+        {% if user.is_approved or user.is_superuser %}
+        <form action="/libros/{{ book.id }}/votar/" method="post">{% csrf_token %}
+          <input type="hidden" name="next" value="/libros/{{ book.id }}/">
+          <button class="btn btn-accent">Votar por este libro</button>
+        </form>
+        {% else %}
+          <p style="font-size:.875rem;color:var(--ink-light);">Tu cuenta esta pendiente de aprobacion para votar.</p>
         {% endif %}
-
-        <div class="d-flex flex-wrap gap-2 mt-3">
-            {% if book.amazon_url %}
-            <a href="{{ book.amazon_url }}" class="btn-outline-warm" target="_blank" rel="noopener">Ver en Amazon ↗</a>
-            {% endif %}
-            {% if book.external_video_url %}
-            <a href="{{ book.external_video_url }}" class="btn-outline-warm" target="_blank" rel="noopener">Video ↗</a>
-            {% endif %}
-            {% if book.pdf_url %}
-            <a href="{{ book.pdf_url }}" class="btn-outline-warm" target="_blank" rel="noopener">Descargar PDF ↗</a>
-            {% endif %}
-        </div>
-
-        {% if book.status == book_status.FUTURE and book.allow_voting %}
-        <div class="card-warm card-warm-body mt-4" style="max-width:480px;border-color:#C0833A;background:#FEF6E7;">
-            <p class="section-label" style="color:#7A4F0D;">Votacion abierta</p>
-            <p style="font-family:var(--serif);font-size:1rem;color:var(--ink);margin-bottom:0.5rem;">
-                ¿Quieres leer este libro en el club?
-            </p>
-            <p style="font-size:0.875rem;color:var(--ink-light);margin-bottom:1rem;">
-                Cada miembro aprobado puede votar por todos los libros que quiera. El libro con mas votos sera el proximo en leerse. Tu voto se guarda de inmediato.
-            </p>
-            <div style="font-size:1.1rem;font-family:var(--serif);font-weight:600;color:#7A4F0D;margin-bottom:1rem;">
-                {{ book.votes.count }} voto{{ book.votes.count|pluralize:"s" }} registrado{{ book.votes.count|pluralize:"s" }}
-            </div>
-            {% if user_vote %}
-            <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.9375rem;color:#2D6A2D;">
-                <span style="font-size:1.2rem;">✓</span> Ya votaste por este libro
-            </div>
-            {% elif user.is_authenticated %}
-            {% if user.is_approved or user.is_superuser %}
-            <form action="/libros/{{ book.id }}/votar/" method="post">
-                {% csrf_token %}
-                <input type="hidden" name="next" value="/libros/{{ book.id }}/">
-                <button class="btn-primary-warm" style="background:#C0833A;">Votar por este libro</button>
-            </form>
-            {% else %}
-            <p style="font-size:0.8125rem;color:var(--ink-light);">Tu cuenta esta pendiente de aprobacion para votar.</p>
-            {% endif %}
-            {% else %}
-            <a href="/login/" class="btn-outline-warm">Inicia sesion para votar</a>
-            {% endif %}
-        </div>
-        {% endif %}
+      {% else %}
+        <a href="/login/" class="btn btn-ghost">Inicia sesion para votar</a>
+      {% endif %}
     </div>
+    {% endif %}
+  </div>
 </div>
-
-<hr class="divider">
-
-<div class="row g-4">
-    <div class="col-lg-7">
-        <p class="section-label">Reseñas</p>
-        {% for review in approved_reviews %}
-        <div class="card-warm card-warm-body mb-3">
-            <div class="d-flex justify-content-between align-items-start mb-1">
-                <strong style="font-size:0.9375rem;">{{ review.user.username }}</strong>
-                <span class="stars" style="font-size:0.875rem;">{% for i in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
-            </div>
-            <p style="margin:0;font-size:0.9375rem;color:var(--ink);line-height:1.6;">{{ review.comment }}</p>
-            <div style="font-size:0.75rem;color:var(--ink-light);margin-top:0.5rem;">{{ review.created_at|date:"j M Y" }}</div>
-        </div>
-        {% empty %}
-        <p style="color:var(--ink-light);">Aún no hay reseñas aprobadas.</p>
-        {% endfor %}
+<hr style="border:none;border-top:1px solid var(--border);margin:0 0 2rem;">
+<div style="display:grid;grid-template-columns:1fr 360px;gap:2rem;">
+  <div>
+    <p class="eyebrow" style="margin-bottom:1rem;">Resenas</p>
+    {% for review in approved_reviews %}
+    <div class="card card-body" style="margin-bottom:.875rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.375rem;">
+        <strong style="font-size:.9375rem;color:var(--ink);">{{ review.user.username }}</strong>
+        <span style="color:var(--accent);font-size:.875rem;">{% for i in "12345" %}{% if forloop.counter <= review.rating %}&#9733;{% else %}&#9734;{% endif %}{% endfor %}</span>
+      </div>
+      <p style="font-size:.9375rem;color:var(--ink-mid);line-height:1.6;margin-bottom:.375rem;">{{ review.comment }}</p>
+      <p style="font-size:.75rem;color:var(--ink-light);">{{ review.created_at|date:"j M Y" }}</p>
     </div>
-
-    {% if user.is_authenticated %}
-    {% if user.is_approved or user.is_superuser %}
-    <div class="col-lg-5">
-        <div class="card-warm card-warm-body" style="background:var(--parchment);">
-            <p class="section-label">Escribe tu reseña</p>
-            <form action="/libros/{{ book.id }}/resena/" method="post">
-                {% csrf_token %}
-                <div class="mb-3">
-                    <label class="form-label">Calificación</label>
-                    <select name="rating" class="form-select">
-                        <option value="5">★★★★★ — Excelente</option>
-                        <option value="4">★★★★☆ — Muy bueno</option>
-                        <option value="3">★★★☆☆ — Bueno</option>
-                        <option value="2">★★☆☆☆ — Regular</option>
-                        <option value="1">★☆☆☆☆ — No me gustó</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Comentario</label>
-                    <textarea name="comment" class="form-control" rows="4" placeholder="¿Qué te pareció el libro?" required></textarea>
-                </div>
-                <button class="btn-primary-warm">Enviar reseña</button>
-                <p style="font-size:0.75rem;color:var(--ink-light);margin-top:0.5rem;">Tu reseña pasará por moderación antes de publicarse.</p>
-            </form>
-        </div>
+    {% empty %}<p style="color:var(--ink-light);">Aun no hay resenas aprobadas.</p>{% endfor %}
+  </div>
+  {% if user.is_authenticated %}{% if user.is_approved or user.is_superuser %}
+  <div>
+    <div class="card">
+      <div class="card-header"><span class="card-header-label">Escribe tu resena</span></div>
+      <div class="card-body">
+        <form action="/libros/{{ book.id }}/resena/" method="post">{% csrf_token %}
+          <div class="field"><label class="lbl">Calificacion</label>
+            <select name="rating" class="sel">
+              <option value="5">&#9733;&#9733;&#9733;&#9733;&#9733; Excelente</option>
+              <option value="4">&#9733;&#9733;&#9733;&#9733;&#9734; Muy bueno</option>
+              <option value="3">&#9733;&#9733;&#9733;&#9734;&#9734; Bueno</option>
+              <option value="2">&#9733;&#9733;&#9734;&#9734;&#9734; Regular</option>
+              <option value="1">&#9733;&#9734;&#9734;&#9734;&#9734; No me gusto</option>
+            </select>
+          </div>
+          <div class="field"><label class="lbl">Tu comentario</label>
+            <textarea name="comment" class="txa" rows="4" placeholder="Que te parecio el libro?" required></textarea>
+          </div>
+          <button class="btn btn-dark">Enviar resena</button>
+          <p class="hint" style="margin-top:.5rem;">Pasa por moderacion antes de publicarse.</p>
+        </form>
+      </div>
     </div>
-    {% endif %}
-    {% endif %}
+  </div>
+  {% endif %}{% endif %}
 </div>
 {% endblock %}

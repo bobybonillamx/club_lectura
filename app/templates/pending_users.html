@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Usuarios pendientes</h2>
+<h2 style="margin-bottom:1.5rem;">Usuarios pendientes</h2>
 {% for u in users %}
-  <div class="d-flex justify-content-between border rounded p-2 mb-2">
-    <span>{{ u.username }} ({{ u.email }})</span>
-    <form action="/usuarios/{{ u.id }}/aprobar/" method="post">{% csrf_token %}<button class="btn btn-sm btn-success">Aprobar</button></form>
-  </div>
-{% empty %}<p>Sin pendientes.</p>{% endfor %}
+<div class="card card-body" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
+  <div><span style="font-weight:500;color:var(--ink);">{{ u.username }}</span><span style="font-size:.8125rem;color:var(--ink-light);margin-left:.5rem;">{{ u.email }}</span></div>
+  <form action="/usuarios/{{ u.id }}/aprobar/" method="post" style="margin:0;">{% csrf_token %}<button class="btn btn-accent btn-sm">Aprobar</button></form>
+</div>
+{% empty %}<div class="card card-body" style="color:var(--ink-light);">Sin usuarios pendientes.</div>{% endfor %}
 {% endblock %}
