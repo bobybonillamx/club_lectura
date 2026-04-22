@@ -18,12 +18,9 @@ from .models import (
     Book, BookStatus, Role, User, Vote, Review, Event,
     Visibility, Invitation, SocialLink, ClubSettings,
     DEFAULT_TPL_WELCOME, DEFAULT_TPL_APPROVED, DEFAULT_TPL_INVITATION,
+    THEMES,
 )
 
-
-# ─────────────────────────────────────────
-# Helpers
-# ─────────────────────────────────────────
 
 def _is_effectively_approved(user):
     return bool(user.is_authenticated and (user.is_superuser or user.is_approved))
@@ -44,12 +41,9 @@ def _send_email(subject, body, to, cfg=None):
         if cfg.smtp_configured:
             connection = get_connection(
                 backend='django.core.mail.backends.smtp.EmailBackend',
-                host=cfg.smtp_host,
-                port=cfg.smtp_port,
-                username=cfg.smtp_user,
-                password=cfg.smtp_password,
-                use_tls=cfg.smtp_use_tls,
-                fail_silently=False,
+                host=cfg.smtp_host, port=cfg.smtp_port,
+                username=cfg.smtp_user, password=cfg.smtp_password,
+                use_tls=cfg.smtp_use_tls, fail_silently=False,
             )
             from_email = cfg.email_from or f'{cfg.name} <{cfg.smtp_user}>'
         else:
@@ -84,10 +78,6 @@ def _build_stats():
     }
 
 
-# ─────────────────────────────────────────
-# Public views
-# ─────────────────────────────────────────
-
 def home(request):
     visible = _visible_filter(request.user)
     books = Book.objects.none()
@@ -102,7 +92,7 @@ def home(request):
         events = Event.objects.filter(visibility__in=visible, starts_at__gte=timezone.now()).order_by('starts_at')[:20]
         links = SocialLink.objects.all()
     except (DatabaseError, OperationalError):
-        messages.warning(request, 'No se pudieron cargar todos los datos. Verifica que las migraciones esten aplicadas.')
+        messages.warning(request, 'No se pudieron cargar todos los datos.')
     return render(request, 'home.html', {
         'books': books, 'events': events, 'current_book': current_book,
         'next_event': next_event, 'links': links, 'book_status': BookStatus,
@@ -152,7 +142,6 @@ def register(request):
             user.role = Role.USER
             user.save()
             cfg = ClubSettings.get_solo()
-            # Notify admins
             admin_emails = list(
                 User.objects.filter(role__in=[Role.ADMIN, Role.SUPERADMIN], is_approved=True)
                 .values_list('email', flat=True)
@@ -160,40 +149,33 @@ def register(request):
             for email in admin_emails:
                 _send_email(
                     subject=f'[{cfg.name}] Nuevo usuario pendiente: {user.username}',
-                    body=f'El usuario {user.username} ({user.email}) se ha registrado y esta esperando aprobacion.\n\n'
-                         f'{cfg.public_url}/dashboard/?seccion=usuarios',
+                    body=f'El usuario {user.username} ({user.email}) se ha registrado.\n\n{cfg.public_url}/dashboard/?seccion=usuarios',
                     to=email, cfg=cfg,
                 )
-            # Welcome email to user
             if user.email:
                 body = cfg.get_welcome_template().format(
-                    nombre=user.username, club=cfg.name, url=cfg.public_url,
-                    usuario=user.username,
+                    nombre=user.username, club=cfg.name, url=cfg.public_url, usuario=user.username,
                 )
                 _send_email(subject=f'Bienvenido a {cfg.name}', body=body, to=user.email, cfg=cfg)
-            messages.success(request, 'Tu cuenta fue creada. Un administrador debe aprobarla antes de que puedas acceder al panel.')
+            messages.success(request, 'Tu cuenta fue creada. Un administrador debe aprobarla.')
             return redirect('login')
     else:
         form = RegisterForm()
     return render(request, 'auth/register.html', {'form': form})
 
 
-# ─────────────────────────────────────────
-# Dashboard
-# ─────────────────────────────────────────
-
 @login_required
 def dashboard(request):
     if not _is_effectively_approved(request.user):
-        return HttpResponseForbidden('Tu cuenta esta pendiente de aprobacion por un administrador.')
+        return HttpResponseForbidden('Tu cuenta esta pendiente de aprobacion.')
 
     section = request.GET.get('seccion', 'inicio')
     cfg = ClubSettings.get_solo()
     settings_form = ClubSettingsForm(instance=cfg)
-    if request.user.role != Role.SUPERADMIN and not request.user.is_superuser:
+    if not (request.user.role == Role.SUPERADMIN or request.user.is_superuser):
         for f in ('google_login_enabled', 'google_client_id', 'google_client_secret',
-                  'smtp_host', 'smtp_port', 'smtp_user', 'smtp_password', 'smtp_use_tls', 'email_from',
-                  'email_tpl_welcome', 'email_tpl_approved', 'email_tpl_invitation',
+                  'smtp_host', 'smtp_port', 'smtp_user', 'smtp_password', 'smtp_use_tls',
+                  'email_from', 'email_tpl_welcome', 'email_tpl_approved', 'email_tpl_invitation',
                   'public_domain'):
             settings_form.fields.pop(f, None)
 
@@ -211,8 +193,7 @@ def dashboard(request):
         'pending_reviews_count': Review.objects.filter(is_approved=False).count(),
         'stats': _build_stats(),
         'cfg': cfg,
-        # Default templates for the email section
-        'theme_choices': [(k, v['label']) for k, v in __import__('core.models', fromlist=['THEMES']).THEMES.items()],
+        'theme_choices': list(THEMES.items()),
         'default_tpl_welcome': DEFAULT_TPL_WELCOME,
         'default_tpl_approved': DEFAULT_TPL_APPROVED,
         'default_tpl_invitation': DEFAULT_TPL_INVITATION,
@@ -228,51 +209,51 @@ def update_club_settings(request):
     cfg = ClubSettings.get_solo()
     section = request.POST.get('seccion', 'inicio')
 
-    # Campos por seccion
     section_fields = {
-        'inicio':       ['name', 'description', 'logo_url', 'icon_url', 'cover_image_url',
-                         'home_welcome_text', 'meta_description',
-                         'cta_register_text', 'cta_login_text'],
-        'apariencia':   ['theme', 'primary_color', 'accent_color',
-                         'footer_powered_by_name', 'footer_powered_by_url',
-                         'footer_custom_link_text', 'footer_custom_link_url', 'footer_text'],
-        'integraciones':['public_domain', 'affiliate_tag',
-                         'google_login_enabled', 'google_client_id', 'google_client_secret',
-                         'smtp_host', 'smtp_port', 'smtp_user', 'smtp_password',
-                         'smtp_use_tls', 'email_from'],
-        'correos':      ['email_tpl_welcome', 'email_tpl_approved', 'email_tpl_invitation'],
+        'inicio': ['name', 'description', 'logo_url', 'icon_url', 'cover_image_url',
+                   'home_welcome_text', 'meta_description', 'cta_register_text', 'cta_login_text'],
+        'apariencia': ['theme', 'primary_color', 'accent_color',
+                       'footer_custom_link_text', 'footer_custom_link_url', 'footer_text'],
+        'integraciones': ['public_domain', 'affiliate_tag',
+                          'google_login_enabled', 'google_client_id', 'google_client_secret',
+                          'smtp_host', 'smtp_port', 'smtp_user', 'smtp_password', 'smtp_use_tls', 'email_from'],
+        'correos': ['email_tpl_welcome', 'email_tpl_approved', 'email_tpl_invitation'],
     }
 
-    fields = section_fields.get(section, section_fields['inicio'])
+    allowed = section_fields.get(section, section_fields['inicio'])
+    form = ClubSettingsForm(request.POST, instance=cfg)
+    for f in list(form.fields.keys()):
+        if f not in allowed:
+            form.fields.pop(f)
 
-    # Filtrar solo los campos de la seccion
-    post_data = request.POST.copy()
-    form = ClubSettingsForm(post_data, instance=cfg)
-    for field_name in list(form.fields.keys()):
-        if field_name not in fields:
-            form.fields.pop(field_name)
-
-    # Permisos superadmin
     if not (request.user.role == Role.SUPERADMIN or request.user.is_superuser):
         for f in ('google_login_enabled', 'google_client_id', 'google_client_secret',
-                  'smtp_host', 'smtp_port', 'smtp_user', 'smtp_password',
-                  'smtp_use_tls', 'email_from', 'public_domain'):
+                  'smtp_host', 'smtp_port', 'smtp_user', 'smtp_password', 'smtp_use_tls',
+                  'email_from', 'public_domain'):
             form.fields.pop(f, None)
 
     if form.is_valid():
         form.save()
         if section == 'integraciones':
             sync_google_social_app_from_settings()
-        messages.success(request, 'Configuracion guardada correctamente.')
+        messages.success(request, 'Configuracion guardada.')
     else:
         messages.error(request, f'Error: {form.errors}')
 
     return redirect(f'/dashboard/?seccion={section}')
 
 
-# ─────────────────────────────────────────
-# Books
-# ─────────────────────────────────────────
+@login_required
+def reset_colors(request):
+    if not request.user.is_admin_like():
+        return HttpResponseForbidden('Solo admins.')
+    cfg = ClubSettings.get_solo()
+    cfg.primary_color = ''
+    cfg.accent_color = ''
+    cfg.save(update_fields=['primary_color', 'accent_color'])
+    messages.success(request, 'Colores restablecidos al tema.')
+    return redirect('/dashboard/?seccion=apariencia')
+
 
 @login_required
 def create_book(request):
@@ -285,9 +266,9 @@ def create_book(request):
         book.save()
         if book.status == BookStatus.READING and form.cleaned_data.get('reemplazar_leyendo_actual'):
             Book.objects.filter(status=BookStatus.READING).exclude(id=book.id).update(status=BookStatus.COMPLETED)
-        messages.success(request, f'Libro "{book.title}" guardado correctamente.')
+        messages.success(request, f'Libro "{book.title}" guardado.')
     else:
-        messages.error(request, f'Error al guardar libro: {form.errors}')
+        messages.error(request, f'Error: {form.errors}')
     return redirect('/dashboard/?seccion=libros')
 
 
@@ -328,10 +309,6 @@ def delete_book(request, book_id):
     return redirect('/dashboard/?seccion=libros')
 
 
-# ─────────────────────────────────────────
-# Events
-# ─────────────────────────────────────────
-
 @login_required
 def create_event(request):
     if not request.user.is_admin_like() or not _is_effectively_approved(request.user):
@@ -341,9 +318,9 @@ def create_event(request):
         event = form.save(commit=False)
         event.created_by = request.user
         event.save()
-        messages.success(request, 'Evento creado correctamente.')
+        messages.success(request, 'Evento creado.')
     else:
-        messages.error(request, f'Error al crear evento: {form.errors}')
+        messages.error(request, f'Error: {form.errors}')
     return redirect('/dashboard/?seccion=eventos')
 
 
@@ -357,7 +334,7 @@ def edit_event(request, event_id):
         form.save()
         messages.success(request, 'Evento actualizado.')
     else:
-        messages.error(request, f'No se pudo actualizar evento: {form.errors}')
+        messages.error(request, f'Error: {form.errors}')
     return redirect('/dashboard/?seccion=eventos')
 
 
@@ -372,10 +349,6 @@ def delete_event(request, event_id):
     messages.success(request, 'Evento eliminado.')
     return redirect('/dashboard/?seccion=eventos')
 
-
-# ─────────────────────────────────────────
-# Voting & Reviews
-# ─────────────────────────────────────────
 
 @login_required
 def vote_book(request, book_id):
@@ -393,7 +366,7 @@ def vote_book(request, book_id):
 @login_required
 def add_review(request, book_id):
     if not _is_effectively_approved(request.user):
-        return HttpResponseForbidden('Necesitas aprobacion para resenar.')
+        return HttpResponseForbidden('Necesitas aprobacion.')
     book = get_object_or_404(Book, pk=book_id)
     form = ReviewForm(request.POST)
     if form.is_valid():
@@ -402,7 +375,7 @@ def add_review(request, book_id):
         review.book = book
         review.is_approved = False
         review.save()
-        messages.success(request, 'Resena enviada. Aparecera una vez que un admin la apruebe.')
+        messages.success(request, 'Resena enviada a moderacion.')
     return redirect(request.POST.get('next') or 'home')
 
 
@@ -430,7 +403,7 @@ def flag_review(request, review_id):
     review = get_object_or_404(Review, pk=review_id)
     review.is_approved = False
     review.is_flagged = True
-    review.moderation_note = request.POST.get('moderation_note', '').strip() or 'Marcada por moderacion'
+    review.moderation_note = request.POST.get('moderation_note', '').strip() or 'Marcada'
     review.save(update_fields=['is_approved', 'is_flagged', 'moderation_note'])
     messages.success(request, 'Resena marcada.')
     return redirect('/dashboard/?seccion=resenas')
@@ -447,10 +420,6 @@ def delete_review(request, review_id):
     messages.success(request, 'Resena eliminada.')
     return redirect('/dashboard/?seccion=resenas')
 
-
-# ─────────────────────────────────────────
-# Users
-# ─────────────────────────────────────────
 
 @login_required
 def pending_users(request):
@@ -516,7 +485,6 @@ def invite_user(request):
         role = request.POST.get('role', Role.USER)
         if role == Role.ADMIN and request.user.role != Role.SUPERADMIN and not request.user.is_superuser:
             return HttpResponseForbidden('Solo el superadmin puede crear admins.')
-
         alphabet = string.ascii_letters + string.digits + '!@#$%'
         password = ''.join(secrets.choice(alphabet) for _ in range(12))
         username = email.split('@')[0]
@@ -526,7 +494,6 @@ def invite_user(request):
         if created:
             user.set_password(password)
             user.save()
-
         Invitation.objects.create(
             invited_name=name, email=email,
             generated_password=password, invited_by=request.user,
@@ -537,17 +504,9 @@ def invite_user(request):
             usuario=username, contrasena=password,
         )
         _send_email(subject=f'Invitacion a {cfg.name}', body=body, to=email, cfg=cfg)
-        messages.success(
-            request,
-            f'Invitacion creada para {email}. Contrasena temporal: {password}. '
-            f'Correo de invitacion enviado (si SMTP esta configurado).',
-        )
+        messages.success(request, f'Invitacion creada. Contrasena temporal: {password}')
     return redirect('/dashboard/?seccion=usuarios')
 
-
-# ─────────────────────────────────────────
-# Test SMTP
-# ─────────────────────────────────────────
 
 @login_required
 def test_smtp(request):
@@ -566,20 +525,16 @@ def test_smtp(request):
         )
         send_mail(
             subject=f'Prueba de correo - {cfg.name}',
-            message=f'Este es un correo de prueba enviado desde {cfg.name}.',
+            message=f'Correo de prueba desde {cfg.name}.',
             from_email=cfg.email_from or cfg.smtp_user,
             recipient_list=[request.user.email],
             connection=connection,
         )
         messages.success(request, f'Correo de prueba enviado a {request.user.email}.')
     except Exception as e:
-        messages.error(request, f'Error al enviar correo de prueba: {e}')
+        messages.error(request, f'Error: {e}')
     return redirect('/dashboard/?seccion=integraciones')
 
-
-# ─────────────────────────────────────────
-# Social links & Profile
-# ─────────────────────────────────────────
 
 @login_required
 def add_social_link(request):
@@ -613,25 +568,8 @@ def edit_profile(request):
         form.save()
         messages.success(request, 'Perfil actualizado.')
     else:
-        messages.error(request, f'Error al actualizar perfil: {form.errors}')
+        messages.error(request, f'Error: {form.errors}')
     return redirect('/dashboard/?seccion=perfil')
-
-
-# ─────────────────────────────────────────
-# PWA
-# ─────────────────────────────────────────
-
-
-@login_required
-def reset_colors(request):
-    if not request.user.is_admin_like():
-        return HttpResponseForbidden('Solo admins.')
-    cfg = ClubSettings.get_solo()
-    cfg.primary_color = ''
-    cfg.accent_color = ''
-    cfg.save(update_fields=['primary_color', 'accent_color'])
-    messages.success(request, 'Colores restablecidos al tema seleccionado.')
-    return redirect('/dashboard/?seccion=apariencia')
 
 
 def manifest(request):

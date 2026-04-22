@@ -82,4 +82,4 @@ class SocialLinkForm(forms.ModelForm):
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ['full_name', 'avatar_url', 'bio', 'favorite_book', 'email']
+        fields = ['full_name', 'avatar_url', 'bio', 'favorite_book', 'email'] 
