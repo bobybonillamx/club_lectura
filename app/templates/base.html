@@ -2,76 +2,266 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="{{ club_settings.primary_color }}" />
-  <link rel="manifest" href="/pwa/manifest.json" />
-  <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
-  <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}" />
-  <title>{{ club_settings.name }}</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="{{ club_settings.primary_color }}" />
+    <link rel="manifest" href="/pwa/manifest.json" />
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
+    <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}" />
+    <title>{{ club_settings.name }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
     :root {
-      --club-color: {{ club_settings.primary_color }};
-      --club-accent: {{ club_settings.accent_color|default:'#212529' }};
+      --club-primary: {{ club_settings.primary_color }};
+      --club-accent:  {{ club_settings.accent_color|default:'#5C3D2E' }};
+      --ink:          #2C1A0E;
+      --ink-light:    #6B4F3A;
+      --parchment:    #FAF6F0;
+      --parchment-2:  #F2EBE0;
+      --parchment-3:  #E8DDD0;
+      --warm-border:  #D9CEBC;
+      --serif: 'Lora', Georgia, serif;
+      --sans:  'Inter', system-ui, sans-serif;
     }
-    body { background: radial-gradient(circle at top right, rgba(111,66,193,.10), transparent 45%), linear-gradient(180deg, #f8f9fb 0%, #eef2f7 100%); }
-    .glass {
-      background: rgba(255,255,255,.8);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(255,255,255,.6);
-      border-radius: 16px;
-      box-shadow: 0 10px 25px rgba(18,38,63,.08);
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: var(--sans);
+      font-size: 15px;
+      background-color: var(--parchment);
+      color: var(--ink);
+      min-height: 100vh;
     }
-    .btn-club { background: linear-gradient(135deg, var(--club-color), var(--club-accent)); color: white; border: none; border-radius: 10px; }
-    .btn-club:hover { filter: brightness(.95); color: white; transform: translateY(-1px); }
-    .navbar-brand { color: var(--club-accent) !important; font-weight: 700; }
-    .hero-title { font-weight: 800; letter-spacing: -.5px; }
-    .card { border-radius: 14px; }
-    .list-group-item.active { background: var(--club-color); border-color: var(--club-color); }
-  </style>
+
+    h1, h2, h3, h4 {
+      font-family: var(--serif);
+      color: var(--ink);
+    }
+
+    /* ── Navbar ── */
+    .site-nav {
+      background: var(--parchment);
+      border-bottom: 1px solid var(--warm-border);
+      padding: 0.75rem 0;
+    }
+    .site-nav .brand {
+      font-family: var(--serif);
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--ink) !important;
+      text-decoration: none;
+      letter-spacing: -0.01em;
+    }
+    .site-nav .nav-link {
+      font-size: 0.875rem;
+      color: var(--ink-light);
+      text-decoration: none;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      transition: background 0.15s, color 0.15s;
+    }
+    .site-nav .nav-link:hover {
+      background: var(--parchment-2);
+      color: var(--ink);
+    }
+
+    /* ── Buttons ── */
+    .btn-primary-warm {
+      background: var(--club-primary);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.45rem 1.1rem;
+      font-size: 0.875rem;
+      font-family: var(--sans);
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn-primary-warm:hover { opacity: 0.88; transform: translateY(-1px); color: #fff; }
+
+    .btn-outline-warm {
+      background: transparent;
+      color: var(--ink-light);
+      border: 1px solid var(--warm-border);
+      border-radius: 8px;
+      padding: 0.4rem 1rem;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: background 0.15s;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-outline-warm:hover { background: var(--parchment-2); color: var(--ink); }
+
+    .btn-danger-warm {
+      background: #9B2626;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.4rem 1rem;
+      font-size: 0.875rem;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-danger-warm:hover { opacity: 0.88; color: #fff; }
+
+    /* ── Cards ── */
+    .card-warm {
+      background: #fff;
+      border: 1px solid var(--warm-border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .card-warm-body { padding: 1.25rem 1.5rem; }
+
+    /* ── Form inputs ── */
+    .form-control, .form-select {
+      background: #fff;
+      border: 1px solid var(--warm-border);
+      border-radius: 8px;
+      color: var(--ink);
+      font-size: 0.875rem;
+    }
+    .form-control:focus, .form-select:focus {
+      border-color: var(--club-primary);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--club-primary) 15%, transparent);
+    }
+    .form-label {
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--ink-light);
+      margin-bottom: 0.3rem;
+    }
+
+    /* ── Alerts ── */
+    .alert-warm {
+      background: #FFF8F0;
+      border: 1px solid #F0D9B5;
+      border-radius: 10px;
+      color: var(--ink);
+      padding: 0.75rem 1rem;
+      font-size: 0.875rem;
+    }
+
+    /* ── Book cover placeholder ── */
+    .book-cover {
+      width: 100%;
+      aspect-ratio: 2/3;
+      object-fit: cover;
+      border-radius: 6px;
+      background: var(--parchment-2);
+    }
+
+    /* ── Badge chips ── */
+    .badge-warm {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      background: var(--parchment-2);
+      color: var(--ink-light);
+      border: 1px solid var(--warm-border);
+    }
+    .badge-warm.reading  { background: #EDF6EC; color: #2D6A2D; border-color: #BAD9B5; }
+    .badge-warm.completed{ background: #EDF0F6; color: #2D3A6A; border-color: #B5BCDA; }
+    .badge-warm.future   { background: #FEF6E7; color: #7A4F0D; border-color: #F0D295; }
+
+    /* ── Divider ── */
+    .divider { border: none; border-top: 1px solid var(--warm-border); margin: 1.5rem 0; }
+
+    /* ── Section header ── */
+    .section-label {
+      font-family: var(--sans);
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-light);
+      margin-bottom: 0.75rem;
+    }
+
+    /* ── Sidebar nav ── */
+    .side-nav a {
+      display: block;
+      padding: 0.5rem 0.85rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      color: var(--ink-light);
+      text-decoration: none;
+      margin-bottom: 2px;
+      transition: background 0.12s, color 0.12s;
+    }
+    .side-nav a:hover { background: var(--parchment-2); color: var(--ink); }
+    .side-nav a.active {
+      background: var(--parchment-3);
+      color: var(--ink);
+      font-weight: 500;
+    }
+
+    /* ── Stars ── */
+    .stars { color: #C0833A; letter-spacing: 1px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .hide-mobile { display: none !important; }
+    }
+    </style>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg bg-white border-bottom shadow-sm">
-  <div class="container">
-    <a class="navbar-brand d-flex align-items-center gap-2" href="/">
-      {% if club_settings.logo_url %}
-        <img src="{{ club_settings.logo_url }}" alt="logo" style="width:150px;height:auto;object-fit:contain;">
-      {% else %}
-        {{ club_settings.name }}
-      {% endif %}
-    </a>
-    <div class="d-none d-lg-flex gap-3 ms-3">
-      <a href="/libros/" class="text-decoration-none text-secondary">Libros</a>
-      <a href="/eventos/" class="text-decoration-none text-secondary">Eventos</a>
-    </div>
-    <div class="ms-auto d-flex gap-2">
-      {% if user.is_authenticated %}
-        <a class="btn btn-sm btn-outline-secondary" href="/dashboard/">Dashboard</a>
-        <form action="/logout/" method="post">{% csrf_token %}<button class="btn btn-sm btn-danger">Salir</button></form>
-      {% else %}
-        <a class="btn btn-sm btn-outline-primary" href="/login/">Entrar</a>
-        <a class="btn btn-sm btn-club" href="/registro/">Registro</a>
-      {% endif %}
-    </div>
-  </div>
-</nav>
-<main class="container py-4">
-  {% if messages %}
-    {% for message in messages %}
-      <div class="alert alert-info glass">{{ message }}</div>
-    {% endfor %}
-  {% endif %}
-  {% block content %}{% endblock %}
-</main>
-<footer class="border-top py-3 text-center bg-white">
-  Powered By: <a href="https://goldtech.mx" target="_blank" rel="noopener">Gold Tech Mx</a><br>
-  ¿Quieres tu propio club? Usa este <a href="https://github.com/bobybonillamx/club_lectura" target="_blank" rel="noopener">repositorio en GitHub</a>.
-</footer>
-<script>
+
+    <nav class="site-nav">
+        <div class="container d-flex align-items-center gap-3">
+            <a class="brand" href="/">
+                {% if club_settings.logo_url %}
+                <img src="{{ club_settings.logo_url }}" alt="{{ club_settings.name }}" style="height:32px;width:auto;object-fit:contain;">
+                {% else %}
+                {{ club_settings.name }}
+                {% endif %}
+            </a>
+            <div class="d-none d-md-flex gap-1 ms-1">
+                <a class="nav-link" href="/libros/">Libros</a>
+                <a class="nav-link" href="/eventos/">Eventos</a>
+            </div>
+            <div class="ms-auto d-flex align-items-center gap-2">
+                {% if user.is_authenticated %}
+                <a class="btn-outline-warm" href="/dashboard/">Panel</a>
+                <form action="/logout/" method="post" style="margin:0">
+                    {% csrf_token %}
+                    <button class="btn-danger-warm">Salir</button>
+                </form>
+                {% else %}
+                <a class="btn-outline-warm" href="/login/">Entrar</a>
+                <a class="btn-primary-warm" href="/registro/">Registro</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main class="container py-4">
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert-warm mb-3">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer style="border-top:1px solid var(--warm-border);padding:1.5rem 0;text-align:center;font-size:0.8125rem;color:var(--ink-light);background:var(--parchment);">
+        Powered by <a href="https://goldtech.mx" target="_blank" rel="noopener" style="color:var(--ink-light);">Gold Tech Mx</a>
+        &nbsp;·&nbsp;
+        <a href="https://github.com/bobybonillamx/club_lectura" target="_blank" rel="noopener" style="color:var(--ink-light);">Repositorio en GitHub</a>
+    </footer>
+
+    <script>
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/pwa/sw.js');
 }
-</script>
+    </script>
 </body>
 </html>
