@@ -489,7 +489,7 @@ T[f"{BASE}/events_page.html"] = """{% extends 'base.html' %}
 # ══════════════════════════════════════════════════════════════
 # DASHBOARD — with theme selector in inicio
 # ══════════════════════════════════════════════════════════════
-T[f"{BASE}/dashboard.html"] = """{% extends 'base.html' %}
+T[f"{BASE}/dashboard.html"] = """{% extends 'base.html' %}{% load theme_tags %}
 {% block content %}
 <div style="display:grid;grid-template-columns:220px 1fr;gap:1.5rem;align-items:start;">
 
