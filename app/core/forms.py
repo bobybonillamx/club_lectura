@@ -34,8 +34,11 @@ class ReviewForm(forms.ModelForm):
 
 
 class ClubSettingsForm(forms.ModelForm):
+    name = forms.CharField(required=False, initial='Mi Club de Lectura')
+    theme = forms.ChoiceField(required=False, choices=THEME_CHOICES)
     primary_color = forms.CharField(required=False, widget=forms.TextInput(attrs={'type': 'color'}))
     accent_color = forms.CharField(required=False, widget=forms.TextInput(attrs={'type': 'color'}))
+    smtp_port = forms.IntegerField(required=False, initial=587)
 
     class Meta:
         model = ClubSettings
@@ -50,6 +53,18 @@ class ClubSettingsForm(forms.ModelForm):
             'footer_powered_by_name', 'footer_powered_by_url',
             'footer_custom_link_text', 'footer_custom_link_url', 'footer_text',
         ]
+
+    def clean_name(self):
+        val = self.cleaned_data.get('name', '').strip()
+        return val or (self.instance.name if self.instance.pk else 'Mi Club de Lectura')
+
+    def clean_theme(self):
+        val = self.cleaned_data.get('theme', '').strip()
+        return val or (self.instance.theme if self.instance.pk else 'literario_cafe')
+
+    def clean_smtp_port(self):
+        val = self.cleaned_data.get('smtp_port')
+        return val or (self.instance.smtp_port if self.instance.pk else 587)
 
     def clean_primary_color(self):
         return self.cleaned_data.get('primary_color', '').strip()
