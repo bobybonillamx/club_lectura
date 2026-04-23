@@ -114,7 +114,7 @@
                     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.875rem;margin-bottom:1.25rem;">
                         {% for theme_key, theme_data in theme_choices %}
                         <label style="cursor:pointer;">
-                            <input type="radio" name="theme" value="{{ theme_key }}" {% if cfg.theme= =theme_key %}checked{% endif %} style="position:absolute;opacity:0;width:0;height:0;">
+                            <input type="radio" name="theme" value="{{ theme_key }}" {% if cfg.theme = = theme_key %}checked{% endif %} style="position:absolute;opacity:0;width:0;height:0;">
                             <div style="border:2px solid {% if cfg.theme == theme_key %}var(--accent){% else %}var(--border){% endif %};border-radius:12px;overflow:hidden;transition:border-color .15s;">
                                 <div style="height:80px;background:{{ theme_key|theme_page_color }};padding:.75rem;display:flex;flex-direction:column;justify-content:space-between;">
                                     <div style="height:12px;background:{{ theme_key|theme_primary_color }};border-radius:4px;width:60%;"></div>
