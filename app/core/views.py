@@ -262,8 +262,32 @@ def update_club_settings(request):
                     'notify_new_book', 'notify_new_event', 'notify_voting_open', 'notify_pending_approvals'],
     }
 
+    post = request.POST
+
+    # Apariencia: save directly to model to avoid form validation issues
+    if section == 'apariencia':
+        from .models import THEMES
+        theme = post.get('theme', '').strip()
+        if theme in THEMES:
+            cfg.theme = theme
+        cfg.primary_color = post.get('primary_color', '').strip()
+        cfg.accent_color = post.get('accent_color', '').strip()
+        cfg.custom_font_serif = post.get('custom_font_serif', '').strip()
+        cfg.custom_font_sans = post.get('custom_font_sans', '').strip()
+        cfg.custom_font_url = post.get('custom_font_url', '').strip()
+        cfg.footer_text = post.get('footer_text', '').strip()
+        cfg.footer_custom_link_text = post.get('footer_custom_link_text', '').strip()
+        cfg.footer_custom_link_url = post.get('footer_custom_link_url', '').strip()
+        cfg.save(update_fields=[
+            'theme', 'primary_color', 'accent_color',
+            'custom_font_serif', 'custom_font_sans', 'custom_font_url',
+            'footer_text', 'footer_custom_link_text', 'footer_custom_link_url',
+        ])
+        messages.success(request, 'Apariencia guardada.')
+        return redirect('/dashboard/?seccion=apariencia')
+
     allowed = section_fields.get(section, section_fields['inicio'])
-    form = ClubSettingsForm(request.POST, instance=cfg)
+    form = ClubSettingsForm(post, instance=cfg)
     for f in list(form.fields.keys()):
         if f not in allowed:
             form.fields.pop(f)
@@ -276,7 +300,6 @@ def update_club_settings(request):
 
     # Validate google credentials if enabling
     if section == 'integraciones':
-        post = request.POST
         if post.get('google_login_enabled') and not (post.get('google_client_id') and post.get('google_client_secret')):
             messages.error(request, 'Para habilitar Google OAuth debes ingresar Client ID y Client Secret.')
             return redirect(f'/dashboard/?seccion={section}')
