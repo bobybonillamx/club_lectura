@@ -1,4 +1,5 @@
 ﻿{% extends 'base.html' %}
+{% load theme_tags %}
 {% block content %}
 
 {% if club_settings.cover_image_url %}
@@ -96,7 +97,7 @@
             <p class="eyebrow" style="margin-bottom:.75rem;">Redes del club</p>
             {% for link in links %}
             <a href="{{ link.url }}" target="_blank" rel="noopener" style="display:block;font-size:.875rem;color:var(--ink-light);padding:3px 0;">
-                {% if link.icon and link.icon != 'link' %}[{{ link.icon }}]{% else %}&#8599;{% endif %} {{ link.network }}
+                <span style="display:inline-flex;align-items:center;gap:.375rem;">{{ link.icon|social_icon }} {{ link.network }}</span>
             </a>
             {% endfor %}
         </div>

@@ -153,35 +153,73 @@
             <div class="card" style="margin-bottom:1.25rem;">
                 <div class="card-header"><span class="card-header-label">Tipografia personalizada (opcional)</span></div>
                 <div class="card-body">
-                    <p style="font-size:.875rem;color:var(--ink-light);margin-bottom:1rem;">Elige fuentes de <a href="https://fonts.google.com" target="_blank" rel="noopener" style="color:var(--accent);">Google Fonts</a>. Dejar en blanco para usar las del tema.</p>
-                    <div class="g2" style="margin-bottom:1rem;">
-                        <div class="field">
-                            <label class="lbl">Fuente para titulos (Serif)</label>
-                            <input class="inp" name="custom_font_serif" value="{{ cfg.custom_font_serif }}" placeholder="Ej: Merriweather">
-                            <p class="hint">Nombre exacto de Google Fonts.</p>
-                        </div>
-                        <div class="field">
-                            <label class="lbl">Fuente para texto (Sans)</label>
-                            <input class="inp" name="custom_font_sans" value="{{ cfg.custom_font_sans }}" placeholder="Ej: Nunito">
-                            <p class="hint">Nombre exacto de Google Fonts.</p>
-                        </div>
-                    </div>
+                    <p style="font-size:.875rem;color:var(--ink-light);margin-bottom:1rem;">Elige una combinacion de fuentes o deja en blanco para usar las del tema activo.</p>
                     <div class="field" style="margin-bottom:1rem;">
-                        <label class="lbl">URL de importacion de Google Fonts</label>
-                        <input class="inp" name="custom_font_url" value="{{ cfg.custom_font_url }}" placeholder="https://fonts.googleapis.com/css2?family=Merriweather&family=Nunito&display=swap">
-                        <p class="hint">Copia la URL que te da Google Fonts al seleccionar las fuentes. Debe incluir ambas familias.</p>
+                        <label class="lbl">Combinacion de tipografias</label>
+                        <select class="sel" name="font_preset" onchange="applyFontPreset(this.value)" style="margin-bottom:.75rem;">
+                            <option value="">Usar fuentes del tema activo</option>
+                            <option value="lora_inter" {% if cfg.custom_font_serif == 'Lora' %}selected{% endif %}>Lora + Inter (editorial clasico)</option>
+                            <option value="playfair_source" {% if cfg.custom_font_serif == 'Playfair Display' %}selected{% endif %}>Playfair Display + Source Sans (elegante)</option>
+                            <option value="merriweather_nunito" {% if cfg.custom_font_serif == 'Merriweather' %}selected{% endif %}>Merriweather + Nunito (legible amigable)</option>
+                            <option value="crimson_raleway" {% if cfg.custom_font_serif == 'Crimson Pro' %}selected{% endif %}>Crimson Pro + Raleway (literario moderno)</option>
+                            <option value="libre_inter" {% if cfg.custom_font_serif == 'Libre Baskerville' %}selected{% endif %}>Libre Baskerville + Inter (academico)</option>
+                            <option value="dm_dm" {% if cfg.custom_font_serif == 'DM Serif Display' %}selected{% endif %}>DM Serif + DM Sans (minimalista)</option>
+                            <option value="space" {% if cfg.custom_font_serif == 'Space Grotesk' %}selected{% endif %}>Space Grotesk (moderno digital)</option>
+                            <option value="custom" {% if cfg.custom_font_url and cfg.custom_font_serif not in 'Lora Playfair Display Merriweather Crimson Pro Libre Baskerville DM Serif Display Space Grotesk' %}selected{% endif %}>URL personalizada</option>
+                        </select>
                     </div>
-                    {% if cfg.custom_font_serif or cfg.custom_font_sans %}
-                    <div style="padding:.875rem 1rem;background:var(--page);border-radius:var(--r);margin-bottom:1rem;">
-                        <p style="font-size:.75rem;color:var(--ink-light);margin-bottom:.375rem;">Vista previa:</p>
-                        <p style="font-family:'{{ cfg.custom_font_serif }}', serif;font-size:1.25rem;color:var(--ink);">Titulo con {{ cfg.custom_font_serif }}</p>
-                        <p style="font-family:'{{ cfg.custom_font_sans }}', sans-serif;font-size:.9375rem;color:var(--ink-mid);">Texto con {{ cfg.custom_font_sans }}</p>
+                    <div id="custom_font_fields" style="{% if not cfg.custom_font_url %}display:none;{% endif %}">
+                        <div class="g2" style="margin-bottom:.75rem;">
+                            <div class="field"><label class="lbl">Fuente titulos</label><input class="inp" name="custom_font_serif" id="f_serif" value="{{ cfg.custom_font_serif }}" placeholder="Ej: Merriweather"></div>
+                            <div class="field"><label class="lbl">Fuente texto</label><input class="inp" name="custom_font_sans" id="f_sans" value="{{ cfg.custom_font_sans }}" placeholder="Ej: Nunito"></div>
+                        </div>
+                        <div class="field" style="margin-bottom:.75rem;">
+                            <label class="lbl">URL Google Fonts CSS</label>
+                            <input class="inp" name="custom_font_url" id="f_url" value="{{ cfg.custom_font_url }}" placeholder="https://fonts.googleapis.com/css2?family=...&display=swap">
+                            <p class="hint">Ve a <a href="https://fonts.google.com" target="_blank" style="color:var(--accent);">fonts.google.com</a>, selecciona las fuentes, copia el link de tipo <code>https://fonts.googleapis.com/css2?...</code> (NO el link de compartir).</p>
+                        </div>
+                    </div>
+                    {% if cfg.custom_font_serif %}
+                    <div style="padding:.875rem 1rem;background:var(--page);border-radius:var(--r);margin-bottom:1rem;border:1px solid var(--border);">
+                        <p style="font-size:.75rem;color:var(--ink-light);margin-bottom:.375rem;">Fuentes activas:</p>
+                        <p style="font-family:'{{ cfg.custom_font_serif }}', serif;font-size:1.125rem;color:var(--ink);margin-bottom:4px;">Titulo: {{ cfg.custom_font_serif }}</p>
+                        <p style="font-family:'{{ cfg.custom_font_sans }}', sans-serif;font-size:.9375rem;color:var(--ink-mid);">Texto: {{ cfg.custom_font_sans }}</p>
                     </div>
                     {% endif %}
                     <div style="display:flex;gap:.75rem;">
                         <button class="btn btn-dark" type="submit">Guardar tipografia</button>
-                        {% if cfg.custom_font_serif or cfg.custom_font_sans %}<a href="/dashboard/reset-fuente/" class="btn btn-ghost btn-sm">Restablecer fuente del tema</a>{% endif %}
+                        {% if cfg.custom_font_serif %}<a href="/dashboard/reset-fuente/" class="btn btn-ghost btn-sm">Restablecer fuente del tema</a>{% endif %}
                     </div>
+                    <script>
+                        const PRESETS = {
+                            'lora_inter': ['Lora', 'Inter', 'https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap'],
+                            'playfair_source': ['Playfair Display', 'Source Sans 3', 'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@300;400;600&display=swap'],
+                            'merriweather_nunito': ['Merriweather', 'Nunito', 'https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Nunito:wght@300;400;600&display=swap'],
+                            'crimson_raleway': ['Crimson Pro', 'Raleway', 'https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Raleway:wght@300;400;500&display=swap'],
+                            'libre_inter': ['Libre Baskerville', 'Inter', 'https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500&display=swap'],
+                            'dm_dm': ['DM Serif Display', 'DM Sans', 'https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap'],
+                            'space': ['Space Grotesk', 'Space Grotesk', 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&display=swap'],
+                        };
+                        function applyFontPreset(val) {
+                            const cf = document.getElementById('custom_font_fields');
+                            if (!val || val === 'custom') {
+                                cf.style.display = val === 'custom' ? '' : 'none';
+                                if (!val) {
+                                    document.getElementById('f_serif').value = '';
+                                    document.getElementById('f_sans').value = '';
+                                    document.getElementById('f_url').value = '';
+                                }
+                                return;
+                            }
+                            const p = PRESETS[val];
+                            if (p) {
+                                document.getElementById('f_serif').value = p[0];
+                                document.getElementById('f_sans').value = p[1];
+                                document.getElementById('f_url').value = p[2];
+                                cf.style.display = '';
+                            }
+                        }
+                    </script>
                 </div>
             </div>
 

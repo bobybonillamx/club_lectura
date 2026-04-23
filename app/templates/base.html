@@ -72,11 +72,27 @@ textarea,input,select,button{font-family:var(--sans);}
 .hint{font-size:.6875rem;color:var(--ink-light);margin-top:4px;line-height:1.5;}
 
 /* CHIPS */
-.chip{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:.6875rem;font-weight:500;white-space:nowrap;}
-.chip-reading{background:#EBF5EB;color:#2D5A2D;}
-.chip-future{background:var(--accent-bg);color:var(--accent);border:1px solid var(--accent-bdr);}
-.chip-done{background:#EEF0F8;color:#2D3A6A;}
-.chip-muted{background:var(--page);color:var(--ink-light);border:1px solid var(--border);}
+    .chip-reading {
+        background: color-mix(in srgb,#22c55e 15%,var(--surface));
+        color: color-mix(in srgb,#16a34a 80%,var(--ink));
+    }
+
+    .chip-future {
+        background: var(--accent-bg);
+        color: var(--accent);
+        border: 1px solid var(--accent-bdr);
+    }
+
+    .chip-done {
+        background: color-mix(in srgb,#6366f1 12%,var(--surface));
+        color: color-mix(in srgb,#4338ca 80%,var(--ink));
+    }
+
+    .chip-muted {
+        background: var(--page);
+        color: var(--ink-light);
+        border: 1px solid var(--border);
+    }
 
 /* EYEBROW */
 .eyebrow{font-size:.6875rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:.375rem;}
