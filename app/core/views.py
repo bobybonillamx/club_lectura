@@ -18,12 +18,17 @@ from .models import (
     Book, BookStatus, Role, User, Vote, Review, Event,
     Visibility, Invitation, SocialLink, ClubSettings,
     DEFAULT_TPL_WELCOME, DEFAULT_TPL_APPROVED, DEFAULT_TPL_INVITATION,
+    DEFAULT_TPL_NEW_BOOK, DEFAULT_TPL_NEW_EVENT, DEFAULT_TPL_VOTING,
     THEMES,
 )
 
 
 def _is_effectively_approved(user):
-    return bool(user.is_authenticated and (user.is_superuser or user.is_approved))
+    return bool(
+        user.is_authenticated
+        and (user.is_superuser or user.is_approved)
+        and not getattr(user, 'is_suspended', False)
+    )
 
 
 def _visible_filter(user):
@@ -54,11 +59,10 @@ def _send_email(subject, body, to, cfg=None):
         pass
 
 
-def _club_name():
-    try:
-        return ClubSettings.get_solo().name
-    except Exception:
-        return 'Club de Lectura'
+def _send_bulk(subject, body_template, recipients, extra_vars, cfg):
+    for user in recipients:
+        body = body_template.format(nombre=user.username, **extra_vars)
+        _send_email(subject, body, user.email, cfg)
 
 
 def _build_stats():
@@ -72,10 +76,33 @@ def _build_stats():
         'total_books': Book.objects.count(),
         'books_read': Book.objects.filter(status=BookStatus.COMPLETED).count(),
         'total_votes': Vote.objects.count(),
-        'approved_users': User.objects.filter(is_approved=True).count(),
+        'approved_users': User.objects.filter(is_approved=True, is_suspended=False).count(),
         'top_voted': top_voted,
         'recent_reviews': Review.objects.filter(is_approved=True).select_related('book', 'user').order_by('-created_at')[:5],
     }
+
+
+def _run_notifications(cfg):
+    """Cron ligero: se ejecuta en cada carga de pagina si han pasado mas de 60min."""
+    from datetime import timedelta
+    now = timezone.now()
+    if cfg.last_cron_run and (now - cfg.last_cron_run).seconds < 3600:
+        return
+    cfg.last_cron_run = now
+    cfg.save(update_fields=['last_cron_run'])
+
+    approved = list(User.objects.filter(is_approved=True, is_suspended=False).exclude(email=''))
+
+    if cfg.notify_pending_approvals:
+        pending_count = User.objects.filter(is_approved=False, is_suspended=False).count()
+        if pending_count:
+            admins = [u for u in approved if u.is_admin_like()]
+            for admin in admins:
+                _send_email(
+                    subject=f'[{cfg.name}] {pending_count} usuario(s) pendientes de aprobacion',
+                    body=f'Hay {pending_count} usuario(s) esperando aprobacion.\n\n{cfg.public_url}/dashboard/?seccion=usuarios',
+                    to=admin.email, cfg=cfg,
+                )
 
 
 def home(request):
@@ -91,6 +118,9 @@ def home(request):
         next_event = Event.objects.filter(visibility__in=visible, starts_at__gte=timezone.now()).order_by('starts_at').first()
         events = Event.objects.filter(visibility__in=visible, starts_at__gte=timezone.now()).order_by('starts_at')[:20]
         links = SocialLink.objects.all()
+        cfg = ClubSettings.get_solo()
+        if cfg.smtp_configured:
+            _run_notifications(cfg)
     except (DatabaseError, OperationalError):
         messages.warning(request, 'No se pudieron cargar todos los datos.')
     return render(request, 'home.html', {
@@ -167,6 +197,8 @@ def register(request):
 @login_required
 def dashboard(request):
     if not _is_effectively_approved(request.user):
+        if getattr(request.user, 'is_suspended', False):
+            return HttpResponseForbidden('Tu cuenta ha sido suspendida.')
         return HttpResponseForbidden('Tu cuenta esta pendiente de aprobacion.')
 
     section = request.GET.get('seccion', 'inicio')
@@ -176,6 +208,8 @@ def dashboard(request):
         for f in ('google_login_enabled', 'google_client_id', 'google_client_secret',
                   'smtp_host', 'smtp_port', 'smtp_user', 'smtp_password', 'smtp_use_tls',
                   'email_from', 'email_tpl_welcome', 'email_tpl_approved', 'email_tpl_invitation',
+                  'email_tpl_new_book', 'email_tpl_new_event', 'email_tpl_voting_open',
+                  'notify_new_book', 'notify_new_event', 'notify_voting_open', 'notify_pending_approvals',
                   'public_domain'):
             settings_form.fields.pop(f, None)
 
@@ -187,7 +221,7 @@ def dashboard(request):
         'books': Book.objects.order_by('-created_at')[:100],
         'events_all': Event.objects.order_by('-starts_at')[:100],
         'users_all': User.objects.order_by('-date_joined')[:100],
-        'users_pending': User.objects.filter(is_approved=False),
+        'users_pending': User.objects.filter(is_approved=False, is_suspended=False),
         'reviews_all': Review.objects.order_by('-created_at')[:200],
         'social_links': SocialLink.objects.all(),
         'pending_reviews_count': Review.objects.filter(is_approved=False).count(),
@@ -197,6 +231,9 @@ def dashboard(request):
         'default_tpl_welcome': DEFAULT_TPL_WELCOME,
         'default_tpl_approved': DEFAULT_TPL_APPROVED,
         'default_tpl_invitation': DEFAULT_TPL_INVITATION,
+        'default_tpl_new_book': DEFAULT_TPL_NEW_BOOK,
+        'default_tpl_new_event': DEFAULT_TPL_NEW_EVENT,
+        'default_tpl_voting': DEFAULT_TPL_VOTING,
     }
     return render(request, 'dashboard.html', context)
 
@@ -211,13 +248,16 @@ def update_club_settings(request):
 
     section_fields = {
         'inicio': ['name', 'description', 'logo_url', 'icon_url', 'cover_image_url',
-                   'home_welcome_text', 'meta_description', 'cta_register_text', 'cta_login_text'],
+                   'home_welcome_text', 'cta_register_text', 'cta_login_text'],
+        'seo': ['meta_description', 'meta_keywords', 'meta_author'],
         'apariencia': ['theme', 'primary_color', 'accent_color',
                        'footer_custom_link_text', 'footer_custom_link_url', 'footer_text'],
         'integraciones': ['public_domain', 'affiliate_tag',
                           'google_login_enabled', 'google_client_id', 'google_client_secret',
                           'smtp_host', 'smtp_port', 'smtp_user', 'smtp_password', 'smtp_use_tls', 'email_from'],
-        'correos': ['email_tpl_welcome', 'email_tpl_approved', 'email_tpl_invitation'],
+        'correos': ['email_tpl_welcome', 'email_tpl_approved', 'email_tpl_invitation',
+                    'email_tpl_new_book', 'email_tpl_new_event', 'email_tpl_voting_open',
+                    'notify_new_book', 'notify_new_event', 'notify_voting_open', 'notify_pending_approvals'],
     }
 
     allowed = section_fields.get(section, section_fields['inicio'])
@@ -231,6 +271,13 @@ def update_club_settings(request):
                   'smtp_host', 'smtp_port', 'smtp_user', 'smtp_password', 'smtp_use_tls',
                   'email_from', 'public_domain'):
             form.fields.pop(f, None)
+
+    # Validate google credentials if enabling
+    if section == 'integraciones':
+        post = request.POST
+        if post.get('google_login_enabled') and not (post.get('google_client_id') and post.get('google_client_secret')):
+            messages.error(request, 'Para habilitar Google OAuth debes ingresar Client ID y Client Secret.')
+            return redirect(f'/dashboard/?seccion={section}')
 
     if form.is_valid():
         form.save()
@@ -266,6 +313,15 @@ def create_book(request):
         book.save()
         if book.status == BookStatus.READING and form.cleaned_data.get('reemplazar_leyendo_actual'):
             Book.objects.filter(status=BookStatus.READING).exclude(id=book.id).update(status=BookStatus.COMPLETED)
+        # Notify members if enabled
+        cfg = ClubSettings.get_solo()
+        if cfg.notify_new_book and cfg.smtp_configured:
+            recipients = list(User.objects.filter(is_approved=True, is_suspended=False).exclude(email=''))
+            tpl = cfg.get_new_book_template()
+            for u in recipients:
+                body = tpl.format(nombre=u.username, club=cfg.name, url=cfg.public_url,
+                                  titulo=book.title, autor=book.author, libro_id=book.id)
+                _send_email(subject=f'Nuevo libro en {cfg.name}: {book.title}', body=body, to=u.email, cfg=cfg)
         messages.success(request, f'Libro "{book.title}" guardado.')
     else:
         messages.error(request, f'Error: {form.errors}')
@@ -318,6 +374,16 @@ def create_event(request):
         event = form.save(commit=False)
         event.created_by = request.user
         event.save()
+        cfg = ClubSettings.get_solo()
+        if cfg.notify_new_event and cfg.smtp_configured:
+            recipients = list(User.objects.filter(is_approved=True, is_suspended=False).exclude(email=''))
+            tpl = cfg.get_new_event_template()
+            lugar = f'Lugar: {event.location}' if event.location else ''
+            for u in recipients:
+                body = tpl.format(nombre=u.username, club=cfg.name, url=cfg.public_url,
+                                  titulo=event.title, fecha=event.starts_at.strftime('%d %b %Y, %H:%M'),
+                                  lugar=lugar)
+                _send_email(subject=f'Nuevo evento en {cfg.name}: {event.title}', body=body, to=u.email, cfg=cfg)
         messages.success(request, 'Evento creado.')
     else:
         messages.error(request, f'Error: {form.errors}')
@@ -425,7 +491,7 @@ def delete_review(request, review_id):
 def pending_users(request):
     if not request.user.is_admin_like():
         return HttpResponseForbidden('Solo admins.')
-    users = User.objects.filter(is_approved=False)
+    users = User.objects.filter(is_approved=False, is_suspended=False)
     return render(request, 'pending_users.html', {'users': users})
 
 
@@ -437,7 +503,8 @@ def approve_user(request, user_id):
         return HttpResponseForbidden('Solo admins.')
     user = get_object_or_404(User, pk=user_id)
     user.is_approved = True
-    user.save(update_fields=['is_approved'])
+    user.is_suspended = False
+    user.save(update_fields=['is_approved', 'is_suspended'])
     cfg = ClubSettings.get_solo()
     if user.email:
         body = cfg.get_approved_template().format(
@@ -445,6 +512,34 @@ def approve_user(request, user_id):
         )
         _send_email(subject=f'Tu cuenta en {cfg.name} fue aprobada', body=body, to=user.email, cfg=cfg)
     messages.success(request, f'{user.username} aprobado.')
+    return redirect('/dashboard/?seccion=usuarios')
+
+
+@login_required
+def suspend_user(request, user_id):
+    if request.method != 'POST':
+        return HttpResponseForbidden('Metodo no permitido.')
+    if not request.user.is_admin_like():
+        return HttpResponseForbidden('Solo admins.')
+    user = get_object_or_404(User, pk=user_id)
+    if user.id == request.user.id:
+        return HttpResponseForbidden('No puedes suspenderte a ti mismo.')
+    user.is_suspended = True
+    user.save(update_fields=['is_suspended'])
+    messages.success(request, f'{user.username} suspendido.')
+    return redirect('/dashboard/?seccion=usuarios')
+
+
+@login_required
+def unsuspend_user(request, user_id):
+    if request.method != 'POST':
+        return HttpResponseForbidden('Metodo no permitido.')
+    if not request.user.is_admin_like():
+        return HttpResponseForbidden('Solo admins.')
+    user = get_object_or_404(User, pk=user_id)
+    user.is_suspended = False
+    user.save(update_fields=['is_suspended'])
+    messages.success(request, f'{user.username} reactivado.')
     return redirect('/dashboard/?seccion=usuarios')
 
 
@@ -477,7 +572,7 @@ def delete_user(request, user_id):
 
 @login_required
 def invite_user(request):
-    if request.user.role not in {Role.ADMIN, Role.SUPERADMIN} and not request.user.is_superuser:
+    if not request.user.is_admin_like():
         return HttpResponseForbidden('Solo admins.')
     if request.method == 'POST':
         name = request.POST.get('name', '').strip()
@@ -504,7 +599,7 @@ def invite_user(request):
             usuario=username, contrasena=password,
         )
         _send_email(subject=f'Invitacion a {cfg.name}', body=body, to=email, cfg=cfg)
-        messages.success(request, f'Invitacion creada. Contrasena temporal: {password}')
+        messages.success(request, f'Invitacion creada para {email}. Contrasena temporal: {password}')
     return redirect('/dashboard/?seccion=usuarios')
 
 
@@ -532,7 +627,7 @@ def test_smtp(request):
         )
         messages.success(request, f'Correo de prueba enviado a {request.user.email}.')
     except Exception as e:
-        messages.error(request, f'Error: {e}')
+        messages.error(request, f'Error SMTP: {e}')
     return redirect('/dashboard/?seccion=integraciones')
 
 
@@ -586,8 +681,8 @@ def manifest(request):
         "short_name": cfg.name[:12],
         "start_url": "/",
         "display": "standalone",
-        "background_color": "#F7F3EE",
-        "theme_color": cfg.primary_color or "#6f42c1",
+        "background_color": cfg.theme_vars.get('page', '#F7F3EE'),
+        "theme_color": cfg.theme_vars.get('primary', '#6f42c1'),
         "icons": icons,
     }
     return HttpResponse(_json.dumps(data), content_type='application/manifest+json')

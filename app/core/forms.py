@@ -45,13 +45,15 @@ class ClubSettingsForm(forms.ModelForm):
         fields = [
             'name', 'description', 'logo_url', 'icon_url', 'cover_image_url',
             'theme', 'primary_color', 'accent_color',
+            'meta_description', 'meta_keywords', 'meta_author',
+            'home_welcome_text', 'cta_register_text', 'cta_login_text',
+            'footer_text', 'footer_custom_link_text', 'footer_custom_link_url',
             'public_domain', 'affiliate_tag',
             'google_login_enabled', 'google_client_id', 'google_client_secret',
             'smtp_host', 'smtp_port', 'smtp_user', 'smtp_password', 'smtp_use_tls', 'email_from',
             'email_tpl_welcome', 'email_tpl_approved', 'email_tpl_invitation',
-            'meta_description', 'home_welcome_text', 'cta_register_text', 'cta_login_text',
-            'footer_powered_by_name', 'footer_powered_by_url',
-            'footer_custom_link_text', 'footer_custom_link_url', 'footer_text',
+            'email_tpl_new_book', 'email_tpl_new_event', 'email_tpl_voting_open',
+            'notify_new_book', 'notify_new_event', 'notify_voting_open', 'notify_pending_approvals',
         ]
 
     def clean_name(self):
@@ -82,4 +84,4 @@ class SocialLinkForm(forms.ModelForm):
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ['full_name', 'avatar_url', 'bio', 'favorite_book', 'email'] 
+        fields = ['full_name', 'avatar_url', 'bio', 'favorite_book', 'email']

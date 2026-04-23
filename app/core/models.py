@@ -22,116 +22,61 @@ class Role(models.TextChoices):
 THEMES = {
     'literario_cafe': {
         'label': 'Literario Cafe',
-        'page': '#F7F3EE',
-        'surface': '#FFFFFF',
-        'border': '#EAE0D5',
-        'border2': '#DDD4C8',
-        'primary': '#3D2B1F',
-        'accent': '#B87333',
-        'accent_bg': '#FDF3E3',
-        'accent_bdr': '#F0D8A8',
-        'ink': '#1A0F0A',
-        'ink_mid': '#3D2B1F',
-        'ink_light': '#7A6252',
-        'serif': "'Lora', Georgia, serif",
-        'sans': "'Inter', system-ui, sans-serif",
+        'page': '#F7F3EE', 'surface': '#FFFFFF', 'border': '#EAE0D5', 'border2': '#DDD4C8',
+        'primary': '#3D2B1F', 'accent': '#B87333', 'accent_bg': '#FDF3E3', 'accent_bdr': '#F0D8A8',
+        'ink': '#1A0F0A', 'ink_mid': '#3D2B1F', 'ink_light': '#7A6252',
+        'serif': "'Lora', Georgia, serif", 'sans': "'Inter', system-ui, sans-serif",
         'fonts': 'https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap',
     },
     'moderno_oscuro': {
         'label': 'Moderno Oscuro',
-        'page': '#111318',
-        'surface': '#1C2030',
-        'border': '#2A2F42',
-        'border2': '#363C52',
-        'primary': '#7C6FFF',
-        'accent': '#7C6FFF',
-        'accent_bg': '#2A2050',
-        'accent_bdr': '#3D3570',
-        'ink': '#F0EFFF',
-        'ink_mid': '#C8C6F0',
-        'ink_light': '#8B8FA8',
-        'serif': "'Space Grotesk', system-ui, sans-serif",
-        'sans': "'Space Grotesk', system-ui, sans-serif",
+        'page': '#111318', 'surface': '#1C2030', 'border': '#2A2F42', 'border2': '#363C52',
+        'primary': '#7C6FFF', 'accent': '#7C6FFF', 'accent_bg': '#2A2050', 'accent_bdr': '#3D3570',
+        'ink': '#F0EFFF', 'ink_mid': '#C8C6F0', 'ink_light': '#8B8FA8',
+        'serif': "'Space Grotesk', system-ui, sans-serif", 'sans': "'Space Grotesk', system-ui, sans-serif",
         'fonts': 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&display=swap',
     },
     'minimalista_blanco': {
         'label': 'Minimalista Blanco',
-        'page': '#FAFAFA',
-        'surface': '#FFFFFF',
-        'border': '#EBEBEB',
-        'border2': '#D8D8D8',
-        'primary': '#111111',
-        'accent': '#111111',
-        'accent_bg': '#F5F5F5',
-        'accent_bdr': '#E0E0E0',
-        'ink': '#111111',
-        'ink_mid': '#333333',
-        'ink_light': '#888888',
-        'serif': "'DM Sans', system-ui, sans-serif",
-        'sans': "'DM Sans', system-ui, sans-serif",
+        'page': '#FAFAFA', 'surface': '#FFFFFF', 'border': '#EBEBEB', 'border2': '#D8D8D8',
+        'primary': '#111111', 'accent': '#111111', 'accent_bg': '#F5F5F5', 'accent_bdr': '#E0E0E0',
+        'ink': '#111111', 'ink_mid': '#333333', 'ink_light': '#888888',
+        'serif': "'DM Sans', system-ui, sans-serif", 'sans': "'DM Sans', system-ui, sans-serif",
         'fonts': 'https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&display=swap',
     },
     'verde_bosque': {
         'label': 'Verde Bosque',
-        'page': '#F2F7F2',
-        'surface': '#FFFFFF',
-        'border': '#D4E8D4',
-        'border2': '#B8D8B8',
-        'primary': '#1E4D2B',
-        'accent': '#3A7D44',
-        'accent_bg': '#E8F5E8',
-        'accent_bdr': '#AEDCAE',
-        'ink': '#0F2B18',
-        'ink_mid': '#1E4D2B',
-        'ink_light': '#4A6B52',
-        'serif': "'Crimson Pro', Georgia, serif",
-        'sans': "'Inter', system-ui, sans-serif",
+        'page': '#F2F7F2', 'surface': '#FFFFFF', 'border': '#D4E8D4', 'border2': '#B8D8B8',
+        'primary': '#1E4D2B', 'accent': '#3A7D44', 'accent_bg': '#E8F5E8', 'accent_bdr': '#AEDCAE',
+        'ink': '#0F2B18', 'ink_mid': '#1E4D2B', 'ink_light': '#4A6B52',
+        'serif': "'Crimson Pro', Georgia, serif", 'sans': "'Inter', system-ui, sans-serif",
         'fonts': 'https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap',
     },
     'oceano_profundo': {
         'label': 'Oceano Profundo',
-        'page': '#EEF4FA',
-        'surface': '#FFFFFF',
-        'border': '#C8DDEF',
-        'border2': '#A8C8E8',
-        'primary': '#0B4F8A',
-        'accent': '#1A72C4',
-        'accent_bg': '#DFF0FB',
-        'accent_bdr': '#9DCFF0',
-        'ink': '#051E3A',
-        'ink_mid': '#0B4F8A',
-        'ink_light': '#3A6080',
-        'serif': "'Libre Baskerville', Georgia, serif",
-        'sans': "'Inter', system-ui, sans-serif",
+        'page': '#EEF4FA', 'surface': '#FFFFFF', 'border': '#C8DDEF', 'border2': '#A8C8E8',
+        'primary': '#0B4F8A', 'accent': '#1A72C4', 'accent_bg': '#DFF0FB', 'accent_bdr': '#9DCFF0',
+        'ink': '#051E3A', 'ink_mid': '#0B4F8A', 'ink_light': '#3A6080',
+        'serif': "'Libre Baskerville', Georgia, serif", 'sans': "'Inter', system-ui, sans-serif",
         'fonts': 'https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500&display=swap',
     },
     'rosa_editorial': {
         'label': 'Rosa Editorial',
-        'page': '#FDF6F8',
-        'surface': '#FFFFFF',
-        'border': '#F0D8E0',
-        'border2': '#E8C0CC',
-        'primary': '#8B2252',
-        'accent': '#C4547A',
-        'accent_bg': '#FCEAF0',
-        'accent_bdr': '#F0B8CC',
-        'ink': '#3D0A22',
-        'ink_mid': '#8B2252',
-        'ink_light': '#8B5A6A',
-        'serif': "'Playfair Display', Georgia, serif",
-        'sans': "'Plus Jakarta Sans', system-ui, sans-serif",
+        'page': '#FDF6F8', 'surface': '#FFFFFF', 'border': '#F0D8E0', 'border2': '#E8C0CC',
+        'primary': '#8B2252', 'accent': '#C4547A', 'accent_bg': '#FCEAF0', 'accent_bdr': '#F0B8CC',
+        'ink': '#3D0A22', 'ink_mid': '#8B2252', 'ink_light': '#8B5A6A',
+        'serif': "'Playfair Display', Georgia, serif", 'sans': "'Plus Jakarta Sans', system-ui, sans-serif",
         'fonts': 'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500&display=swap',
     },
 }
 
-THEME_CHOICES = [(k, v['label']) for k, v in THEMES.items()] + [('personalizado', 'Personalizado')]
-
+THEME_CHOICES = [(k, v['label']) for k, v in THEMES.items()]
 
 DEFAULT_TPL_WELCOME = """Hola {nombre},
 
-Gracias por registrarte en {club}. Tu cuenta esta pendiente de aprobacion por un administrador.
+Gracias por registrarte en {club}. Tu cuenta esta pendiente de aprobacion.
 
-Te avisaremos por correo cuando tu cuenta sea aprobada.
+Te avisaremos cuando sea aprobada.
 
 Saludos,
 El equipo de {club}
@@ -139,7 +84,7 @@ El equipo de {club}
 
 DEFAULT_TPL_APPROVED = """Hola {nombre},
 
-Tu cuenta en {club} ha sido aprobada. Ya puedes acceder al panel desde:
+Tu cuenta en {club} ha sido aprobada. Accede en:
 
 {url}/dashboard/
 
@@ -151,13 +96,44 @@ El equipo de {club}
 
 DEFAULT_TPL_INVITATION = """Hola {nombre},
 
-Has sido invitado/a a unirte a {club}.
+Has sido invitado/a a {club}.
 
 Accede en: {url}/login/
 Usuario: {usuario}
 Contrasena temporal: {contrasena}
 
-Te recomendamos cambiar tu contrasena al ingresar.
+Saludos,
+El equipo de {club}
+"""
+
+DEFAULT_TPL_NEW_BOOK = """Hola {nombre},
+
+Hay un nuevo libro en {club}: {titulo} de {autor}.
+
+Verlo en: {url}/libros/{libro_id}/
+
+Saludos,
+El equipo de {club}
+"""
+
+DEFAULT_TPL_NEW_EVENT = """Hola {nombre},
+
+Nuevo evento en {club}: {titulo}
+
+Fecha: {fecha}
+{lugar}
+
+Ver detalles en: {url}/eventos/
+
+Saludos,
+El equipo de {club}
+"""
+
+DEFAULT_TPL_VOTING = """Hola {nombre},
+
+La votacion para el proximo libro esta abierta en {club}.
+
+Vota en: {url}/libros/
 
 Saludos,
 El equipo de {club}
@@ -168,6 +144,7 @@ class User(AbstractUser):
     full_name = models.CharField(max_length=180, blank=True)
     role = models.CharField(max_length=20, choices=Role.choices, default=Role.USER)
     is_approved = models.BooleanField(default=False)
+    is_suspended = models.BooleanField(default=False)
     avatar_url = models.URLField(blank=True)
     bio = models.TextField(blank=True)
     favorite_book = models.CharField(max_length=255, blank=True)
@@ -189,11 +166,26 @@ class ClubSettings(models.Model):
     logo_url = models.URLField(blank=True)
     icon_url = models.URLField(blank=True, default='')
     cover_image_url = models.URLField(blank=True, default='')
-
-    # Tema visual
-    theme = models.CharField(max_length=40, default='literario_cafe', choices=THEME_CHOICES)
     primary_color = models.CharField(max_length=7, default='')
     accent_color = models.CharField(max_length=7, default='')
+
+    # Tema
+    theme = models.CharField(max_length=40, default='literario_cafe', choices=THEME_CHOICES)
+
+    # SEO
+    meta_description = models.CharField(max_length=260, blank=True, default='')
+    meta_keywords = models.CharField(max_length=255, blank=True, default='')
+    meta_author = models.CharField(max_length=120, blank=True, default='')
+
+    # Textos
+    home_welcome_text = models.CharField(max_length=255, blank=True, default='')
+    cta_register_text = models.CharField(max_length=60, blank=True, default='')
+    cta_login_text = models.CharField(max_length=60, blank=True, default='')
+
+    # Footer
+    footer_text = models.CharField(max_length=255, blank=True, default='')
+    footer_custom_link_text = models.CharField(max_length=120, blank=True, default='')
+    footer_custom_link_url = models.URLField(blank=True, default='')
 
     # Dominio
     public_domain = models.CharField(max_length=255, blank=True, default='')
@@ -218,19 +210,16 @@ class ClubSettings(models.Model):
     email_tpl_welcome = models.TextField(blank=True, default='')
     email_tpl_approved = models.TextField(blank=True, default='')
     email_tpl_invitation = models.TextField(blank=True, default='')
+    email_tpl_new_book = models.TextField(blank=True, default='')
+    email_tpl_new_event = models.TextField(blank=True, default='')
+    email_tpl_voting_open = models.TextField(blank=True, default='')
 
-    # SEO & textos
-    meta_description = models.CharField(max_length=260, blank=True, default='')
-    home_welcome_text = models.CharField(max_length=255, blank=True, default='')
-    cta_register_text = models.CharField(max_length=60, blank=True, default='')
-    cta_login_text = models.CharField(max_length=60, blank=True, default='')
-
-    # Footer
-    footer_powered_by_name = models.CharField(max_length=120, blank=True, default='')
-    footer_powered_by_url = models.URLField(blank=True, default='')
-    footer_custom_link_text = models.CharField(max_length=120, blank=True, default='')
-    footer_custom_link_url = models.URLField(blank=True, default='')
-    footer_text = models.CharField(max_length=255, blank=True, default='')
+    # Notifications
+    notify_new_book = models.BooleanField(default=False)
+    notify_new_event = models.BooleanField(default=False)
+    notify_voting_open = models.BooleanField(default=False)
+    notify_pending_approvals = models.BooleanField(default=False)
+    last_cron_run = models.DateTimeField(null=True, blank=True)
 
     @classmethod
     def get_solo(cls):
@@ -257,14 +246,12 @@ class ClubSettings(models.Model):
 
     @property
     def theme_vars(self):
-        """Returns resolved CSS variables dict for the active theme."""
         base = THEMES.get(self.theme, THEMES['literario_cafe']).copy()
-        if self.theme == 'personalizado' or (self.primary_color or self.accent_color):
-            if self.primary_color:
-                base['primary'] = self.primary_color
-                base['ink_mid'] = self.primary_color
-            if self.accent_color:
-                base['accent'] = self.accent_color
+        if self.primary_color:
+            base['primary'] = self.primary_color
+            base['ink_mid'] = self.primary_color
+        if self.accent_color:
+            base['accent'] = self.accent_color
         return base
 
     @property
@@ -283,6 +270,15 @@ class ClubSettings(models.Model):
 
     def get_invitation_template(self):
         return self.email_tpl_invitation or DEFAULT_TPL_INVITATION
+
+    def get_new_book_template(self):
+        return self.email_tpl_new_book or DEFAULT_TPL_NEW_BOOK
+
+    def get_new_event_template(self):
+        return self.email_tpl_new_event or DEFAULT_TPL_NEW_EVENT
+
+    def get_voting_template(self):
+        return self.email_tpl_voting_open or DEFAULT_TPL_VOTING
 
 
 class BookStatus(models.TextChoices):
