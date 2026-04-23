@@ -1,42 +1,53 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 {% block content %}
-<div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
-  <div><p class="eyebrow" style="margin-bottom:.25rem;">Biblioteca</p><h1 style="font-size:1.75rem;">Libros del club</h1></div>
+<div class="d-flex justify-content-between align-items-end mb-3 flex-wrap gap-2">
+    <div>
+        <p class="section-label mb-0">Biblioteca</p>
+        <h1 style="font-size:1.75rem;margin:0;">Libros del club</h1>
+    </div>
 </div>
-<form method="get" action="/libros/" style="display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:2rem;">
-  <input type="text" name="q" value="{{ query|default:'' }}" class="inp" placeholder="Buscar por titulo o autor..." style="max-width:280px;width:100%;">
-  <select name="estado" class="sel" style="max-width:170px;width:100%;" onchange="this.form.submit()">
-    <option value="">Todos los estados</option>
-    <option value="completed" {% if estado == 'completed' %}selected{% endif %}>Leidos</option>
-    <option value="reading" {% if estado == 'reading' %}selected{% endif %}>Leyendo</option>
-    <option value="future" {% if estado == 'future' %}selected{% endif %}>En votacion</option>
-  </select>
-  <button class="btn btn-dark" type="submit">Buscar</button>
-  {% if query or estado %}<a href="/libros/" class="btn btn-ghost">Limpiar</a>{% endif %}
+
+<form method="get" action="/libros/" class="d-flex gap-2 flex-wrap mb-4">
+    <input type="text" name="q" value="{{ query|default:'' }}" class="form-control" placeholder="Buscar por título o autor…" style="max-width:320px;">
+    <select name="estado" class="form-select" style="max-width:180px;" onchange="this.form.submit()">
+        <option value="">Todos los estados</option>
+        <option value="completed" {% if estado= ='completed' %}selected{% endif %}>Leídos</option>
+        <option value="reading" {% if estado= ='reading' %}selected{% endif %}>Leyendo</option>
+        <option value="future" {% if estado= ='future' %}selected{% endif %}>En votación</option>
+    </select>
+    <button class="btn-primary-warm" type="submit">Buscar</button>
+    {% if query or estado %}<a class="btn-outline-warm" href="/libros/">Limpiar</a>{% endif %}
 </form>
+
 {% for book in books %}
-<a href="/libros/{{ book.id }}/" style="display:block;text-decoration:none;margin-bottom:.75rem;">
-  <div class="card" style="{% if book.status == 'future' and book.allow_voting %}border-color:var(--accent-bdr);{% endif %}transition:box-shadow .15s;" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.07)'" onmouseout="this.style.boxShadow=''">
-    {% if book.status == 'future' and book.allow_voting %}
-    <div style="background:var(--accent-bg);border-bottom:1px solid var(--accent-bdr);padding:.375rem 1.25rem;font-size:.75rem;color:var(--accent);display:flex;align-items:center;gap:.5rem;">
-      &#128717; <strong>Votacion abierta</strong> &mdash; {{ book.votes.count }} voto{{ book.votes.count|pluralize:"s" }} &middot; Entra para votar
-    </div>
-    {% endif %}
-    <div style="display:flex;align-items:center;">
-      {% if book.cover_url %}
-        <img src="{{ book.cover_url }}" alt="{{ book.title }}" style="width:48px;height:72px;object-fit:cover;flex-shrink:0;">
-      {% else %}
-        <div style="width:48px;height:72px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0;">&#128214;</div>
-      {% endif %}
-      <div style="flex:1;padding:.875rem 1.125rem;display:flex;justify-content:space-between;align-items:center;gap:.75rem;">
-        <div>
-          <p style="font-family:var(--serif);font-size:.9375rem;font-weight:600;color:var(--ink);margin-bottom:2px;">{{ book.title }}</p>
-          <p style="font-size:.8125rem;color:var(--ink-light);font-style:italic;">{{ book.author }}</p>
+<a href="/libros/{{ book.id }}/" style="text-decoration:none;display:block;">
+    <div class="card-warm mb-2" style="transition:box-shadow 0.15s;{% if book.status == 'future' and book.allow_voting %}border-color:#C0833A;{% endif %}" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)'" onmouseout="this.style.boxShadow=''">
+        {% if book.status == 'future' and book.allow_voting %}
+        <div style="background:#FEF6E7;border-bottom:1px solid #F0D295;padding:0.4rem 1.25rem;font-size:0.75rem;color:#7A4F0D;display:flex;align-items:center;gap:0.5rem;">
+            <span>🗳</span> <strong>Votación abierta</strong> — {{ book.votes.count }} voto{{ book.votes.count|pluralize:"s" }} · Haz clic para votar
         </div>
-        <span class="chip {% if book.status == 'reading' %}chip-reading{% elif book.status == 'completed' %}chip-done{% else %}chip-future{% endif %}">{{ book.get_status_display }}</span>
-      </div>
+        {% endif %}
+        <div class="card-warm-body d-flex justify-content-between align-items-center gap-3">
+            <div style="display:flex;align-items:center;gap:0.875rem;">
+                {% if book.cover_url %}
+                <img src="{{ book.cover_url }}" alt="{{ book.title }}" style="width:40px;height:60px;object-fit:cover;border-radius:4px;flex-shrink:0;">
+                {% else %}
+                <div style="width:40px;height:60px;background:var(--parchment-2);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">📖</div>
+                {% endif %}
+                <div>
+                    <strong style="font-family:var(--serif);color:var(--ink);font-size:0.9375rem;">{{ book.title }}</strong>
+                    <div style="font-size:0.8125rem;color:var(--ink-light);">{{ book.author }}</div>
+                    {% if book.pdf_url %}<span style="font-size:0.75rem;color:var(--ink-light);">· PDF incluido</span>{% endif %}
+                </div>
+            </div>
+            <span class="badge-warm {% if book.status == 'reading' %}reading{% elif book.status == 'completed' %}completed{% else %}future{% endif %}" style="white-space:nowrap;">
+                {{ book.get_status_display }}
+                {% if book.reading_month and book.status == 'future' %}<span class="chip chip-muted" style="margin-left:.375rem;font-size:.625rem;">{{ book.reading_month }}</span>{% endif %}
+            </span>
+        </div>
     </div>
-  </div>
 </a>
-{% empty %}<p style="color:var(--ink-light);padding:2rem 0;">No se encontraron libros con estos filtros.</p>{% endfor %}
+{% empty %}
+<p style="color:var(--ink-light);padding:2rem 0;">No se encontraron libros con estos filtros.</p>
+{% endfor %}
 {% endblock %}

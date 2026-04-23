@@ -1,15 +1,3 @@
-FONT_PRESETS = {
-    'default': {'label': 'Predeterminado del tema', 'serif': '', 'sans': '', 'url': ''},
-    'lora_inter': {'label': 'Lora + Inter (Clasico)', 'serif': 'Lora', 'sans': 'Inter', 'url': 'https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap'},
-    'playfair_nunito': {'label': 'Playfair + Nunito (Elegante)', 'serif': 'Playfair Display', 'sans': 'Nunito', 'url': 'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Nunito:wght@300;400;600&display=swap'},
-    'merriweather_source': {'label': 'Merriweather + Source Sans (Editorial)', 'serif': 'Merriweather', 'sans': 'Source Sans 3', 'url': 'https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@300;400;500&display=swap'},
-    'crimson_karla': {'label': 'Crimson Pro + Karla (Literario)', 'serif': 'Crimson Pro', 'sans': 'Karla', 'url': 'https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Karla:wght@300;400;500&display=swap'},
-    'libre_poppins': {'label': 'Libre Baskerville + Poppins (Moderno)', 'serif': 'Libre Baskerville', 'sans': 'Poppins', 'url': 'https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Poppins:wght@300;400;500&display=swap'},
-    'cormorant_dm': {'label': 'Cormorant + DM Sans (Sofisticado)', 'serif': 'Cormorant Garamond', 'sans': 'DM Sans', 'url': 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap'},
-    'eb_garamond_inter': {'label': 'EB Garamond + Inter (Academico)', 'serif': 'EB Garamond', 'sans': 'Inter', 'url': 'https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500&display=swap'},
-    'space_grotesk': {'label': 'Space Grotesk (Moderno uniforme)', 'serif': 'Space Grotesk', 'sans': 'Space Grotesk', 'url': 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&display=swap'},
-}
-
 import json
 from urllib.parse import urlencode, urlparse, parse_qs, urlunparse, quote_plus
 from urllib.request import Request, urlopen
@@ -232,7 +220,6 @@ class ClubSettings(models.Model):
     custom_font_url = models.CharField(max_length=500, blank=True, default='')
     custom_font_serif = models.CharField(max_length=120, blank=True, default='')
     custom_font_sans = models.CharField(max_length=120, blank=True, default='')
-    font_preset = models.CharField(max_length=40, blank=True, default='')
 
     # Notifications
     notify_new_book = models.BooleanField(default=False)
@@ -273,8 +260,6 @@ class ClubSettings(models.Model):
         if self.accent_color:
             base['accent'] = self.accent_color
         # Apply font preset if set
-        if self.font_preset and self.font_preset != 'default':
-            preset = FONT_PRESETS.get(self.font_preset, {})
             if preset.get('url'):
                 if preset.get('serif'):
                     base['serif'] = f"'{preset['serif']}', Georgia, serif"
