@@ -1,134 +1,107 @@
 ﻿{% extends 'base.html' %}
 {% block content %}
 
-<section style="padding:2.5rem 0 1.5rem;">
-    <p class="section-label">Bienvenido</p>
-    <h1 style="font-size:2rem;margin-bottom:0.5rem;">{{ club_settings.name }}</h1>
-    {% if club_settings.description %}
-    <p style="color:var(--ink-light);max-width:520px;margin-bottom:1.5rem;">{{ club_settings.description }}</p>
-    {% endif %}
-
-    <div class="row g-3" style="max-width:640px;">
-        <div class="col-sm-6">
-            <div class="card-warm card-warm-body" style="height:100%;">
-                <p class="section-label mb-1">Leyendo ahora</p>
-                {% if current_book %}
-                <strong style="font-family:var(--serif);">{{ current_book.title }}</strong>
-                <div style="font-size:0.8125rem;color:var(--ink-light);margin-top:2px;">{{ current_book.author }}</div>
-                {% else %}
-                <span style="color:var(--ink-light);font-size:0.875rem;">Sin libro activo</span>
-                {% endif %}
-            </div>
-        </div>
-        <div class="col-sm-6">
-            <div class="card-warm card-warm-body" style="height:100%;">
-                <p class="section-label mb-1">Próximo evento</p>
-                {% if next_event %}
-                <strong style="font-family:var(--serif);">{{ next_event.title }}</strong>
-                <div style="font-size:0.8125rem;color:var(--ink-light);margin-top:2px;">{{ next_event.starts_at|date:"j M, H:i" }}</div>
-                {% else %}
-                <span style="color:var(--ink-light);font-size:0.875rem;">Sin eventos próximos</span>
-                {% endif %}
-            </div>
-        </div>
+{% if club_settings.cover_image_url %}
+<div style="margin:-2rem -1.5rem 2rem;height:320px;overflow:hidden;position:relative;">
+    <img src="{{ club_settings.cover_image_url }}" alt="{{ club_settings.name }}" style="width:100%;height:100%;object-fit:cover;display:block;">
+    <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.65) 0%,transparent 60%);"></div>
+    <div style="position:absolute;bottom:2rem;left:2rem;">
+        <p class="eyebrow" style="color:rgba(255,255,255,.75);">{% if club_settings.home_welcome_text %}{{ club_settings.home_welcome_text }}{% else %}Bienvenido{% endif %}</p>
+        <h1 style="font-size:2.25rem;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.4);">{{ club_settings.name }}</h1>
+        {% if club_settings.description %}<p style="color:rgba(255,255,255,.85);max-width:480px;font-size:.9375rem;margin-top:.375rem;">{{ club_settings.description }}</p>{% endif %}
     </div>
+</div>
+{% else %}
+<section style="padding:1.5rem 0 2rem;">
+    <p class="eyebrow">{% if club_settings.home_welcome_text %}{{ club_settings.home_welcome_text }}{% else %}Bienvenido{% endif %}</p>
+    <h1 style="font-size:2rem;margin-bottom:.375rem;">{{ club_settings.name }}</h1>
+    {% if club_settings.description %}<p style="color:var(--ink-light);max-width:520px;font-size:.9375rem;">{{ club_settings.description }}</p>{% endif %}
 </section>
+{% endif %}
 
-<hr class="divider">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;max-width:600px;margin-bottom:2rem;">
+    <div class="card card-body">
+        <p class="eyebrow" style="margin-bottom:.375rem;">Leyendo ahora</p>
+        {% if current_book %}
+        <p style="font-family:var(--serif);font-size:.9375rem;color:var(--ink);font-weight:600;margin-bottom:2px;">{{ current_book.title }}</p>
+        <p style="font-size:.8125rem;color:var(--ink-light);font-style:italic;">{{ current_book.author }}</p>
+        {% else %}<p style="font-size:.875rem;color:var(--ink-light);">Sin libro activo</p>{% endif %}
+    </div>
+    <div class="card card-body">
+        <p class="eyebrow" style="margin-bottom:.375rem;">Proximo evento</p>
+        {% if next_event %}
+        <p style="font-family:var(--serif);font-size:.9375rem;color:var(--ink);font-weight:600;margin-bottom:2px;">{{ next_event.title }}</p>
+        <p style="font-size:.8125rem;color:var(--ink-light);">{{ next_event.starts_at|date:"j M, H:i" }}</p>
+        {% else %}<p style="font-size:.875rem;color:var(--ink-light);">Sin eventos proximos</p>{% endif %}
+    </div>
+</div>
 
-<div class="row g-4">
-    <div class="col-lg-8">
-        <p class="section-label">Biblioteca del club</p>
+<div style="display:grid;grid-template-columns:1fr 300px;gap:2rem;">
+    <div>
+        <p class="eyebrow" style="margin-bottom:1rem;">Biblioteca del club</p>
         {% for book in books %}
-        <div class="card-warm mb-3" style="display:flex;gap:0;">
-            <div style="flex-shrink:0;width:80px;background:var(--parchment-2);">
-                {% if book.cover_url %}
-                <img src="{{ book.cover_url }}" alt="{{ book.title }}" style="width:80px;height:120px;object-fit:cover;border-radius:12px 0 0 12px;">
-                {% else %}
-                <div style="width:80px;height:120px;display:flex;align-items:center;justify-content:center;color:var(--warm-border);font-size:1.5rem;border-radius:12px 0 0 12px;">📖</div>
-                {% endif %}
-            </div>
-            <div class="card-warm-body" style="flex:1;padding:1rem 1.25rem;">
-                <div class="d-flex justify-content-between align-items-start gap-2">
+        <div class="card" style="margin-bottom:.875rem;display:flex;">
+            {% if book.cover_url %}
+            <img src="{{ book.cover_url }}" alt="{{ book.title }}" style="width:72px;height:108px;object-fit:cover;flex-shrink:0;border-radius:14px 0 0 14px;">
+            {% else %}
+            <div style="width:72px;height:108px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;">&#128214;</div>
+            {% endif %}
+            <div style="flex:1;padding:1rem 1.125rem;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.5rem;">
                     <div>
-                        <h3 style="font-size:1rem;margin-bottom:2px;">{{ book.title }}</h3>
-                        <div style="font-size:0.8125rem;color:var(--ink-light);">{{ book.author }}</div>
+                        <h3 style="font-size:.9375rem;margin-bottom:2px;">{{ book.title }}</h3>
+                        <p style="font-size:.8125rem;color:var(--ink-light);font-style:italic;">{{ book.author }}</p>
                     </div>
-                    <span class="badge-warm {% if book.status == 'reading' %}reading{% elif book.status == 'completed' %}completed{% else %}future{% endif %}" style="white-space:nowrap;flex-shrink:0;">
-                        {{ book.get_status_display }}
-                    </span>
-                </div>
-
-                <div class="d-flex flex-wrap gap-2 mt-3 align-items-center">
-                    <a class="btn-outline-warm" href="/libros/{{ book.id }}/" style="font-size:0.8125rem;padding:0.3rem 0.75rem;">Ver detalle</a>
-                    {% if book.amazon_url %}<a href="{{ book.amazon_url }}" target="_blank" rel="noopener" style="font-size:0.8125rem;color:var(--ink-light);">Amazon ↗</a>{% endif %}
-                    {% if book.pdf_url %}<a href="{{ book.pdf_url }}" target="_blank" style="font-size:0.8125rem;color:var(--ink-light);">PDF ↗</a>{% endif %}
-                </div>
-
-                {% if book.status == book_status.FUTURE and book.allow_voting and user.is_authenticated %}
-                {% if user.is_approved or user.is_superuser %}
-                <form action="/libros/{{ book.id }}/votar/" method="post" style="margin-top:0.75rem;">
-                    {% csrf_token %}
-                    <input type="hidden" name="next" value="/">
-                    <button class="btn-primary-warm" style="font-size:0.8125rem;padding:0.3rem 0.75rem;">
-                        Votar · {{ book.votes.count }} voto{{ book.votes.count|pluralize:"s" }}
-                    </button>
-                </form>
-                {% endif %}
-                {% endif %}
-
-                {% with approved=book.reviews.all %}
-                {% if approved %}
-                <div style="margin-top:0.75rem;border-top:1px solid var(--parchment-3);padding-top:0.75rem;">
-                    {% for review in approved %}
-                    {% if review.is_approved %}
-                    <div style="font-size:0.8125rem;color:var(--ink-light);">
-                        <span class="stars">{% for i in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
-                        <strong style="color:var(--ink);">{{ review.user.username }}</strong> — {{ review.comment }}
+                    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.25rem;">
+                        <span class="chip {% if book.status == 'reading' %}chip-reading{% elif book.status == 'completed' %}chip-done{% else %}chip-future{% endif %}">{{ book.get_status_display }}</span>
+                        {% if book.reading_month and book.status == 'future' %}<span class="chip chip-muted" style="font-size:.625rem;">{{ book.reading_month }}</span>{% endif %}
                     </div>
-                    {% endif %}
-                    {% endfor %}
+                </div>
+                {% if book.status == 'future' and book.allow_voting %}
+                <div style="background:var(--accent-bg);border:1px solid var(--accent-bdr);border-radius:var(--r);padding:.5rem .75rem;margin-bottom:.5rem;font-size:.8125rem;color:var(--accent);">
+                    Votacion abierta &middot; {{ book.votes.count }} voto{{ book.votes.count|pluralize:"s" }}
                 </div>
                 {% endif %}
-                {% endwith %}
-
-                <a href="/libros/{{ book.id }}/" style="font-size:0.8125rem;color:var(--ink-light);display:inline-block;margin-top:0.5rem;">Escribe una reseña →</a>
+                <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;">
+                    <a href="/libros/{{ book.id }}/" class="btn btn-ghost btn-sm">Ver detalle</a>
+                    {% if book.amazon_url %}<a href="{{ book.amazon_url }}" target="_blank" rel="noopener" style="font-size:.8125rem;color:var(--ink-light);">Amazon &#8599;</a>{% endif %}
+                    {% if book.pdf_url %}{% if user.is_authenticated and user.is_approved or user.is_superuser %}
+                    <a href="{{ book.pdf_url }}" target="_blank" rel="noopener" style="font-size:.8125rem;color:var(--ink-light);">PDF &#8599;</a>
+                    {% endif %}{% endif %}
+                </div>
             </div>
         </div>
-        {% empty %}
-        <p style="color:var(--ink-light);">Aún no hay libros registrados.</p>
-        {% endfor %}
+        {% empty %}<p style="color:var(--ink-light);">Aun no hay libros registrados.</p>{% endfor %}
     </div>
 
-    <div class="col-lg-4">
-        <div class="card-warm card-warm-body mb-4">
-            <p class="section-label">Próximos eventos</p>
+    <aside>
+        <div class="card card-body" style="margin-bottom:1rem;">
+            <p class="eyebrow" style="margin-bottom:.875rem;">Proximos eventos</p>
             {% for event in events %}
-            <div style="padding:0.75rem 0;{% if not forloop.last %}border-bottom:1px solid var(--parchment-3);{% endif %}">
-                <strong style="font-family:var(--serif);font-size:0.9375rem;">{{ event.title }}</strong>
-                <div style="font-size:0.8125rem;color:var(--ink-light);margin-top:2px;">{{ event.event_type }} · {{ event.starts_at|date:"j M" }}</div>
-                {% if event.location %}<div style="font-size:0.8rem;color:var(--ink-light);">{{ event.location }}</div>{% endif %}
+            <div style="padding:.625rem 0;{% if not forloop.last %}border-bottom:1px solid var(--border);{% endif %}">
+                {% if event.cover_image_url %}
+                <img src="{{ event.cover_image_url }}" alt="{{ event.title }}" style="width:100%;height:80px;object-fit:cover;border-radius:var(--r);margin-bottom:.5rem;cursor:pointer;" onclick="document.getElementById('hmodal-{{ event.id }}').style.display='flex'">
+                <div id="hmodal-{{ event.id }}" onclick="this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center;cursor:pointer;">
+                    <img src="{{ event.cover_image_url }}" style="max-width:90vw;max-height:90vh;border-radius:12px;">
+                </div>
+                {% endif %}
+                <p style="font-family:var(--serif);font-size:.875rem;color:var(--ink);font-weight:600;margin-bottom:2px;">{{ event.title }}</p>
+                <p style="font-size:.75rem;color:var(--ink-light);">{{ event.event_type }} &middot; {{ event.starts_at|date:"j M" }}</p>
+                {% if event.location %}<p style="font-size:.75rem;color:var(--ink-light);">{{ event.location }}</p>{% endif %}
             </div>
-            {% empty %}
-            <p style="color:var(--ink-light);font-size:0.875rem;margin:0;">Sin eventos próximos.</p>
-            {% endfor %}
+            {% empty %}<p style="font-size:.875rem;color:var(--ink-light);">Sin eventos proximos.</p>{% endfor %}
         </div>
-
         {% if links %}
-        <div class="card-warm card-warm-body mb-4">
-            <p class="section-label">Redes del club</p>
+        <div class="card card-body" style="margin-bottom:1rem;">
+            <p class="eyebrow" style="margin-bottom:.75rem;">Redes del club</p>
             {% for link in links %}
-            <a href="{{ link.url }}" target="_blank" rel="noopener" style="display:block;font-size:0.875rem;color:var(--ink-light);padding:0.25rem 0;text-decoration:none;">
-                → {{ link.network }}
+            <a href="{{ link.url }}" target="_blank" rel="noopener" style="display:block;font-size:.875rem;color:var(--ink-light);padding:3px 0;">
+                {% if link.icon and link.icon != 'link' %}[{{ link.icon }}]{% else %}&#8599;{% endif %} {{ link.network }}
             </a>
             {% endfor %}
         </div>
         {% endif %}
-
-        <button class="btn-outline-warm w-100"
-                onclick="navigator.share ? navigator.share({title: document.title, url: location.href}) : alert('Comparte esta URL: ' + location.href)">
-            Compartir club
-        </button>
-    </div>
+        <button class="btn btn-ghost" style="width:100%;" onclick="navigator.share?navigator.share({title:document.title,url:location.href}):alert('Comparte: '+location.href)">Compartir club</button>
+    </aside>
 </div>
 {% endblock %}
