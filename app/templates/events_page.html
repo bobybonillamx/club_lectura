@@ -1,4 +1,7 @@
-﻿<style>
+﻿{% extends 'base.html' %}
+{% block content %}
+
+<style>
     .ev-modal {
         display: none;
         position: fixed;
@@ -21,48 +24,51 @@
             box-shadow: 0 20px 60px rgba(0,0,0,.5);
         }
 </style>
-{% extends 'base.html' %}
-{% block content %}
-<p class="section-label mb-0">Agenda</p>
+
+<p class="eyebrow" style="margin-bottom:.375rem;">Agenda</p>
 <h1 style="font-size:1.75rem;margin-bottom:2rem;">Eventos del club</h1>
 
-<p class="section-label">Próximos</p>
+<p class="eyebrow" style="margin-bottom:.875rem;">Proximos</p>
 {% for e in upcoming %}
-<div class="card-warm card-warm-body mb-3">
-    <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
-        <div>
-            <h3 style="font-size:1.0625rem;margin-bottom:0.25rem;">{{ e.title }}</h3>
-            <div style="font-size:0.8125rem;color:var(--ink-light);">
-                <span class="badge-warm">{{ e.event_type }}</span>
-                <span style="margin-left:0.5rem;">{{ e.starts_at|date:"l j \d\e F, H:i" }}</span>
-                {% if e.location %} · {{ e.location }}{% endif %}
+<div class="card" style="margin-bottom:.875rem;overflow:hidden;">
+    {% if e.cover_image_url %}
+    <div style="height:180px;overflow:hidden;cursor:pointer;position:relative;" onclick="document.getElementById('modal-{{ e.id }}').classList.add('open')">
+        <img src="{{ e.cover_image_url }}" alt="{{ e.title }}" style="width:100%;height:100%;object-fit:cover;display:block;">
+        <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.5) 0%,transparent 60%);pointer-events:none;"></div>
+        <span style="position:absolute;bottom:.75rem;right:.75rem;background:rgba(0,0,0,.5);color:#fff;font-size:.75rem;padding:3px 10px;border-radius:20px;">Ver foto</span>
+    </div>
+    <div id="modal-{{ e.id }}" class="ev-modal" onclick="this.classList.remove('open')">
+        <img src="{{ e.cover_image_url }}" alt="{{ e.title }}">
+    </div>
+    {% endif %}
+    <div class="card-body">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;">
+            <div>
+                <h3 style="font-size:1.0625rem;margin-bottom:.25rem;">{{ e.title }}</h3>
+                <p style="font-size:.8125rem;color:var(--ink-light);">
+                    <span class="chip chip-muted" style="margin-right:.375rem;">{{ e.event_type }}</span>
+                    {{ e.starts_at|date:"j M Y, H:i" }}{% if e.location %} &middot; {{ e.location }}{% endif %}
+                </p>
+                {% if e.description %}<p style="font-size:.9375rem;color:var(--ink-mid);margin-top:.5rem;line-height:1.6;">{{ e.description }}</p>{% endif %}
             </div>
-            {% if e.description %}<p style="margin-top:0.5rem;font-size:0.875rem;color:var(--ink);margin-bottom:0;">{{ e.description }}</p>{% endif %}
+            {% if e.external_video_url %}<a href="{{ e.external_video_url }}" class="btn btn-ghost btn-sm" target="_blank" rel="noopener" style="flex-shrink:0;">Ver video &#8599;</a>{% endif %}
         </div>
-        {% if e.external_video_url %}
-        <a href="{{ e.external_video_url }}" class="btn-outline-warm" target="_blank" rel="noopener" style="white-space:nowrap;flex-shrink:0;">Ver video ↗</a>
-        {% endif %}
     </div>
 </div>
-{% empty %}
-<p style="color:var(--ink-light);">Sin eventos próximos.</p>
-{% endfor %}
+{% empty %}<p style="color:var(--ink-light);margin-bottom:1.5rem;">Sin eventos proximos.</p>{% endfor %}
 
-<hr class="divider">
-<p class="section-label">Pasados</p>
+<hr style="border:none;border-top:1px solid var(--border);margin:1.5rem 0;">
+<p class="eyebrow" style="margin-bottom:.875rem;">Pasados</p>
 {% for e in past %}
-<div class="card-warm card-warm-body mb-2" style="opacity:0.75;">
-    <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
+<div class="card card-body" style="margin-bottom:.625rem;opacity:.72;">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
         <div>
-            <strong style="font-family:var(--serif);">{{ e.title }}</strong>
-            <span style="font-size:0.8125rem;color:var(--ink-light);margin-left:0.5rem;">{{ e.event_type }} · {{ e.starts_at|date:"j M Y" }}</span>
+            <strong style="font-family:var(--serif);color:var(--ink);">{{ e.title }}</strong>
+            <span style="font-size:.8125rem;color:var(--ink-light);margin-left:.5rem;">{{ e.event_type }} &middot; {{ e.starts_at|date:"j M Y" }}</span>
         </div>
-        {% if e.external_video_url %}
-        <a href="{{ e.external_video_url }}" class="btn-outline-warm" target="_blank" rel="noopener" style="font-size:0.8125rem;padding:0.25rem 0.6rem;">Video ↗</a>
-        {% endif %}
+        {% if e.external_video_url %}<a href="{{ e.external_video_url }}" class="btn btn-ghost btn-sm" target="_blank" rel="noopener">Video</a>{% endif %}
     </div>
 </div>
-{% empty %}
-<p style="color:var(--ink-light);">Sin eventos pasados.</p>
-{% endfor %}
+{% empty %}<p style="color:var(--ink-light);">Sin eventos pasados.</p>{% endfor %}
+
 {% endblock %}
