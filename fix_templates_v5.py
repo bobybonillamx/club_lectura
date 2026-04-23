@@ -176,7 +176,7 @@ details summary::-webkit-details-marker{display:none;}
     {% if club_settings.footer_powered_by_name %}
       Powered by <a href="{{ club_settings.footer_powered_by_url }}" target="_blank" rel="noopener">{{ club_settings.footer_powered_by_name }}</a>
     {% else %}
-      Powered by <a href="https://goldtech.mx" target="_blank" rel="noopener">Gold Tech Mx</a>
+      Powered by <a href="https://bio.goldtech.mx/lxltmx" target="_blank" rel="noopener">Locos X la Tecnología</a>
     {% endif %}
     &nbsp;&middot;&nbsp;
     <a href="https://github.com/bobybonillamx/club_lectura" target="_blank" rel="noopener">GitHub</a>
@@ -675,7 +675,7 @@ T[f"{BASE}/dashboard.html"] = """{% extends 'base.html' %}{% load theme_tags %}
           <input type="hidden" name="seccion" value="apariencia">
           <div class="g2" style="margin-bottom:1rem;">
             <div class="field"><label class="lbl">Powered by — nombre</label><input class="inp" name="footer_powered_by_name" value="{{ cfg.footer_powered_by_name }}" placeholder="Gold Tech Mx"></div>
-            <div class="field"><label class="lbl">Powered by — URL</label><input class="inp" name="footer_powered_by_url" value="{{ cfg.footer_powered_by_url }}" type="url" placeholder="https://goldtech.mx"></div>
+            <div class="field"><label class="lbl">Powered by — URL</label><input class="inp" name="footer_powered_by_url" value="{{ cfg.footer_powered_by_url }}" type="url" placeholder="https://bio.goldtech.mx/lxltmx"></div>
           </div>
           <div class="g2" style="margin-bottom:1rem;">
             <div class="field"><label class="lbl">Link adicional — texto</label><input class="inp" name="footer_custom_link_text" value="{{ cfg.footer_custom_link_text }}" placeholder="Terminos de uso"></div>
