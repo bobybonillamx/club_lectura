@@ -259,19 +259,17 @@ class ClubSettings(models.Model):
             base['ink_mid'] = self.primary_color
         if self.accent_color:
             base['accent'] = self.accent_color
-        # Apply font preset if set
-            if preset.get('url'):
-                if preset.get('serif'):
-                    base['serif'] = f"'{preset['serif']}', Georgia, serif"
-                if preset.get('sans'):
-                    base['sans'] = f"'{preset['sans']}', system-ui, sans-serif"
-                base['fonts'] = preset['url']
-        # Manual overrides take priority over preset
-        elif self.custom_font_serif and self.custom_font_url:
+        if self.custom_font_serif and self.custom_font_url:
             base['serif'] = f"'{self.custom_font_serif}', Georgia, serif"
             if self.custom_font_sans:
                 base['sans'] = f"'{self.custom_font_sans}', system-ui, sans-serif"
             base['fonts'] = self.custom_font_url
+        if 'chip_reading_bg' not in base:
+            base['chip_reading_bg'] = '#EBF5EB'
+            base['chip_reading_ink'] = '#2D5A2D'
+        if 'chip_done_bg' not in base:
+            base['chip_done_bg'] = '#EEF0F8'
+            base['chip_done_ink'] = '#2D3A6A'
         return base
 
     @property
