@@ -1,3 +1,15 @@
+FONT_PRESETS = {
+    'default': {'label': 'Predeterminado del tema', 'serif': '', 'sans': '', 'url': ''},
+    'lora_inter': {'label': 'Lora + Inter (Clasico)', 'serif': 'Lora', 'sans': 'Inter', 'url': 'https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap'},
+    'playfair_nunito': {'label': 'Playfair + Nunito (Elegante)', 'serif': 'Playfair Display', 'sans': 'Nunito', 'url': 'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Nunito:wght@300;400;600&display=swap'},
+    'merriweather_source': {'label': 'Merriweather + Source Sans (Editorial)', 'serif': 'Merriweather', 'sans': 'Source Sans 3', 'url': 'https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@300;400;500&display=swap'},
+    'crimson_karla': {'label': 'Crimson Pro + Karla (Literario)', 'serif': 'Crimson Pro', 'sans': 'Karla', 'url': 'https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Karla:wght@300;400;500&display=swap'},
+    'libre_poppins': {'label': 'Libre Baskerville + Poppins (Moderno)', 'serif': 'Libre Baskerville', 'sans': 'Poppins', 'url': 'https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Poppins:wght@300;400;500&display=swap'},
+    'cormorant_dm': {'label': 'Cormorant + DM Sans (Sofisticado)', 'serif': 'Cormorant Garamond', 'sans': 'DM Sans', 'url': 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap'},
+    'eb_garamond_inter': {'label': 'EB Garamond + Inter (Academico)', 'serif': 'EB Garamond', 'sans': 'Inter', 'url': 'https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500&display=swap'},
+    'space_grotesk': {'label': 'Space Grotesk (Moderno uniforme)', 'serif': 'Space Grotesk', 'sans': 'Space Grotesk', 'url': 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&display=swap'},
+}
+
 import json
 from urllib.parse import urlencode, urlparse, parse_qs, urlunparse, quote_plus
 from urllib.request import Request, urlopen
@@ -31,8 +43,10 @@ THEMES = {
     'moderno_oscuro': {
         'label': 'Moderno Oscuro',
         'page': '#111318', 'surface': '#1C2030', 'border': '#2A2F42', 'border2': '#363C52',
-        'primary': '#7C6FFF', 'accent': '#7C6FFF', 'accent_bg': '#2A2050', 'accent_bdr': '#3D3570',
-        'ink': '#F0EFFF', 'ink_mid': '#C8C6F0', 'ink_light': '#8B8FA8',
+        'primary': '#7C6FFF', 'accent': '#A89FFF', 'accent_bg': '#2A2050', 'accent_bdr': '#5A50A0',
+        'ink': '#F0EFFF', 'ink_mid': '#D8D6F8', 'ink_light': '#9A9EBB',
+        'chip_reading_bg': '#1A3A1A', 'chip_reading_ink': '#6EE06E',
+        'chip_done_bg': '#1A1A3A', 'chip_done_ink': '#8888FF',
         'serif': "'Space Grotesk', system-ui, sans-serif", 'sans': "'Space Grotesk', system-ui, sans-serif",
         'fonts': 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&display=swap',
     },
@@ -218,6 +232,7 @@ class ClubSettings(models.Model):
     custom_font_url = models.CharField(max_length=500, blank=True, default='')
     custom_font_serif = models.CharField(max_length=120, blank=True, default='')
     custom_font_sans = models.CharField(max_length=120, blank=True, default='')
+    font_preset = models.CharField(max_length=40, blank=True, default='')
 
     # Notifications
     notify_new_book = models.BooleanField(default=False)
@@ -257,12 +272,20 @@ class ClubSettings(models.Model):
             base['ink_mid'] = self.primary_color
         if self.accent_color:
             base['accent'] = self.accent_color
-        if self.custom_font_serif and self.custom_font_sans and self.custom_font_url:
-            base['serif'] = f"'{self.custom_font_serif}', Georgia, serif"
-            base['sans'] = f"'{self.custom_font_sans}', system-ui, sans-serif"
-            base['fonts'] = self.custom_font_url
+        # Apply font preset if set
+        if self.font_preset and self.font_preset != 'default':
+            preset = FONT_PRESETS.get(self.font_preset, {})
+            if preset.get('url'):
+                if preset.get('serif'):
+                    base['serif'] = f"'{preset['serif']}', Georgia, serif"
+                if preset.get('sans'):
+                    base['sans'] = f"'{preset['sans']}', system-ui, sans-serif"
+                base['fonts'] = preset['url']
+        # Manual overrides take priority over preset
         elif self.custom_font_serif and self.custom_font_url:
             base['serif'] = f"'{self.custom_font_serif}', Georgia, serif"
+            if self.custom_font_sans:
+                base['sans'] = f"'{self.custom_font_sans}', system-ui, sans-serif"
             base['fonts'] = self.custom_font_url
         return base
 

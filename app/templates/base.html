@@ -14,22 +14,27 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="{{ theme_vars.fonts }}" rel="stylesheet">
 <style>
-:root{
-  --page:{{ theme_vars.page }};
-  --surface:{{ theme_vars.surface }};
-  --border:{{ theme_vars.border }};
-  --border2:{{ theme_vars.border2 }};
-  --primary:{{ theme_vars.primary }};
-  --accent:{{ theme_vars.accent }};
-  --accent-bg:{{ theme_vars.accent_bg }};
-  --accent-bdr:{{ theme_vars.accent_bdr }};
-  --ink:{{ theme_vars.ink }};
-  --ink-mid:{{ theme_vars.ink_mid }};
-  --ink-light:{{ theme_vars.ink_light }};
-  --serif:{{ theme_vars.serif }};
-  --sans:{{ theme_vars.sans }};
-  --r:8px;--rl:14px;
-}
+    :root {
+        --page: {{ theme_vars.page }};
+        --surface: {{ theme_vars.surface }};
+        --border: {{ theme_vars.border }};
+        --border2: {{ theme_vars.border2 }};
+        --primary: {{ theme_vars.primary }};
+        --accent: {{ theme_vars.accent }};
+        --accent-bg: {{ theme_vars.accent_bg }};
+        --accent-bdr: {{ theme_vars.accent_bdr }};
+        --ink: {{ theme_vars.ink }};
+        --ink-mid: {{ theme_vars.ink_mid }};
+        --ink-light: {{ theme_vars.ink_light }};
+        --serif: {{ theme_vars.serif }};
+        --sans: {{ theme_vars.sans }};
+        --r: 8px;
+        --rl: 14px;
+        --chip-reading-bg: {{ theme_vars.chip_reading_bg }};
+        --chip-reading-ink: {{ theme_vars.chip_reading_ink }};
+        --chip-done-bg: {{ theme_vars.chip_done_bg }};
+        --chip-done-ink: {{ theme_vars.chip_done_ink }};
+    }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:var(--sans);font-size:15px;background:var(--page);color:var(--ink-mid);min-height:100vh;-webkit-font-smoothing:antialiased;}
 h1,h2,h3,h4{font-family:var(--serif);color:var(--ink);font-weight:600;line-height:1.2;}
@@ -73,8 +78,24 @@ textarea,input,select,button{font-family:var(--sans);}
 
 /* CHIPS */
     .chip-reading {
-        background: color-mix(in srgb,#22c55e 15%,var(--surface));
-        color: color-mix(in srgb,#16a34a 80%,var(--ink));
+        background:
+
+    {
+
+    {
+        theme_vars .chip_reading_bg
+    }
+
+    }
+
+    ;color: {
+
+    {
+        theme_vars .chip_reading_ink
+    }
+
+    }
+    ;
     }
 
     .chip-future {
@@ -84,8 +105,24 @@ textarea,input,select,button{font-family:var(--sans);}
     }
 
     .chip-done {
-        background: color-mix(in srgb,#6366f1 12%,var(--surface));
-        color: color-mix(in srgb,#4338ca 80%,var(--ink));
+        background:
+
+    {
+
+    {
+        theme_vars .chip_done_bg
+    }
+
+    }
+
+    ;color: {
+
+    {
+        theme_vars .chip_done_ink
+    }
+
+    }
+    ;
     }
 
     .chip-muted {

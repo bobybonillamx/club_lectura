@@ -168,7 +168,7 @@
                             <option value="custom" {% if cfg.custom_font_url and cfg.custom_font_serif not in 'Lora Playfair Display Merriweather Crimson Pro Libre Baskerville DM Serif Display Space Grotesk' %}selected{% endif %}>URL personalizada</option>
                         </select>
                     </div>
-                    <div id="custom_font_fields" style="{% if not cfg.custom_font_url %}display:none;{% endif %}">
+                    <div id="custom_font_fields">
                         <div class="g2" style="margin-bottom:.75rem;">
                             <div class="field"><label class="lbl">Fuente titulos</label><input class="inp" name="custom_font_serif" id="f_serif" value="{{ cfg.custom_font_serif }}" placeholder="Ej: Merriweather"></div>
                             <div class="field"><label class="lbl">Fuente texto</label><input class="inp" name="custom_font_sans" id="f_sans" value="{{ cfg.custom_font_sans }}" placeholder="Ej: Nunito"></div>
@@ -201,22 +201,18 @@
                             'space': ['Space Grotesk', 'Space Grotesk', 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&display=swap'],
                         };
                         function applyFontPreset(val) {
-                            const cf = document.getElementById('custom_font_fields');
-                            if (!val || val === 'custom') {
-                                cf.style.display = val === 'custom' ? '' : 'none';
-                                if (!val) {
-                                    document.getElementById('f_serif').value = '';
-                                    document.getElementById('f_sans').value = '';
-                                    document.getElementById('f_url').value = '';
-                                }
+                            if (!val) {
+                                document.getElementById('f_serif').value = '';
+                                document.getElementById('f_sans').value = '';
+                                document.getElementById('f_url').value = '';
                                 return;
                             }
+                            if (val === 'custom') return;
                             const p = PRESETS[val];
                             if (p) {
                                 document.getElementById('f_serif').value = p[0];
                                 document.getElementById('f_sans').value = p[1];
                                 document.getElementById('f_url').value = p[2];
-                                cf.style.display = '';
                             }
                         }
                     </script>
