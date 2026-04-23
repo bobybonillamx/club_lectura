@@ -7,9 +7,9 @@
     <input type="text" name="q" value="{{ query|default:'' }}" class="inp" placeholder="Buscar por titulo o autor..." style="max-width:280px;width:100%;">
     <select name="estado" class="sel" style="max-width:170px;width:100%;" onchange="this.form.submit()">
         <option value="">Todos los estados</option>
-        <option value="completed" {% if estado == completed' %}selected{% endif %}>Leidos</option>
+        <option value="completed" {% if estado == 'completed' %}selected{% endif %}>Leidos</option>
         <option value="reading" {% if estado == 'reading' %}selected{% endif %}>Leyendo</option>
-        <option value="future" {% if estado == 'future' %}selected{% endif %}>En votacion</option>
+        <option value="future" {% if estad o == 'future' %}selected{% endif %}>En votacion</option>
     </select>
     <button class="btn btn-dark" type="submit">Buscar</button>
     {% if query or estado %}<a href="/libros/" class="btn btn-ghost">Limpiar</a>{% endif %}
