@@ -214,6 +214,11 @@ class ClubSettings(models.Model):
     email_tpl_new_event = models.TextField(blank=True, default='')
     email_tpl_voting_open = models.TextField(blank=True, default='')
 
+    # Custom font
+    custom_font_url = models.CharField(max_length=500, blank=True, default='')
+    custom_font_serif = models.CharField(max_length=120, blank=True, default='')
+    custom_font_sans = models.CharField(max_length=120, blank=True, default='')
+
     # Notifications
     notify_new_book = models.BooleanField(default=False)
     notify_new_event = models.BooleanField(default=False)
@@ -252,6 +257,13 @@ class ClubSettings(models.Model):
             base['ink_mid'] = self.primary_color
         if self.accent_color:
             base['accent'] = self.accent_color
+        if self.custom_font_serif and self.custom_font_sans and self.custom_font_url:
+            base['serif'] = f"'{self.custom_font_serif}', Georgia, serif"
+            base['sans'] = f"'{self.custom_font_sans}', system-ui, sans-serif"
+            base['fonts'] = self.custom_font_url
+        elif self.custom_font_serif and self.custom_font_url:
+            base['serif'] = f"'{self.custom_font_serif}', Georgia, serif"
+            base['fonts'] = self.custom_font_url
         return base
 
     @property
@@ -298,6 +310,7 @@ class Book(models.Model):
     external_video_url = models.URLField(blank=True)
     pdf_url = models.URLField(blank=True)
     allow_voting = models.BooleanField(default=True)
+    reading_month = models.CharField(max_length=7, blank=True, default='', help_text='Mes planeado YYYY-MM.')
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -325,6 +338,7 @@ class Event(models.Model):
     visibility = models.CharField(max_length=20, choices=Visibility.choices, default=Visibility.PUBLIC)
     location = models.CharField(max_length=255, blank=True)
     external_video_url = models.URLField(blank=True)
+    cover_image_url = models.URLField(blank=True, default='')
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
 
 
@@ -356,9 +370,17 @@ class Invitation(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 
+SOCIAL_ICON_CHOICES = [
+    ('link', 'Enlace generico'), ('instagram', 'Instagram'), ('facebook', 'Facebook'),
+    ('twitter', 'Twitter / X'), ('whatsapp', 'WhatsApp'), ('telegram', 'Telegram'),
+    ('youtube', 'YouTube'), ('tiktok', 'TikTok'), ('spotify', 'Spotify'),
+    ('email', 'Correo electronico'), ('website', 'Sitio web'),
+]
+
 class SocialLink(models.Model):
     network = models.CharField(max_length=80)
     url = models.URLField()
+    icon = models.CharField(max_length=30, blank=True, default='link', choices=SOCIAL_ICON_CHOICES)
 
 
 def build_amazon_url(title, affiliate_tag):

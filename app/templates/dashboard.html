@@ -64,7 +64,14 @@
             <div class="card-body">
                 <form action="/integraciones/redes/nueva/" method="post" style="margin-bottom:1rem;">
                     {% csrf_token %}
-                    <div style="display:grid;grid-template-columns:1fr 2fr auto;gap:.75rem;align-items:end;">
+                    <div style="display:grid;grid-template-columns:140px 1fr 2fr auto;gap:.75rem;align-items:end;">
+                        <div class="field" style="margin-bottom:0;">
+                            <label class="lbl">Icono</label>
+                            <select class="sel" name="icon">
+                                {% for val, label in social_icon_choices %}
+                                <option value="{{ val }}">{{ label }}</option>{% endfor %}
+                            </select>
+                        </div>
                         <div class="field" style="margin-bottom:0;"><label class="lbl">Red social</label><input class="inp" name="network" placeholder="Instagram..."></div>
                         <div class="field" style="margin-bottom:0;"><label class="lbl">URL</label><input class="inp" name="url" type="url" placeholder="https://..."></div>
                         <button class="btn btn-ghost">Agregar</button>
@@ -74,7 +81,7 @@
                 <div style="border-top:1px solid var(--border);padding-top:.875rem;">
                     {% for link in social_links %}
                     <div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;{% if not forloop.last %}border-bottom:1px solid var(--border);{% endif %}">
-                        <div><span style="font-weight:500;font-size:.875rem;">{{ link.network }}</span><a href="{{ link.url }}" target="_blank" rel="noopener" style="font-size:.8125rem;color:var(--ink-light);margin-left:.5rem;">{{ link.url|truncatechars:40 }}</a></div>
+                        <div style="display:flex;align-items:center;gap:.5rem;"><span class="chip chip-muted" style="font-size:.625rem;">{{ link.icon }}</span><span style="font-weight:500;font-size:.875rem;">{{ link.network }}</span><a href="{{ link.url }}" target="_blank" rel="noopener" style="font-size:.8125rem;color:var(--ink-light);margin-left:.5rem;">{{ link.url|truncatechars:40 }}</a></div>
                         <form action="/integraciones/redes/{{ link.id }}/eliminar/" method="post" style="margin:0;">{% csrf_token %}<button class="btn btn-ghost btn-sm" style="color:#8B2020;">Eliminar</button></form>
                     </div>
                     {% endfor %}
@@ -114,7 +121,7 @@
                     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.875rem;margin-bottom:1.25rem;">
                         {% for theme_key, theme_data in theme_choices %}
                         <label style="cursor:pointer;">
-                            <input type="radio" name="theme" value="{{ theme_key }}" {% if cfg.theme == theme_key %}checked{% endif %} style="position:absolute;opacity:0;width:0;height:0;">
+                            <input type="radio" name="theme" value="{{ theme_key }}" {% if cfg.theme= =theme_key %}checked{% endif %} style="position:absolute;opacity:0;width:0;height:0;">
                             <div style="border:2px solid {% if cfg.theme == theme_key %}var(--accent){% else %}var(--border){% endif %};border-radius:12px;overflow:hidden;transition:border-color .15s;">
                                 <div style="height:80px;background:{{ theme_key|theme_page_color }};padding:.75rem;display:flex;flex-direction:column;justify-content:space-between;">
                                     <div style="height:12px;background:{{ theme_key|theme_primary_color }};border-radius:4px;width:60%;"></div>
@@ -143,6 +150,41 @@
                     <div style="display:flex;gap:.75rem;"><button class="btn btn-dark" type="submit">Guardar colores</button><a href="/dashboard/reset-colores/" class="btn btn-ghost btn-sm">Restablecer</a></div>
                 </div>
             </div>
+            <div class="card" style="margin-bottom:1.25rem;">
+                <div class="card-header"><span class="card-header-label">Tipografia personalizada (opcional)</span></div>
+                <div class="card-body">
+                    <p style="font-size:.875rem;color:var(--ink-light);margin-bottom:1rem;">Elige fuentes de <a href="https://fonts.google.com" target="_blank" rel="noopener" style="color:var(--accent);">Google Fonts</a>. Dejar en blanco para usar las del tema.</p>
+                    <div class="g2" style="margin-bottom:1rem;">
+                        <div class="field">
+                            <label class="lbl">Fuente para titulos (Serif)</label>
+                            <input class="inp" name="custom_font_serif" value="{{ cfg.custom_font_serif }}" placeholder="Ej: Merriweather">
+                            <p class="hint">Nombre exacto de Google Fonts.</p>
+                        </div>
+                        <div class="field">
+                            <label class="lbl">Fuente para texto (Sans)</label>
+                            <input class="inp" name="custom_font_sans" value="{{ cfg.custom_font_sans }}" placeholder="Ej: Nunito">
+                            <p class="hint">Nombre exacto de Google Fonts.</p>
+                        </div>
+                    </div>
+                    <div class="field" style="margin-bottom:1rem;">
+                        <label class="lbl">URL de importacion de Google Fonts</label>
+                        <input class="inp" name="custom_font_url" value="{{ cfg.custom_font_url }}" placeholder="https://fonts.googleapis.com/css2?family=Merriweather&family=Nunito&display=swap">
+                        <p class="hint">Copia la URL que te da Google Fonts al seleccionar las fuentes. Debe incluir ambas familias.</p>
+                    </div>
+                    {% if cfg.custom_font_serif or cfg.custom_font_sans %}
+                    <div style="padding:.875rem 1rem;background:var(--page);border-radius:var(--r);margin-bottom:1rem;">
+                        <p style="font-size:.75rem;color:var(--ink-light);margin-bottom:.375rem;">Vista previa:</p>
+                        <p style="font-family:'{{ cfg.custom_font_serif }}', serif;font-size:1.25rem;color:var(--ink);">Titulo con {{ cfg.custom_font_serif }}</p>
+                        <p style="font-family:'{{ cfg.custom_font_sans }}', sans-serif;font-size:.9375rem;color:var(--ink-mid);">Texto con {{ cfg.custom_font_sans }}</p>
+                    </div>
+                    {% endif %}
+                    <div style="display:flex;gap:.75rem;">
+                        <button class="btn btn-dark" type="submit">Guardar tipografia</button>
+                        {% if cfg.custom_font_serif or cfg.custom_font_sans %}<a href="/dashboard/reset-fuente/" class="btn btn-ghost btn-sm">Restablecer fuente del tema</a>{% endif %}
+                    </div>
+                </div>
+            </div>
+
             <div class="card">
                 <div class="card-header"><span class="card-header-label">Footer personalizado</span></div>
                 <div class="card-body">
@@ -208,6 +250,11 @@
                     <div class="field" style="margin-bottom:1rem;"><label class="lbl">Descripcion</label><textarea class="txa" name="description" rows="2" placeholder="Se busca automaticamente"></textarea></div>
                     <div class="g2" style="margin-bottom:1rem;"><div class="field"><label class="lbl">URL portada</label><input class="inp" name="cover_url" type="url"></div><div class="field"><label class="lbl">URL Amazon</label><input class="inp" name="amazon_url" type="url"></div></div>
                     <div class="g2" style="margin-bottom:1rem;"><div class="field"><label class="lbl">URL PDF (solo miembros activos)</label><input class="inp" name="pdf_url" type="url"></div><div class="field"><label class="lbl">URL video</label><input class="inp" name="external_video_url" type="url"></div></div>
+                    <div class="field" style="margin-bottom:1rem;" id="reading_month_field">
+                        <label class="lbl">Mes planeado de lectura (opcional)</label>
+                        <input class="inp" name="reading_month" type="month" style="max-width:200px;">
+                        <p class="hint">Solo para libros en estado "Por leer".</p>
+                    </div>
                     <div style="display:flex;align-items:center;gap:1rem;"><button class="btn btn-dark">Guardar libro</button><label style="display:flex;align-items:center;gap:.5rem;font-size:.875rem;color:var(--ink-light);cursor:pointer;"><input type="checkbox" name="reemplazar_leyendo_actual" style="accent-color:var(--accent);width:16px;height:16px;"> Mover "Leyendo" a "Leido"</label></div>
                 </form>
             </div>
@@ -224,6 +271,7 @@
                                 <span style="font-family:var(--serif);font-size:.9375rem;font-weight:600;color:var(--ink);">{{ b.title }}</span>
                                 <span style="font-size:.8125rem;color:var(--ink-light);font-style:italic;margin-left:.5rem;">{{ b.author }}</span>
                                 <span class="chip {% if b.status == 'reading' %}chip-reading{% elif b.status == 'completed' %}chip-done{% else %}chip-future{% endif %}" style="margin-left:.5rem;">{{ b.get_status_display }}</span>
+                                {% if b.reading_month %}<span class="chip chip-muted" style="margin-left:.25rem;">{{ b.reading_month }}</span>{% endif %}
                             </div>
                             <div style="display:flex;gap:.5rem;"><a href="/libros/{{ b.id }}/" class="btn btn-ghost btn-sm">Ver</a><form action="/libros/{{ b.id }}/eliminar/" method="post" style="margin:0;" onsubmit="return confirm('Eliminar?')">{% csrf_token %}<button class="btn btn-ghost btn-sm" style="color:#8B2020;">Eliminar</button></form></div>
                         </div>
@@ -233,13 +281,20 @@
                                 {% csrf_token %}
                                 <div class="g2" style="margin-bottom:.75rem;"><div class="field"><label class="lbl">Titulo</label><input class="inp" name="title" value="{{ b.title }}"></div><div class="field"><label class="lbl">Autor</label><input class="inp" name="author" value="{{ b.author }}"></div></div>
                                 <div class="g3" style="margin-bottom:.75rem;">
-                                    <div class="field"><label class="lbl">Estado</label><select class="sel" name="status"><option value="future" {% if b.status == "future" %}selected{% endif %}>Por leer</option><option value="reading" {% if b.status == "reading" %}selected{% endif %}>Leyendo</option><option value="completed" {% if b.status == "completed" %}selected{% endif %}>Leido</option></select></div>
-                                    <div class="field"><label class="lbl">Visibilidad</label><select class="sel" name="visibility"><option value="public" {% if b.visibility == "public" %}selected{% endif %}>Publico</option><option value="private" {% if b.visibility == "private" %}selected{% endif %}>Solo miembros</option><option value="admins" {% if b.visibility == "admins" %}selected{% endif %}>Solo admins</option></select></div>
+                                    <div class="field"><label class="lbl">Estado</label><select class="sel" name="status"><option value="future" {% if b.status= ="future" %}selected{% endif %}>Por leer</option><option value="reading" {% if b.status= ="reading" %}selected{% endif %}>Leyendo</option><option value="completed" {% if b.status= ="completed" %}selected{% endif %}>Leido</option></select></div>
+                                    <div class="field"><label class="lbl">Visibilidad</label><select class="sel" name="visibility"><option value="public" {% if b.visibility= ="public" %}selected{% endif %}>Publico</option><option value="private" {% if b.visibility= ="private" %}selected{% endif %}>Solo miembros</option><option value="admins" {% if b.visibility= ="admins" %}selected{% endif %}>Solo admins</option></select></div>
                                     <div class="field"><label class="lbl">Votos</label><select class="sel" name="allow_voting"><option value="True" {% if b.allow_voting %}selected{% endif %}>Permitidos</option><option value="False" {% if not b.allow_voting %}selected{% endif %}>Desactivados</option></select></div>
                                 </div>
                                 <div class="g2" style="margin-bottom:.75rem;"><div class="field"><label class="lbl">URL portada</label><input class="inp" name="cover_url" value="{{ b.cover_url }}" type="url"></div><div class="field"><label class="lbl">URL Amazon</label><input class="inp" name="amazon_url" value="{{ b.amazon_url }}" type="url"></div></div>
                                 <div class="g2" style="margin-bottom:.75rem;"><div class="field"><label class="lbl">URL PDF</label><input class="inp" name="pdf_url" value="{{ b.pdf_url }}" type="url"></div><div class="field"><label class="lbl">URL video</label><input class="inp" name="external_video_url" value="{{ b.external_video_url }}" type="url"></div></div>
                                 <div class="field" style="margin-bottom:.75rem;"><label class="lbl">Descripcion</label><textarea class="txa" name="description" rows="2">{{ b.description }}</textarea></div>
+                                {% if b.status == "future" %}
+                                <div class="field" style="margin-bottom:.75rem;">
+                                    <label class="lbl">Mes planeado de lectura</label>
+                                    <input class="inp" name="reading_month" type="month" value="{{ b.reading_month }}" style="max-width:200px;">
+                                    <p class="hint">Mes en que planean leer este libro.</p>
+                                </div>
+                                {% endif %}
                                 <button class="btn btn-dark btn-sm">Guardar cambios</button>
                             </form>
                         </details>
@@ -261,6 +316,11 @@
                     <div class="g2" style="margin-bottom:1rem;"><div class="field"><label class="lbl">Fecha y hora *</label><input class="inp" name="starts_at" type="datetime-local" required></div><div class="field"><label class="lbl">Visibilidad</label><select class="sel" name="visibility"><option value="public">Publico</option><option value="private">Solo miembros</option><option value="admins">Solo admins</option></select></div></div>
                     <div class="g2" style="margin-bottom:1rem;"><div class="field"><label class="lbl">Lugar</label><input class="inp" name="location"></div><div class="field"><label class="lbl">Video</label><input class="inp" name="external_video_url" type="url"></div></div>
                     <div class="field" style="margin-bottom:1rem;"><label class="lbl">Descripcion</label><textarea class="txa" name="description" rows="2"></textarea></div>
+                    <div class="field" style="margin-bottom:1rem;">
+                        <label class="lbl">Imagen del evento</label>
+                        <input class="inp" name="cover_image_url" type="url" placeholder="https://...">
+                        <p class="hint">Foto o banner del evento. Opcional.</p>
+                    </div>
                     <button class="btn btn-dark">Guardar evento</button>
                 </form>
             </div>
@@ -270,7 +330,15 @@
             {% for e in events_all %}
             <div style="border-bottom:{% if not forloop.last %}1px solid var(--border){% else %}none{% endif %};padding:.875rem 1.5rem;">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;flex-wrap:wrap;">
-                    <div><span style="font-family:var(--serif);font-size:.9375rem;font-weight:600;color:var(--ink);">{{ e.title }}</span><span class="chip chip-muted" style="margin-left:.5rem;">{{ e.event_type }}</span><div style="font-size:.8125rem;color:var(--ink-light);margin-top:3px;">{{ e.starts_at|date:"j M Y, H:i" }}{% if e.location %} &middot; {{ e.location }}{% endif %}</div></div>
+                    <div style="display:flex;gap:.75rem;align-items:flex-start;">
+                        {% if e.cover_image_url %}
+                        <img src="{{ e.cover_image_url }}" alt="{{ e.title }}" style="width:56px;height:56px;object-fit:cover;border-radius:var(--r);flex-shrink:0;cursor:pointer;" onclick="document.getElementById('modal-ev-{{ e.id }}').style.display='flex'">
+                        <div id="modal-ev-{{ e.id }}" onclick="this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:999;align-items:center;justify-content:center;cursor:pointer;">
+                            <img src="{{ e.cover_image_url }}" style="max-width:90vw;max-height:90vh;border-radius:12px;">
+                        </div>
+                        {% endif %}
+                        <div><span style="font-family:var(--serif);font-size:.9375rem;font-weight:600;color:var(--ink);">{{ e.title }}</span><span class="chip chip-muted" style="margin-left:.5rem;">{{ e.event_type }}</span><div style="font-size:.8125rem;color:var(--ink-light);margin-top:3px;">{{ e.starts_at|date:"j M Y, H:i" }}{% if e.location %} &middot; {{ e.location }}{% endif %}</div></div>
+                    </div>
                     <form action="/eventos/{{ e.id }}/eliminar/" method="post" style="margin:0;" onsubmit="return confirm('Eliminar?')">{% csrf_token %}<button class="btn btn-ghost btn-sm" style="color:#8B2020;">Eliminar</button></form>
                 </div>
                 <details style="margin-top:.75rem;">
@@ -278,7 +346,7 @@
                     <form action="/eventos/{{ e.id }}/editar/" method="post" style="margin-top:.75rem;">
                         {% csrf_token %}
                         <div class="g2" style="margin-bottom:.75rem;"><div class="field"><label class="lbl">Titulo</label><input class="inp" name="title" value="{{ e.title }}"></div><div class="field"><label class="lbl">Tipo</label><input class="inp" name="event_type" value="{{ e.event_type }}"></div></div>
-                        <div class="g2" style="margin-bottom:.75rem;"><div class="field"><label class="lbl">Fecha y hora</label><input class="inp" name="starts_at" type="datetime-local" value="{{ e.starts_at|date:'Y-m-d' }}T{{ e.starts_at|date:'H:i' }}"></div><div class="field"><label class="lbl">Visibilidad</label><select class="sel" name="visibility"><option value="public" {% if e.visibility == "public" %}selected{% endif %}>Publico</option><option value="private" {% if e.visibility == "private" %}selected{% endif %}>Solo miembros</option><option value="admins" {% if e.visibility == "admins" %}selected{% endif %}>Solo admins</option></select></div></div>
+                        <div class="g2" style="margin-bottom:.75rem;"><div class="field"><label class="lbl">Fecha y hora</label><input class="inp" name="starts_at" type="datetime-local" value="{{ e.starts_at|date:'Y-m-d' }}T{{ e.starts_at|date:'H:i' }}"></div><div class="field"><label class="lbl">Visibilidad</label><select class="sel" name="visibility"><option value="public" {% if e.visibility= ="public" %}selected{% endif %}>Publico</option><option value="private" {% if e.visibility= ="private" %}selected{% endif %}>Solo miembros</option><option value="admins" {% if e.visibility= ="admins" %}selected{% endif %}>Solo admins</option></select></div></div>
                         <div class="g2" style="margin-bottom:.75rem;"><div class="field"><label class="lbl">Lugar</label><input class="inp" name="location" value="{{ e.location }}"></div><div class="field"><label class="lbl">Video</label><input class="inp" name="external_video_url" value="{{ e.external_video_url }}" type="url"></div></div>
                         <div class="field" style="margin-bottom:.75rem;"><label class="lbl">Descripcion</label><textarea class="txa" name="description" rows="2">{{ e.description }}</textarea></div>
                         <button class="btn btn-dark btn-sm">Guardar</button>

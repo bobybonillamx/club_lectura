@@ -19,7 +19,7 @@ from .models import (
     Visibility, Invitation, SocialLink, ClubSettings,
     DEFAULT_TPL_WELCOME, DEFAULT_TPL_APPROVED, DEFAULT_TPL_INVITATION,
     DEFAULT_TPL_NEW_BOOK, DEFAULT_TPL_NEW_EVENT, DEFAULT_TPL_VOTING,
-    THEMES,
+    THEMES, SOCIAL_ICON_CHOICES,
 )
 
 
@@ -234,6 +234,7 @@ def dashboard(request):
         'default_tpl_new_book': DEFAULT_TPL_NEW_BOOK,
         'default_tpl_new_event': DEFAULT_TPL_NEW_EVENT,
         'default_tpl_voting': DEFAULT_TPL_VOTING,
+        'social_icon_choices': SOCIAL_ICON_CHOICES,
     }
     return render(request, 'dashboard.html', context)
 
@@ -251,6 +252,7 @@ def update_club_settings(request):
                    'home_welcome_text', 'cta_register_text', 'cta_login_text'],
         'seo': ['meta_description', 'meta_keywords', 'meta_author'],
         'apariencia': ['theme', 'primary_color', 'accent_color',
+                       'custom_font_url', 'custom_font_serif', 'custom_font_sans',
                        'footer_custom_link_text', 'footer_custom_link_url', 'footer_text'],
         'integraciones': ['public_domain', 'affiliate_tag',
                           'google_login_enabled', 'google_client_id', 'google_client_secret',
@@ -347,8 +349,9 @@ def edit_book(request, book_id):
     if new_vis in dict(Visibility.choices):
         book.visibility = new_vis
     book.allow_voting = request.POST.get('allow_voting', 'True') == 'True'
+    book.reading_month = request.POST.get('reading_month', book.reading_month).strip()
     book.save(update_fields=['title', 'author', 'description', 'cover_url', 'amazon_url',
-                             'pdf_url', 'external_video_url', 'status', 'visibility', 'allow_voting'])
+                             'pdf_url', 'external_video_url', 'status', 'visibility', 'allow_voting', 'reading_month'])
     messages.success(request, 'Libro actualizado.')
     return redirect('/dashboard/?seccion=libros')
 
@@ -665,6 +668,20 @@ def edit_profile(request):
     else:
         messages.error(request, f'Error: {form.errors}')
     return redirect('/dashboard/?seccion=perfil')
+
+
+
+@login_required
+def reset_font(request):
+    if not request.user.is_admin_like():
+        return HttpResponseForbidden('Solo admins.')
+    cfg = ClubSettings.get_solo()
+    cfg.custom_font_url = ''
+    cfg.custom_font_serif = ''
+    cfg.custom_font_sans = ''
+    cfg.save(update_fields=['custom_font_url', 'custom_font_serif', 'custom_font_sans'])
+    messages.success(request, 'Tipografia restablecida al tema.')
+    return redirect('/dashboard/?seccion=apariencia')
 
 
 def manifest(request):

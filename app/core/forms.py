@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import User, Book, Event, Review, ClubSettings, SocialLink, THEME_CHOICES
+from .models import User, Book, Event, Review, ClubSettings, SocialLink, THEME_CHOICES, SOCIAL_ICON_CHOICES
 
 
 class RegisterForm(UserCreationForm):
@@ -17,13 +17,13 @@ class BookForm(forms.ModelForm):
     class Meta:
         model = Book
         fields = ['title', 'author', 'status', 'visibility', 'allow_voting',
-                  'description', 'amazon_url', 'cover_url', 'external_video_url', 'pdf_url']
+                  'description', 'amazon_url', 'cover_url', 'external_video_url', 'pdf_url', 'reading_month']
 
 
 class EventForm(forms.ModelForm):
     class Meta:
         model = Event
-        fields = ['title', 'event_type', 'description', 'starts_at', 'visibility', 'location', 'external_video_url']
+        fields = ['title', 'event_type', 'description', 'starts_at', 'visibility', 'location', 'external_video_url', 'cover_image_url']
         widgets = {'starts_at': forms.DateTimeInput(attrs={'type': 'datetime-local'})}
 
 
@@ -47,6 +47,7 @@ class ClubSettingsForm(forms.ModelForm):
             'theme', 'primary_color', 'accent_color',
             'meta_description', 'meta_keywords', 'meta_author',
             'home_welcome_text', 'cta_register_text', 'cta_login_text',
+            'custom_font_url', 'custom_font_serif', 'custom_font_sans',
             'footer_text', 'footer_custom_link_text', 'footer_custom_link_url',
             'public_domain', 'affiliate_tag',
             'google_login_enabled', 'google_client_id', 'google_client_secret',
@@ -78,7 +79,7 @@ class ClubSettingsForm(forms.ModelForm):
 class SocialLinkForm(forms.ModelForm):
     class Meta:
         model = SocialLink
-        fields = ['network', 'url']
+        fields = ['network', 'url', 'icon']
 
 
 class UserProfileForm(forms.ModelForm):

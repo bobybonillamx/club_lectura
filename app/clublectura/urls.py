@@ -16,6 +16,7 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('dashboard/configuracion/', views.update_club_settings, name='update_club_settings'),
     path('dashboard/reset-colores/', views.reset_colors, name='reset_colors'),
+    path('dashboard/reset-fuente/', views.reset_font, name='reset_font'),
     path('libros/nuevo/', views.create_book, name='create_book'),
     path('libros/<int:book_id>/editar/', views.edit_book, name='edit_book'),
     path('libros/<int:book_id>/eliminar/', views.delete_book, name='delete_book'),
