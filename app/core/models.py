@@ -346,6 +346,7 @@ class Book(models.Model):
     external_video_url = models.URLField(blank=True)
     pdf_url = models.URLField(blank=True)
     allow_voting = models.BooleanField(default=True)
+    order = models.PositiveSmallIntegerField(default=0)
     category = models.ForeignKey('Category', on_delete=models.SET_NULL, null=True, blank=True, related_name='books')
     reading_month = models.CharField(max_length=7, blank=True, default='', help_text='Mes planeado YYYY-MM.')
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
