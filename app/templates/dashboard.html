@@ -269,7 +269,21 @@
       <div class="card-header"><span class="card-header-label">Agregar libro</span></div>
       <div class="card-body">
         <form action="/libros/nuevo/" method="post">{% csrf_token %}
-          <div class="g2" style="margin-bottom:1rem;"><div class="field"><label class="lbl">Titulo *</label><input class="inp" name="title" required></div><div class="field"><label class="lbl">Autor</label><input class="inp" name="author" placeholder="Se busca automaticamente"></div></div>
+          <div class="g2" style="margin-bottom:.75rem;">
+            <div class="field"><label class="lbl">Titulo *</label><input class="inp" id="book_title" name="title" required></div>
+            <div class="field"><label class="lbl">Autor</label><input class="inp" id="book_author" name="author" placeholder="Opcional"></div>
+          </div>
+          <div style="margin-bottom:1rem;">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="fetchBookData()" id="fetch_btn">&#128269; Buscar datos del libro</button>
+            <span id="fetch_status" style="font-size:.8125rem;color:var(--ink-light);margin-left:.75rem;"></span>
+          </div>
+          <div id="fetch_preview" style="display:none;background:var(--accent-bg);border:1px solid var(--accent-bdr);border-radius:var(--r);padding:.875rem 1rem;margin-bottom:1rem;">
+            <p style="font-size:.8125rem;font-weight:500;color:var(--ink);margin-bottom:.5rem;">Datos encontrados — revisa y edita si es necesario:</p>
+            <div style="display:flex;gap:1rem;align-items:flex-start;">
+              <img id="fetch_cover_preview" src="" style="width:60px;height:90px;object-fit:cover;border-radius:6px;display:none;">
+              <div style="flex:1;font-size:.8125rem;color:var(--ink-mid);" id="fetch_summary"></div>
+            </div>
+          </div>
           <div class="g4" style="margin-bottom:1rem;">
             <div class="field"><label class="lbl">Estado</label><select class="sel" name="status"><option value="future">Por leer / Votacion</option><option value="reading">Leyendo</option><option value="completed">Leido</option></select></div>
             <div class="field"><label class="lbl">Categoria</label><select class="sel" name="category"><option value="">Sin categoria</option>{% for cat in categories %}<option value="{{ cat.id }}">{{ cat.name }}</option>{% endfor %}</select></div>
@@ -334,6 +348,44 @@
       </div>
       {% empty %}<div style="padding:2rem 1.5rem;color:var(--ink-light);font-size:.875rem;">Sin libros. Agrega el primero arriba.</div>{% endfor %}
     </div>
+    <script>
+    function fetchBookData() {
+      var title = document.getElementById('book_title').value.trim();
+      var author = document.getElementById('book_author').value.trim();
+      if (!title) { alert('Ingresa el titulo primero'); return; }
+      var btn = document.getElementById('fetch_btn');
+      var status = document.getElementById('fetch_status');
+      btn.disabled = true;
+      status.textContent = 'Buscando...';
+      fetch('/libros/fetch-datos/?title=' + encodeURIComponent(title) + '&author=' + encodeURIComponent(author))
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          btn.disabled = false;
+          if (d.error) { status.textContent = 'No encontrado: ' + d.error; return; }
+          status.textContent = '';
+          // Fill form fields
+          if (d.author) document.getElementById('book_author').value = d.author;
+          var descField = document.querySelector('[name=description]');
+          if (d.description && descField) descField.value = d.description;
+          var coverField = document.querySelector('[name=cover_url]');
+          if (d.cover_url && coverField) coverField.value = d.cover_url;
+          // Show preview
+          var preview = document.getElementById('fetch_preview');
+          var summary = document.getElementById('fetch_summary');
+          var coverImg = document.getElementById('fetch_cover_preview');
+          preview.style.display = 'block';
+          summary.innerHTML = '<strong>' + title + '</strong><br>' +
+            (d.author ? 'Autor: ' + d.author + '<br>' : '') +
+            (d.isbn ? 'ISBN: ' + d.isbn + '<br>' : '') +
+            (d.description ? d.description.substring(0,150) + '...' : 'Sin descripcion');
+          if (d.cover_url) {
+            coverImg.src = d.cover_url;
+            coverImg.style.display = 'block';
+          }
+        })
+        .catch(function() { btn.disabled = false; status.textContent = 'Error de conexion'; });
+    }
+    </script>
     <div class="card" style="margin-top:1.25rem;">
       <div class="card-header" style="justify-content:space-between;">
         <span class="card-header-label">Categorias</span>
@@ -358,7 +410,7 @@
         </div>
       </div>
     </div>
-  {% endif %} 
+
     {% if seccion == 'eventos' %}
     <h2 style="margin-bottom:1.5rem;">Eventos</h2>
     <div class="card" style="margin-bottom:1.25rem;">
