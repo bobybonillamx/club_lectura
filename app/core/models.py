@@ -153,6 +153,8 @@ class User(AbstractUser):
     avatar_url = models.URLField(blank=True)
     bio = models.TextField(blank=True)
     favorite_book = models.CharField(max_length=255, blank=True)
+    location = models.CharField(max_length=120, blank=True, default='')
+    website = models.URLField(blank=True, default='')
 
     def is_admin_like(self):
         return self.is_superuser or self.role in {Role.ADMIN, Role.SUPERADMIN}
@@ -402,6 +404,13 @@ SOCIAL_ICON_CHOICES = [
 ]
 
 class SocialLink(models.Model):
+    network = models.CharField(max_length=80)
+    url = models.URLField()
+    icon = models.CharField(max_length=30, blank=True, default='link', choices=SOCIAL_ICON_CHOICES)
+
+
+class UserSocialLink(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='social_links')
     network = models.CharField(max_length=80)
     url = models.URLField()
     icon = models.CharField(max_length=30, blank=True, default='link', choices=SOCIAL_ICON_CHOICES)
