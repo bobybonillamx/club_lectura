@@ -4,6 +4,7 @@ from urllib.request import Request, urlopen
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.db.models import Q
 from django.utils import timezone
 
 
@@ -346,18 +347,28 @@ class Book(models.Model):
     def save(self, *args, **kwargs):
         tag = ClubSettings.get_solo().effective_affiliate_tag
         # Auto-fetch metadata if any field is missing
+        isbn = ''
         if not self.author or not self.cover_url or not self.description:
             metadata = fetch_book_metadata(self.title, self.author)
             self.cover_url = self.cover_url or metadata.get('cover_url', '')
             self.description = self.description or metadata.get('description', '')
             self.author = self.author or metadata.get('author', '')
-        # Build Amazon URL with affiliate tag
+            isbn = metadata.get('isbn', '')
+            # Auto-assign category if found and not set
+            if not self.category_id and metadata.get('categories'):
+                cat_name = metadata['categories'][0].split('/')[0].strip()
+                cat = Category.objects.filter(
+                    Q(name__iexact=cat_name) | Q(name__icontains=cat_name[:6])
+                ).first()
+                if cat:
+                    self.category = cat
+        # Build Amazon URL - use ISBN for direct product link when available
         if not self.amazon_url:
-            self.amazon_url = build_amazon_url(self.title, tag)
+            self.amazon_url = build_amazon_url(self.title, tag, isbn)
         else:
             self.amazon_url = apply_affiliate_tag(self.amazon_url, tag)
         if not self.cover_url:
-            self.cover_url = f'https://source.unsplash.com/featured/?book,{self.title.replace(" ", ",")}'
+            self.cover_url = f'https://source.unsplash.com/featured/?book,{quote_plus(self.title)}'
         super().save(*args, **kwargs)
 
 
@@ -414,7 +425,11 @@ class SocialLink(models.Model):
     icon = models.CharField(max_length=30, blank=True, default='link', choices=SOCIAL_ICON_CHOICES)
 
 
-def build_amazon_url(title, affiliate_tag):
+def build_amazon_url(title, affiliate_tag, isbn=''):
+    if isbn:
+        # Direct product search by ISBN is much more accurate
+        params = urlencode({'field-keywords': isbn, 'tag': affiliate_tag})
+        return f'https://www.amazon.com.mx/s?{params}'
     query = urlencode({'k': title, 'tag': affiliate_tag})
     return f'https://www.amazon.com.mx/s?{query}'
 
@@ -440,18 +455,42 @@ def fetch_book_metadata(title, author_hint=''):
 
 def fetch_from_google_books(title):
     query = quote_plus(title)
-    url = f'https://www.googleapis.com/books/v1/volumes?q=intitle:{query}&maxResults=1&langRestrict=es'
-    data = _safe_json_get(url)
-    items = data.get('items') or []
+    # Search without language restriction to get better author results
+    # Try with intitle first, fall back to general search
+    for search_query in [f'intitle:{query}', query]:
+        url = f'https://www.googleapis.com/books/v1/volumes?q={search_query}&maxResults=5&orderBy=relevance'
+        data = _safe_json_get(url)
+        items = data.get('items') or []
+        if items:
+            break
     if not items:
         return {}
-    info = items[0].get('volumeInfo', {})
+    # Pick the best match - prefer items with cover image and multiple authors info
+    best = None
+    for item in items:
+        info = item.get('volumeInfo', {})
+        if info.get('authors') and info.get('imageLinks'):
+            best = item
+            break
+    if not best:
+        best = items[0]
+    info = best.get('volumeInfo', {})
     image_links = info.get('imageLinks', {})
     authors = info.get('authors') or []
+    # Use largest available image
+    cover = (image_links.get('extraLarge') or image_links.get('large') or
+             image_links.get('medium') or image_links.get('thumbnail') or '')
+    cover = cover.replace('http://', 'https://')
+    # Upgrade to zoom=1 for better quality
+    if cover and 'zoom=' in cover:
+        cover = cover.replace('zoom=1', 'zoom=3').replace('zoom=5', 'zoom=3')
     return {
-        'cover_url': image_links.get('thumbnail', '').replace('http://', 'https://'),
+        'cover_url': cover,
         'description': info.get('description', ''),
         'author': ', '.join(authors),
+        'categories': info.get('categories') or [],
+        'isbn': next((i['identifier'] for i in info.get('industryIdentifiers', [])
+                      if i['type'] in ('ISBN_13', 'ISBN_10')), ''),
     }
 
 
