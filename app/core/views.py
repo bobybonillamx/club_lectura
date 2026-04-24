@@ -16,7 +16,7 @@ from .forms import (
 from .oauth import sync_google_social_app_from_settings
 from .models import (
     Book, BookStatus, Role, User, Vote, Review, Event,
-    Visibility, Invitation, SocialLink, ClubSettings, Category,
+    Visibility, Invitation, SocialLink, ClubSettings, Category, UserSocialLink,
     DEFAULT_TPL_WELCOME, DEFAULT_TPL_APPROVED, DEFAULT_TPL_INVITATION,
     DEFAULT_TPL_NEW_BOOK, DEFAULT_TPL_NEW_EVENT, DEFAULT_TPL_VOTING,
     THEMES, SOCIAL_ICON_CHOICES,
@@ -243,6 +243,7 @@ def dashboard(request):
         'default_tpl_voting': DEFAULT_TPL_VOTING,
         'social_icon_choices': SOCIAL_ICON_CHOICES,
         'categories': Category.objects.all(),
+        'user_social_links': UserSocialLink.objects.filter(user=request.user),
     }
     return render(request, 'dashboard.html', context)
 
@@ -700,12 +701,16 @@ def delete_social_link(request, link_id):
 
 @login_required
 def edit_profile(request):
-    form = UserProfileForm(request.POST, instance=request.user)
-    if form.is_valid():
-        form.save()
-        messages.success(request, 'Perfil actualizado.')
-    else:
-        messages.error(request, f'Error: {form.errors}')
+    user = request.user
+    user.full_name = request.POST.get('full_name', user.full_name).strip()
+    user.email = request.POST.get('email', user.email).strip()
+    user.favorite_book = request.POST.get('favorite_book', user.favorite_book).strip()
+    user.bio = request.POST.get('bio', user.bio).strip()
+    user.avatar_url = request.POST.get('avatar_url', user.avatar_url).strip()
+    user.location = request.POST.get('location', user.location).strip()
+    user.website = request.POST.get('website', user.website).strip()
+    user.save()
+    messages.success(request, 'Perfil actualizado.')
     return redirect('/dashboard/?seccion=perfil')
 
 
@@ -749,6 +754,44 @@ def delete_category(request, cat_id):
         messages.success(request, f'Categoria eliminada.')
     return redirect('/dashboard/?seccion=libros')
 
+
+
+
+def member_profile(request, user_id):
+    """Public profile page - visible to approved members only."""
+    profile_user = get_object_or_404(User, pk=user_id, is_approved=True, is_suspended=False)
+    if not _is_effectively_approved(request.user):
+        return HttpResponseForbidden('Solo miembros aprobados pueden ver perfiles.')
+    reviews = Review.objects.filter(user=profile_user, is_approved=True).select_related('book').order_by('-created_at')
+    social_links = UserSocialLink.objects.filter(user=profile_user)
+    return render(request, 'member_profile.html', {
+        'profile_user': profile_user,
+        'reviews': reviews,
+        'social_links': social_links,
+    })
+
+
+@login_required
+def add_user_social_link(request):
+    if request.method != 'POST':
+        return HttpResponseForbidden('Metodo no permitido.')
+    network = request.POST.get('network', '').strip()
+    url = request.POST.get('url', '').strip()
+    icon = request.POST.get('icon', 'link').strip()
+    if network and url:
+        UserSocialLink.objects.create(user=request.user, network=network, url=url, icon=icon)
+        messages.success(request, 'Red social agregada.')
+    return redirect('/dashboard/?seccion=perfil')
+
+
+@login_required
+def delete_user_social_link(request, link_id):
+    if request.method != 'POST':
+        return HttpResponseForbidden('Metodo no permitido.')
+    link = get_object_or_404(UserSocialLink, pk=link_id, user=request.user)
+    link.delete()
+    messages.success(request, 'Red social eliminada.')
+    return redirect('/dashboard/?seccion=perfil')
 
 
 def fetch_book_data(request):
