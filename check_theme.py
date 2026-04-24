@@ -1,8 +1,12 @@
 from core.models import ClubSettings
 c = ClubSettings.get_solo()
-print("tema en DB:", c.theme)
-print("primary_color:", c.primary_color)
+print("tema:", c.theme)
+print("custom_font_serif:", c.custom_font_serif)
+print("custom_font_sans:", c.custom_font_sans)
+print("custom_font_url COMPLETA:")
+print(c.custom_font_url)
 tv = c.theme_vars
-print("theme_vars page:", tv.get('page'))
-print("theme_vars primary:", tv.get('primary'))
-print("theme_vars fonts:", tv.get('fonts', '')[:60])
+print("theme_vars fonts COMPLETA:")
+print(tv.get('fonts'))
+print("theme_vars serif:", tv.get('serif'))
+print("theme_vars sans:", tv.get('sans'))
