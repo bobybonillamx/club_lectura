@@ -309,6 +309,18 @@ class ClubSettings(models.Model):
         return self.email_tpl_voting_open or DEFAULT_TPL_VOTING
 
 
+class Category(models.Model):
+    name = models.CharField(max_length=80, unique=True)
+    is_default = models.BooleanField(default=False)
+    order = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'name']
+
+    def __str__(self):
+        return self.name
+
+
 class BookStatus(models.TextChoices):
     COMPLETED = 'completed', 'Leido'
     READING = 'reading', 'Leyendo'
@@ -326,21 +338,24 @@ class Book(models.Model):
     external_video_url = models.URLField(blank=True)
     pdf_url = models.URLField(blank=True)
     allow_voting = models.BooleanField(default=True)
+    category = models.ForeignKey('Category', on_delete=models.SET_NULL, null=True, blank=True, related_name='books')
     reading_month = models.CharField(max_length=7, blank=True, default='', help_text='Mes planeado YYYY-MM.')
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
         tag = ClubSettings.get_solo().effective_affiliate_tag
+        # Auto-fetch metadata if any field is missing
+        if not self.author or not self.cover_url or not self.description:
+            metadata = fetch_book_metadata(self.title, self.author)
+            self.cover_url = self.cover_url or metadata.get('cover_url', '')
+            self.description = self.description or metadata.get('description', '')
+            self.author = self.author or metadata.get('author', '')
+        # Build Amazon URL with affiliate tag
         if not self.amazon_url:
             self.amazon_url = build_amazon_url(self.title, tag)
         else:
             self.amazon_url = apply_affiliate_tag(self.amazon_url, tag)
-        if not self.cover_url or not self.description or not self.author:
-            metadata = fetch_book_metadata(self.title)
-            self.cover_url = self.cover_url or metadata.get('cover_url', '')
-            self.description = self.description or metadata.get('description', '')
-            self.author = self.author or metadata.get('author', '')
         if not self.cover_url:
             self.cover_url = f'https://source.unsplash.com/featured/?book,{self.title.replace(" ", ",")}'
         super().save(*args, **kwargs)
@@ -412,14 +427,14 @@ def apply_affiliate_tag(url, affiliate_tag):
     return urlunparse((parsed.scheme, parsed.netloc, parsed.path, parsed.params, new_query, parsed.fragment))
 
 
-def fetch_book_metadata(title):
-    metadata = fetch_from_google_books(title)
-    if metadata.get('cover_url'):
-        return metadata
-    metadata_open = fetch_from_open_library(title)
-    for key in ('cover_url', 'description', 'author'):
-        if not metadata.get(key):
-            metadata[key] = metadata_open.get(key, '')
+def fetch_book_metadata(title, author_hint=''):
+    query = f'{title} {author_hint}'.strip() if author_hint else title
+    metadata = fetch_from_google_books(query)
+    if not metadata.get('cover_url'):
+        metadata_open = fetch_from_open_library(title)
+        for key in ('cover_url', 'description', 'author'):
+            if not metadata.get(key):
+                metadata[key] = metadata_open.get(key, '')
     return metadata
 
 

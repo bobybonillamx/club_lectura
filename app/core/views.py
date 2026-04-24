@@ -16,7 +16,7 @@ from .forms import (
 from .oauth import sync_google_social_app_from_settings
 from .models import (
     Book, BookStatus, Role, User, Vote, Review, Event,
-    Visibility, Invitation, SocialLink, ClubSettings,
+    Visibility, Invitation, SocialLink, ClubSettings, Category,
     DEFAULT_TPL_WELCOME, DEFAULT_TPL_APPROVED, DEFAULT_TPL_INVITATION,
     DEFAULT_TPL_NEW_BOOK, DEFAULT_TPL_NEW_EVENT, DEFAULT_TPL_VOTING,
     THEMES, SOCIAL_ICON_CHOICES,
@@ -133,12 +133,18 @@ def books_page(request):
     visible = _visible_filter(request.user)
     status = request.GET.get('estado', '')
     query = request.GET.get('q', '').strip()
-    qs = Book.objects.filter(visibility__in=visible).order_by('-created_at')
+    categoria = request.GET.get('categoria', '')
+    qs = Book.objects.filter(visibility__in=visible).select_related('category').order_by('-created_at')
     if status in {BookStatus.COMPLETED, BookStatus.READING, BookStatus.FUTURE}:
         qs = qs.filter(status=status)
     if query:
         qs = qs.filter(Q(title__icontains=query) | Q(author__icontains=query))
-    return render(request, 'books_page.html', {'books': qs, 'estado': status, 'query': query})
+    if categoria:
+        qs = qs.filter(category_id=categoria)
+    return render(request, 'books_page.html', {
+        'books': qs, 'estado': status, 'query': query,
+        'categoria': categoria, 'categories': Category.objects.all(),
+    })
 
 
 def book_detail(request, book_id):
@@ -151,6 +157,7 @@ def book_detail(request, book_id):
     return render(request, 'book_detail.html', {
         'book': book, 'approved_reviews': approved_reviews,
         'book_status': BookStatus, 'user_vote': user_vote,
+        'categories': Category.objects.all(),
     })
 
 
@@ -235,6 +242,7 @@ def dashboard(request):
         'default_tpl_new_event': DEFAULT_TPL_NEW_EVENT,
         'default_tpl_voting': DEFAULT_TPL_VOTING,
         'social_icon_choices': SOCIAL_ICON_CHOICES,
+        'categories': Category.objects.all(),
     }
     return render(request, 'dashboard.html', context)
 
@@ -372,9 +380,17 @@ def edit_book(request, book_id):
     if new_vis in dict(Visibility.choices):
         book.visibility = new_vis
     book.allow_voting = request.POST.get('allow_voting', 'True') == 'True'
+    cat_id = request.POST.get('category')
+    if cat_id:
+        try:
+            book.category = Category.objects.get(pk=int(cat_id))
+        except (Category.DoesNotExist, ValueError):
+            book.category = None
+    else:
+        book.category = None
     book.reading_month = request.POST.get('reading_month', book.reading_month).strip()
     book.save(update_fields=['title', 'author', 'description', 'cover_url', 'amazon_url',
-                             'pdf_url', 'external_video_url', 'status', 'visibility', 'allow_voting', 'reading_month'])
+                             'pdf_url', 'external_video_url', 'status', 'visibility', 'allow_voting', 'reading_month', 'category'])
     messages.success(request, 'Libro actualizado.')
     return redirect('/dashboard/?seccion=libros')
 
@@ -705,6 +721,33 @@ def reset_font(request):
     cfg.save(update_fields=['custom_font_url', 'custom_font_serif', 'custom_font_sans'])
     messages.success(request, 'Tipografia restablecida al tema.')
     return redirect('/dashboard/?seccion=apariencia')
+
+
+
+@login_required
+def create_category(request):
+    if not request.user.is_admin_like():
+        return HttpResponseForbidden('Solo admins.')
+    name = request.POST.get('name', '').strip()
+    if name:
+        Category.objects.get_or_create(name=name, defaults={'is_default': False})
+        messages.success(request, f'Categoria "{name}" agregada.')
+    return redirect('/dashboard/?seccion=libros')
+
+
+@login_required
+def delete_category(request, cat_id):
+    if request.method != 'POST':
+        return HttpResponseForbidden('Metodo no permitido.')
+    if not request.user.is_admin_like():
+        return HttpResponseForbidden('Solo admins.')
+    cat = get_object_or_404(Category, pk=cat_id)
+    if cat.is_default:
+        messages.error(request, 'Las categorias predefinidas no se pueden eliminar.')
+    else:
+        cat.delete()
+        messages.success(request, f'Categoria eliminada.')
+    return redirect('/dashboard/?seccion=libros')
 
 
 def manifest(request):

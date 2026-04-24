@@ -191,30 +191,30 @@
                         {% if cfg.custom_font_serif %}<a href="/dashboard/reset-fuente/" class="btn btn-ghost btn-sm">Restablecer fuente del tema</a>{% endif %}
                     </div>
                     <script>
-                        const PRESETS = {
-                            'lora_inter': ['Lora', 'Inter', 'https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap'],
-                            'playfair_source': ['Playfair Display', 'Source Sans 3', 'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@300;400;600&display=swap'],
-                            'merriweather_nunito': ['Merriweather', 'Nunito', 'https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Nunito:wght@300;400;600&display=swap'],
-                            'crimson_raleway': ['Crimson Pro', 'Raleway', 'https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Raleway:wght@300;400;500&display=swap'],
-                            'libre_inter': ['Libre Baskerville', 'Inter', 'https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500&display=swap'],
-                            'dm_dm': ['DM Serif Display', 'DM Sans', 'https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap'],
-                            'space': ['Space Grotesk', 'Space Grotesk', 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&display=swap'],
-                        };
-                        function applyFontPreset(val) {
-                            if (!val) {
-                                document.getElementById('f_serif').value = '';
-                                document.getElementById('f_sans').value = '';
-                                document.getElementById('f_url').value = '';
-                                return;
-                            }
-                            if (val === 'custom') return;
-                            const p = PRESETS[val];
-                            if (p) {
-                                document.getElementById('f_serif').value = p[0];
-                                document.getElementById('f_sans').value = p[1];
-                                document.getElementById('f_url').value = p[2];
-                            }
-                        }
+          const PRESETS = {
+            'lora_inter': ['Lora','Inter','https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap'],
+            'playfair_source': ['Playfair Display','Source Sans 3','https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@300;400;600&display=swap'],
+            'merriweather_nunito': ['Merriweather','Nunito','https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Nunito:wght@300;400;600&display=swap'],
+            'crimson_raleway': ['Crimson Pro','Raleway','https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Raleway:wght@300;400;500&display=swap'],
+            'libre_inter': ['Libre Baskerville','Inter','https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500&display=swap'],
+            'dm_dm': ['DM Serif Display','DM Sans','https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap'],
+            'space': ['Space Grotesk','Space Grotesk','https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&display=swap'],
+          };
+          function applyFontPreset(val) {
+            if (!val) {
+              document.getElementById('f_serif').value = '';
+              document.getElementById('f_sans').value = '';
+              document.getElementById('f_url').value = '';
+              return;
+            }
+            if (val === 'custom') return;
+            const p = PRESETS[val];
+            if (p) {
+              document.getElementById('f_serif').value = p[0];
+              document.getElementById('f_sans').value = p[1];
+              document.getElementById('f_url').value = p[2];
+            }
+          }
                     </script>
                 </div>
             </div>
@@ -276,8 +276,9 @@
                 <form action="/libros/nuevo/" method="post">
                     {% csrf_token %}
                     <div class="g2" style="margin-bottom:1rem;"><div class="field"><label class="lbl">Titulo *</label><input class="inp" name="title" required></div><div class="field"><label class="lbl">Autor</label><input class="inp" name="author" placeholder="Se busca automaticamente"></div></div>
-                    <div class="g3" style="margin-bottom:1rem;">
+                    <div class="g4" style="margin-bottom:1rem;">
                         <div class="field"><label class="lbl">Estado</label><select class="sel" name="status"><option value="future">Por leer / Votacion</option><option value="reading">Leyendo</option><option value="completed">Leido</option></select></div>
+                        <div class="field"><label class="lbl">Categoria</label><select class="sel" name="category"><option value="">Sin categoria</option>{% for cat in categories %}<option value="{{ cat.id }}">{{ cat.name }}</option>{% endfor %}</select></div>
                         <div class="field"><label class="lbl">Visibilidad</label><select class="sel" name="visibility"><option value="public">Publico</option><option value="private">Solo miembros</option><option value="admins">Solo admins</option></select></div>
                         <div class="field"><label class="lbl">Votos</label><select class="sel" name="allow_voting"><option value="True">Permitidos</option><option value="False">Desactivados</option></select></div>
                     </div>
@@ -314,8 +315,11 @@
                             <form action="/libros/{{ b.id }}/editar/" method="post" style="margin-top:.75rem;">
                                 {% csrf_token %}
                                 <div class="g2" style="margin-bottom:.75rem;"><div class="field"><label class="lbl">Titulo</label><input class="inp" name="title" value="{{ b.title }}"></div><div class="field"><label class="lbl">Autor</label><input class="inp" name="author" value="{{ b.author }}"></div></div>
-                                <div class="g3" style="margin-bottom:.75rem;">
+                                <div class="g2" style="margin-bottom:.75rem;">
                                     <div class="field"><label class="lbl">Estado</label><select class="sel" name="status"><option value="future" {% if b.status == "future" %}selected{% endif %}>Por leer</option><option value="reading" {% if b.status == "reading" %}selected{% endif %}>Leyendo</option><option value="completed" {% if b.status == "completed" %}selected{% endif %}>Leido</option></select></div>
+                                    <div class="field"><label class="lbl">Categoria</label><select class="sel" name="category"><option value="">Sin categoria</option>{% for cat in categories %}<option value="{{ cat.id }}" {% if b.category and b.category.id == cat.id %}selected{% endif %}>{{ cat.name }}</option>{% endfor %}</select></div>
+                                </div>
+                                <div class="g2" style="margin-bottom:.75rem;">
                                     <div class="field"><label class="lbl">Visibilidad</label><select class="sel" name="visibility"><option value="public" {% if b.visibility == "public" %}selected{% endif %}>Publico</option><option value="private" {% if b.visibility == "private" %}selected{% endif %}>Solo miembros</option><option value="admins" {% if b.visibility == "admins" %}selected{% endif %}>Solo admins</option></select></div>
                                     <div class="field"><label class="lbl">Votos</label><select class="sel" name="allow_voting"><option value="True" {% if b.allow_voting %}selected{% endif %}>Permitidos</option><option value="False" {% if not b.allow_voting %}selected{% endif %}>Desactivados</option></select></div>
                                 </div>
@@ -336,6 +340,32 @@
                 </div>
             </div>
             {% empty %}<div style="padding:2rem 1.5rem;color:var(--ink-light);font-size:.875rem;">Sin libros. Agrega el primero arriba.</div>{% endfor %}
+        </div>
+        {% if seccion == 'libros' %}
+        <div class="card" style="margin-top:1.25rem;">
+            <div class="card-header" style="justify-content:space-between;">
+                <span class="card-header-label">Categorias</span>
+                <span style="font-size:.75rem;color:var(--ink-light);">{{ categories|length }} categoria{{ categories|length|pluralize:"s" }}</span>
+            </div>
+            <div class="card-body">
+                <form action="/libros/categorias/nueva/" method="post" style="margin-bottom:1rem;">
+                    {% csrf_token %}
+                    <div style="display:grid;grid-template-columns:1fr auto;gap:.75rem;align-items:end;">
+                        <div class="field" style="margin-bottom:0;"><label class="lbl">Nueva categoria</label><input class="inp" name="name" placeholder="Ej: Novela historica..."></div>
+                        <button class="btn btn-ghost">Agregar</button>
+                    </div>
+                </form>
+                <div style="display:flex;flex-wrap:wrap;gap:.5rem;">
+                    {% for cat in categories %}
+                    <div style="display:flex;align-items:center;gap:.25rem;background:var(--page);border:1px solid var(--border);border-radius:20px;padding:4px 10px 4px 12px;">
+                        <span style="font-size:.875rem;color:var(--ink-mid);">{{ cat.name }}</span>
+                        {% if not cat.is_default %}
+                        <form action="/libros/categorias/{{ cat.id }}/eliminar/" method="post" style="margin:0;">{% csrf_token %}<button style="background:none;border:none;cursor:pointer;color:var(--ink-light);font-size:1rem;line-height:1;padding:0 2px;" title="Eliminar">&times;</button></form>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
         </div>
         {% endif %}
 

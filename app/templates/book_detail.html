@@ -15,7 +15,8 @@
     <div>
         <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-bottom:.75rem;">
             <span class="chip {% if book.status == 'reading' %}chip-reading{% elif book.status == 'completed' %}chip-done{% else %}chip-future{% endif %}">{{ book.get_status_display }}</span>
-            {% if book.reading_month and book.status == 'future' %}<span class="chip chip-muted">Lectura planeada: {{ book.reading_month }}</span>{% endif %}
+            {% if book.category %}<span class="chip chip-muted">{{ book.category.name }}</span>{% endif %}
+            {% if book.reading_month and book.status == 'future' %}<span class="chip chip-muted">Lectura: {{ book.reading_month }}</span>{% endif %}
         </div>
         <h1 style="font-size:1.75rem;margin-bottom:.25rem;">{{ book.title }}</h1>
         {% if book.author %}<p style="font-size:1rem;color:var(--ink-light);font-style:italic;margin-bottom:1rem;">{{ book.author }}</p>{% endif %}

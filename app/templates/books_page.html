@@ -7,12 +7,17 @@
     <input type="text" name="q" value="{{ query|default:'' }}" class="inp" placeholder="Buscar por titulo o autor..." style="max-width:280px;width:100%;">
     <select name="estado" class="sel" style="max-width:170px;width:100%;" onchange="this.form.submit()">
         <option value="">Todos los estados</option>
-        <option value="completed" {% if estado == 'completed' %}selected{% endif %}>Leidos</option>
-        <option value="reading" {% if estado == 'reading' %}selected{% endif %}>Leyendo</option>
-        <option value="future" {% if estado == 'future' %}selected{% endif %}>En votacion</option>
+        <option value="completed" {% if estado= ='completed' %}selected{% endif %}>Leidos</option>
+        <option value="reading" {% if estado= ='reading' %}selected{% endif %}>Leyendo</option>
+        <option value="future" {% if estado= ='future' %}selected{% endif %}>En votacion</option>
+    </select>
+    <select name="categoria" class="sel" style="max-width:170px;width:100%;" onchange="this.form.submit()">
+        <option value="">Todas las categorias</option>
+        {% for cat in categories %}
+        <option value="{{ cat.id }}" {% if categoria= =cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>{% endfor %}
     </select>
     <button class="btn btn-dark" type="submit">Buscar</button>
-    {% if query or estado %}<a href="/libros/" class="btn btn-ghost">Limpiar</a>{% endif %}
+    {% if query or estado or categoria %}<a href="/libros/" class="btn btn-ghost">Limpiar</a>{% endif %}
 </form>
 
 {% for book in books %}
@@ -33,6 +38,7 @@
                 <div>
                     <p style="font-family:var(--serif);font-size:.9375rem;font-weight:600;color:var(--ink);margin-bottom:2px;">{{ book.title }}</p>
                     <p style="font-size:.8125rem;color:var(--ink-light);font-style:italic;">{{ book.author }}</p>
+                    {% if book.category %}<span class="chip chip-muted" style="font-size:.6875rem;margin-top:3px;">{{ book.category.name }}</span>{% endif %}
                 </div>
                 <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.375rem;">
                     <span class="chip {% if book.status == 'reading' %}chip-reading{% elif book.status == 'completed' %}chip-done{% else %}chip-future{% endif %}">

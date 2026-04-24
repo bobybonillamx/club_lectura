@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import User, Book, Event, Review, ClubSettings, SocialLink, THEME_CHOICES, SOCIAL_ICON_CHOICES
+from .models import User, Book, Event, Review, ClubSettings, SocialLink, Category, THEME_CHOICES, SOCIAL_ICON_CHOICES, FONT_PRESETS
 
 
 class RegisterForm(UserCreationForm):
@@ -17,7 +17,7 @@ class BookForm(forms.ModelForm):
     class Meta:
         model = Book
         fields = ['title', 'author', 'status', 'visibility', 'allow_voting',
-                  'description', 'amazon_url', 'cover_url', 'external_video_url', 'pdf_url', 'reading_month']
+                  'category', 'description', 'amazon_url', 'cover_url', 'external_video_url', 'pdf_url', 'reading_month']
 
 
 class EventForm(forms.ModelForm):
@@ -47,7 +47,7 @@ class ClubSettingsForm(forms.ModelForm):
             'theme', 'primary_color', 'accent_color',
             'meta_description', 'meta_keywords', 'meta_author',
             'home_welcome_text', 'cta_register_text', 'cta_login_text',
-            'custom_font_url', 'custom_font_serif', 'custom_font_sans',
+            'font_preset', 'custom_font_url', 'custom_font_serif', 'custom_font_sans',
             'footer_text', 'footer_custom_link_text', 'footer_custom_link_url',
             'public_domain', 'affiliate_tag',
             'google_login_enabled', 'google_client_id', 'google_client_secret',
