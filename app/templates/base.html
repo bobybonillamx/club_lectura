@@ -145,9 +145,25 @@ details summary::-webkit-details-marker{display:none;}
   </div>
 </nav>
 <main style="max-width:1200px;margin:0 auto;padding:2rem 1.5rem;">
-  {% if messages %}{% for message in messages %}
-    <div class="alert alert-info">{{ message }}</div>
-  {% endfor %}{% endif %}
+  {% if messages %}
+  <div id="toast-container" style="position:fixed;top:70px;right:1.5rem;z-index:500;display:flex;flex-direction:column;gap:.5rem;max-width:360px;">
+    {% for message in messages %}
+    <div class="toast-msg" style="background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--r);padding:.75rem 1rem;box-shadow:0 4px 16px rgba(0,0,0,.1);display:flex;justify-content:space-between;align-items:center;gap:.75rem;animation:slideIn .2s ease;">
+      <span style="font-size:.875rem;color:var(--ink);">{{ message }}</span>
+      <button onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;color:var(--ink-light);font-size:1.25rem;line-height:1;padding:0;flex-shrink:0;">&times;</button>
+    </div>
+    {% endfor %}
+  </div>
+  <style>
+  @keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+  </style>
+  <script>
+  setTimeout(function(){
+    var toasts=document.querySelectorAll('.toast-msg');
+    toasts.forEach(function(t){t.style.transition='opacity .4s';t.style.opacity='0';setTimeout(function(){t.remove()},400);});
+  }, 4000);
+  </script>
+  {% endif %}
   {% block content %}{% endblock %}
 </main>
 <footer class="cl-footer">
