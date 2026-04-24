@@ -1,145 +1,195 @@
 # Club de Lectura
 
-Plataforma web para crear y administrar clubes de lectura con roles, aprobación de usuarios, votaciones, eventos, reseñas moderadas, OAuth con Google, PWA y despliegue Docker.
+PWA para gestión de clubes de lectura. Desarrollado con Django 5, PostgreSQL y Docker.
 
-## Funcionalidades incluidas
+**Desarrollado por [Gold Tech Mx](https://goldtech.mx)**
 
-- Gestión de libros: leídos, leyendo, por leer.
-- Votación para elegir próximos libros.
-- Registro/login tradicional + login con Google (django-allauth, opcional y activable por superadmin).
-- Roles: `superadmin`, `admin`, `user`.
-- Aprobación manual de usuarios por admins.
-- Invitación de usuarios con contraseña temporal autogenerada.
-- Eventos flexibles (sesión, intercambio, visita, restaurante, cine, etc.).
-- Visibilidad por contenido: público, privado, solo admins.
-- Reseñas con moderación (aprobar/marcar).
-- Personalización visual completa desde dashboard:
-  - Nombre del club
-  - Descripción
-  - Logo
-  - Color principal y color acento
-  - Tag de afiliado Amazon (si está vacío se usa automáticamente el tag base del sistema)
-- Enlaces de compra en Amazon con tag de afiliado aplicado automáticamente.
-- Búsqueda enriquecida de metadatos de libros:
-  - Google Books
-  - OpenLibrary
-- Footer persistente:
-  - Powered By: Gold Tech Mx
-  - Repositorio oficial de GitHub
-- PWA básica (instalable en Android/iOS con “Agregar a pantalla de inicio”).
+---
+
+## Características
+
+- Biblioteca con votación, reseñas y categorías
+- Eventos con foto, detalle y vista galería/lista
+- Sistema de temas visuales (6 predefinidos + colores personalizados)
+- Tipografía personalizable con Google Fonts
+- Notificaciones por correo (nuevo libro, evento, votación)
+- Gestión de usuarios: registro, aprobación, invitación, suspensión
+- Perfiles de miembro con redes sociales
+- Auto-fetch de metadatos de libros (Google Books + Open Library)
+- SEO configurable desde el panel
+- PWA instalable en móvil
+- Integración con Amazon afiliados
+- Google OAuth opcional
+- Despliegue con Cloudflare Tunnel
 
 ---
 
 ## Requisitos
 
-- Docker + Docker Compose
-- (Opcional) Python 3.12 para correr sin Docker
-- Cuenta de Google Cloud para OAuth
+- Docker Desktop
+- Git
 
 ---
 
-## Instalación en VPS (recomendada con Docker)
+## Instalación limpia
 
-### 1) Clonar o actualizar repositorio
+### 1. Clonar el repositorio
 
 ```bash
 git clone https://github.com/bobybonillamx/club_lectura.git
 cd club_lectura
 ```
 
-Si ya existe en tu servidor:
+### 2. Configurar variables de entorno
+
+Crea un archivo `.env` en la raíz del proyecto:
+
+```env
+SECRET_KEY=cambia-esto-por-una-clave-segura
+DEBUG=False
+DB_NAME=clublectura
+DB_USER=clublectura
+DB_PASSWORD=cambia-esto
+DB_HOST=db
+DB_PORT=5432
+DEFAULT_AFFILIATE_TAG=tu-tag-20
+PUBLIC_BASE_URL=https://tudominio.com
+```
+
+Para generar una `SECRET_KEY` segura:
 
 ```bash
-cd club_lectura
+python -c "import secrets; print(secrets.token_urlsafe(50))"
+```
+
+### 3. Levantar los contenedores
+
+```bash
+docker compose up -d --build
+```
+
+### 4. Aplicar migraciones
+
+```bash
+docker compose exec web python manage.py migrate
+```
+
+### 5. Crear superadmin
+
+```bash
+docker compose exec web python manage.py createsuperuser
+```
+
+### 6. Acceder al sitio
+
+- Sitio público: `http://localhost:8787`
+- Panel de admin: `http://localhost:8787/dashboard/`
+
+---
+
+## Estructura del proyecto
+
+```
+club_lectura/
+├── app/
+│   ├── clublectura/          # Configuración Django
+│   │   ├── settings.py
+│   │   └── urls.py
+│   ├── core/                 # App principal
+│   │   ├── models.py         # Modelos: User, Book, Event, Category...
+│   │   ├── views.py          # Vistas
+│   │   ├── forms.py          # Formularios
+│   │   ├── context_processors.py
+│   │   ├── templatetags/
+│   │   │   └── theme_tags.py # Filtros para temas e iconos
+│   │   └── migrations/
+│   └── templates/            # Templates HTML
+│       ├── base.html
+│       ├── home.html
+│       ├── books_page.html
+│       ├── book_detail.html
+│       ├── events_page.html
+│       ├── event_detail.html
+│       ├── dashboard.html
+│       ├── member_profile.html
+│       ├── 403.html / 404.html / 500.html
+│       └── auth/
+│           ├── login.html
+│           └── register.html
+├── docker-compose.yml
+├── Dockerfile
+└── .env
+```
+
+---
+
+## Despliegue en producción
+
+### Con Cloudflare Tunnel
+
+1. Instala `cloudflared` en tu servidor
+2. Crea un túnel apuntando a `http://localhost:8787`
+3. En el panel del club → Integraciones → pon el dominio del túnel (sin `https://`)
+
+### Variables adicionales para producción
+
+```env
+DEBUG=False
+ALLOWED_HOSTS=tudominio.com,www.tudominio.com
+```
+
+---
+
+## Flujo de deploy tras cambios
+
+```powershell
+# En Windows
 git pull
-```
-
-### 2) Crear archivo de variables
-
-```bash
-cp .env.example .env
-```
-
-Edita `.env` según tu servidor. Variables principales:
-
-- `APP_PORT` puerto público del sitio (default recomendado: `8787`)
-- `PUBLIC_BASE_URL` URL pública real (ejemplo: `https://club.midominio.com`)
-- `DJANGO_SECRET_KEY` secreto de producción
-- `POSTGRES_*` credenciales de base de datos
-- `POSTGRES_PORT`: puerto interno y externo de Postgres (debe ser el mismo en `db` y `web`).
-
-### 3) Levantar servicios
-
-```bash
-docker compose --env-file .env up -d --build
-```
-
-### 4) Ejecutar migraciones y super admin inicial
-
-```bash
-docker compose --env-file .env exec web python manage.py migrate
-docker compose --env-file .env exec web python manage.py createsuperuser
-```
-
-### 5) Activar OAuth Google desde el dashboard (sin .env)
-
-- Inicia sesión como **superadmin**
-- Ve a `Dashboard`
-- En “Personalización visual y branding” captura:
-  - `google_login_enabled`
-  - `google_client_id`
-  - `google_client_secret`
-- Guarda cambios
-
-### 6) Abrir la app
-
-- URL local por defecto: `http://localhost:8787`
-- URL real: la que definiste en `PUBLIC_BASE_URL`
-
----
-
-## Configuración OAuth Google (Cloud Console)
-
-1. Entra a https://console.cloud.google.com/
-2. Crea proyecto o selecciona uno existente.
-3. Configura **OAuth consent screen**.
-4. Crea credencial **OAuth Client ID** tipo **Web application**.
-5. Agrega redirect URI:
-   - `https://TU_DOMINIO/accounts/google/login/callback/`
-   - En local: `http://localhost:8787/accounts/google/login/callback/`
-6. Captura `Client ID` y `Client Secret` en el Dashboard como superadmin.
-7. Guarda cambios y prueba el botón de Google en `/login/`.
-
----
-
-## Despliegue y mantenimiento
-
-Actualizar en VPS:
-
-```bash
-git pull
-docker compose --env-file .env up -d --build
-docker compose --env-file .env exec web python manage.py migrate
-```
-
-Ver logs:
-
-```bash
-docker compose logs -f web
-```
-
-Respaldar base de datos (ejemplo rápido):
-
-```bash
-docker compose exec db pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB" > backup.sql
+docker compose up -d --build
+docker compose exec web python manage.py migrate
 ```
 
 ---
 
-## Seguridad mínima recomendada
+## Configuración inicial del club
 
-- Ejecutar con `DEBUG=false`
-- Usar HTTPS con proxy reverso (Nginx/Caddy/Traefik)
-- Definir `ALLOWED_HOSTS` real
-- Rotar `DJANGO_SECRET_KEY` en producción
-- Respaldos automáticos de PostgreSQL
+1. Entra a `/dashboard/` con el superadmin
+2. **Inicio** — Nombre del club, descripción, logo, imagen hero
+3. **SEO** — Meta descripción, palabras clave
+4. **Apariencia** — Elige un tema y tipografía
+5. **Integraciones** — Configura SMTP para correos, dominio público, tag de Amazon
+6. **Correos** — Activa notificaciones automáticas
+
+---
+
+## Temas disponibles
+
+| Tema | Descripción |
+|------|-------------|
+| Literario Café | Tonos cálidos, tipografía serif clásica |
+| Moderno Oscuro | Dark mode con acentos púrpura |
+| Minimalista Blanco | Limpio y minimal |
+| Verde Bosque | Tonos naturales verdes |
+| Océano Profundo | Azules profundos |
+| Rosa Editorial | Rosa elegante |
+
+---
+
+## Stack técnico
+
+| Componente | Tecnología |
+|-----------|-----------|
+| Backend | Django 5.1.8 |
+| Base de datos | PostgreSQL |
+| Servidor WSGI | Gunicorn |
+| Contenedores | Docker Compose |
+| Frontend | HTML/CSS con variables CSS (sin Bootstrap) |
+| PWA | Service Worker + Web Manifest |
+| Fuentes | Google Fonts dinámico |
+| Túnel | Cloudflare Tunnel |
+
+---
+
+## Licencia
+
+Uso personal y comercial libre. Mantén el crédito "Powered by Gold Tech Mx" en el footer.
