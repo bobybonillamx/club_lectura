@@ -1,14 +1,49 @@
 {% extends 'base.html' %}
 {% block content %}
-<div style="max-width:440px;margin:2rem auto;">
-  <p class="eyebrow" style="margin-bottom:.375rem;">Unete</p>
-  <h1 style="font-size:1.5rem;margin-bottom:1.5rem;">{{ club_settings.effective_cta_register }}</h1>
+<div style="max-width:440px;margin:3rem auto;">
+  <div style="text-align:center;margin-bottom:2rem;">
+    {% if club_settings.icon_url %}
+    <img src="{{ club_settings.icon_url }}" style="width:64px;height:64px;border-radius:16px;margin-bottom:1rem;">
+    {% endif %}
+    <p class="eyebrow" style="margin-bottom:.375rem;">Unete al club</p>
+    <h1 style="font-size:1.5rem;">{{ club_settings.effective_cta_register }}</h1>
+  </div>
   <div class="card card-body">
-    <form method="post">{% csrf_token %}{{ form.as_p }}
-      <button class="btn btn-dark" style="width:100%;margin-top:.5rem;">Crear cuenta</button>
+    {% if form.errors %}
+    <div class="alert alert-info" style="margin-bottom:1rem;background:color-mix(in srgb,#e53e3e 10%,var(--surface));border-color:#e53e3e;color:var(--ink);">
+      {% for field, errors in form.errors.items %}{% for error in errors %}{{ error }} {% endfor %}{% endfor %}
+    </div>
+    {% endif %}
+    <form method="post">{% csrf_token %}
+      <div class="field">
+        <label class="lbl">Nombre completo</label>
+        <input class="inp" type="text" name="full_name" required>
+      </div>
+      <div class="field">
+        <label class="lbl">Usuario</label>
+        <input class="inp" type="text" name="username" autocomplete="username" required>
+        <p class="hint">Solo letras, numeros y @/./+/-/_</p>
+      </div>
+      <div class="field">
+        <label class="lbl">Correo electronico</label>
+        <input class="inp" type="email" name="email" autocomplete="email">
+      </div>
+      <div class="field">
+        <label class="lbl">Contrasena</label>
+        <input class="inp" type="password" name="password1" autocomplete="new-password" required>
+      </div>
+      <div class="field" style="margin-bottom:1.25rem;">
+        <label class="lbl">Confirmar contrasena</label>
+        <input class="inp" type="password" name="password2" autocomplete="new-password" required>
+      </div>
+      <button class="btn btn-dark" style="width:100%;">Crear cuenta</button>
     </form>
   </div>
-  <p style="text-align:center;font-size:.875rem;color:var(--ink-light);margin-top:1rem;">Tu cuenta quedara pendiente de aprobacion.</p>
-  <p style="text-align:center;font-size:.875rem;color:var(--ink-light);">Ya tienes cuenta? <a href="/login/" style="color:var(--ink);font-weight:500;">{{ club_settings.effective_cta_login }}</a></p>
+  <p style="text-align:center;font-size:.875rem;color:var(--ink-light);margin-top:.75rem;">
+    Tu cuenta quedara pendiente de aprobacion por un administrador.
+  </p>
+  <p style="text-align:center;font-size:.875rem;color:var(--ink-light);margin-top:.5rem;">
+    Ya tienes cuenta? <a href="/login/" style="color:var(--accent);font-weight:500;">{{ club_settings.effective_cta_login }}</a>
+  </p>
 </div>
 {% endblock %}
