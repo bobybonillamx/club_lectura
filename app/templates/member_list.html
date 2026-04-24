@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load theme_tags %}
+{% block content %}
+<p class="eyebrow" style="margin-bottom:.375rem;">Comunidad</p>
+<h1 style="font-size:1.75rem;margin-bottom:2rem;">Miembros del club</h1>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1.25rem;">
+{% for member in members %}
+<a href="/miembros/{{ member.id }}/" style="text-decoration:none;">
+  <div class="card card-body" style="text-align:center;transition:box-shadow .15s;" onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow=''">
+    {% if member.avatar_url %}
+    <img src="{{ member.avatar_url }}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--border);margin:0 auto .75rem;">
+    {% else %}
+    <div style="width:72px;height:72px;border-radius:50%;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:1.75rem;margin:0 auto .75rem;">&#128100;</div>
+    {% endif %}
+    <p style="font-family:var(--serif);font-size:.9375rem;font-weight:600;color:var(--ink);margin-bottom:2px;">{{ member.full_name|default:member.username }}</p>
+    <p style="font-size:.8125rem;color:var(--ink-light);">@{{ member.username }}</p>
+    {% if member.location %}<p style="font-size:.75rem;color:var(--ink-light);margin-top:.25rem;">&#128205; {{ member.location }}</p>{% endif %}
+    {% if member.favorite_book %}<p style="font-size:.75rem;color:var(--ink-light);margin-top:.375rem;font-style:italic;">&#9733; {{ member.favorite_book|truncatechars:30 }}</p>{% endif %}
+    {% with links=member.social_links.all %}
+    {% if links %}
+    <div style="display:flex;justify-content:center;gap:.375rem;margin-top:.75rem;">
+      {% for link in links|slice:":4" %}
+      <span style="color:var(--ink-light);">{{ link.icon|social_icon }}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+  </div>
+</a>
+{% empty %}
+<p style="color:var(--ink-light);grid-column:1/-1;">No hay miembros registrados aun.</p>
+{% endfor %}
+</div>
+{% endblock %}
