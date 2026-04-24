@@ -37,13 +37,13 @@
       {% endif %}
     </div>
     {% if book.status == 'future' and book.allow_voting %}
-    <div style="background:var(--vote-bg,var(--accent-bg));border:1px solid var(--vote-border,var(--accent-bdr));border-radius:12px;padding:1.25rem 1.5rem;max-width:460px;">
+    <div style="background:var(--surface);border:2px solid var(--chip-future-bdr);border-radius:12px;padding:1.25rem 1.5rem;max-width:460px;">
       <p class="eyebrow" style="margin-bottom:.5rem;">Votacion abierta</p>
-      <p style="font-family:var(--serif);font-size:1.0625rem;color:var(--vote-ink,var(--ink));margin-bottom:.375rem;">Quieres que leamos este libro?</p>
+      <p style="font-family:var(--serif);font-size:1.0625rem;color:var(--ink);margin-bottom:.375rem;">Quieres que leamos este libro?</p>
       <p style="font-size:.875rem;color:var(--ink-light);margin-bottom:1rem;">Puedes votar por todos los libros que quieras. El mas votado sera el proximo.</p>
-      <p style="font-size:1.5rem;font-family:var(--serif);font-weight:600;color:var(--vote-accent,var(--accent));margin-bottom:.875rem;">{{ book.votes.count }} voto{{ book.votes.count|pluralize:"s" }}</p>
+      <p style="font-size:1.5rem;font-family:var(--serif);font-weight:600;color:var(--chip-future-ink);margin-bottom:.875rem;">{{ book.votes.count }} voto{{ book.votes.count|pluralize:"s" }}</p>
       {% if user_vote %}
-        <p style="font-size:.9375rem;color:var(--vote-accent,var(--accent));">&#10003; Ya votaste por este libro</p>
+        <p style="font-size:.9375rem;color:var(--chip-future-ink);">&#10003; Ya votaste por este libro</p>
       {% elif user.is_authenticated %}
         {% if user.is_approved or user.is_superuser %}
         <form action="/libros/{{ book.id }}/votar/" method="post">{% csrf_token %}
