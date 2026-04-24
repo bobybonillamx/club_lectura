@@ -4,7 +4,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0016_alter_user_options_and_more'),
+        ('core', '0015_user_profile_social_links'),
     ]
 
     operations = [
