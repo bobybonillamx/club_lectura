@@ -262,7 +262,6 @@ class ClubSettings(models.Model):
         base = THEMES.get(self.theme, THEMES['literario_cafe']).copy()
         if self.primary_color:
             base['primary'] = self.primary_color
-            base['ink_mid'] = self.primary_color
         if self.accent_color:
             base['accent'] = self.accent_color
         if self.custom_font_serif and self.custom_font_url:
