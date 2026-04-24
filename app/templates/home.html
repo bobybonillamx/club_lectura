@@ -59,7 +59,7 @@
                     </div>
                 </div>
                 {% if book.status == 'future' and book.allow_voting %}
-                <div style="background:var(--accent-bg);border:1px solid var(--accent-bdr);border-radius:var(--r);padding:.5rem .75rem;margin-bottom:.5rem;font-size:.8125rem;color:var(--accent);">
+                <div style="background:var(--chip-future-bg);border:1px solid var(--chip-future-bdr);border-radius:var(--r);padding:.5rem .75rem;margin-bottom:.5rem;font-size:.8125rem;color:var(--chip-future-ink);font-weight:500;">
                     Votacion abierta &middot; {{ book.votes.count }} voto{{ book.votes.count|pluralize:"s" }}
                 </div>
                 {% endif %}
