@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import User, Book, Event, Review, ClubSettings, SocialLink, Category, THEME_CHOICES, SOCIAL_ICON_CHOICES, FONT_PRESETS
+from .models import User, Book, Event, Review, ClubSettings, SocialLink, Category, THEME_CHOICES, SOCIAL_ICON_CHOICES
 
 
 class RegisterForm(UserCreationForm):
