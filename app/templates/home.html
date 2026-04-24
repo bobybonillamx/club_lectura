@@ -39,7 +39,14 @@
 
 <div style="display:grid;grid-template-columns:1fr 300px;gap:2rem;">
   <div>
-    <p class="eyebrow" style="margin-bottom:1rem;">Biblioteca del club</p>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+      <p class="eyebrow">Biblioteca del club</p>
+      <div style="display:flex;gap:.375rem;">
+        <button id="home-btn-list" onclick="setHomeView('list')" class="btn btn-dark btn-sm" style="padding:4px 10px;font-size:.75rem;">&#9776;</button>
+        <button id="home-btn-grid" onclick="setHomeView('grid')" class="btn btn-ghost btn-sm" style="padding:4px 10px;font-size:.75rem;">&#9638;</button>
+      </div>
+    </div>
+    <div id="home-view-list">
     {% for book in books %}
     <div class="card" style="margin-bottom:.875rem;display:flex;">
       {% if book.cover_url %}
@@ -72,7 +79,46 @@
         </div>
       </div>
     </div>
-    {% empty %}<p style="color:var(--ink-light);">Aun no hay libros registrados.</p>{% endfor %}
+    {% empty %}<p style="color:var(--ink-light);">Aun no hay libros registrados.</p>
+    {% endfor %}
+    </div>
+
+    <div id="home-view-grid" style="display:none;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:1rem;">
+      {% for book in books %}
+      <a href="/libros/{{ book.id }}/" style="text-decoration:none;">
+        <div class="card" style="overflow:hidden;transition:box-shadow .15s;" onmouseover="this.style.boxShadow='0 6px 20px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow=''">
+          {% if book.cover_url %}
+            <img src="{{ book.cover_url }}" alt="{{ book.title }}" style="width:100%;aspect-ratio:2/3;object-fit:cover;display:block;">
+          {% else %}
+            <div style="width:100%;aspect-ratio:2/3;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:2rem;">&#128214;</div>
+          {% endif %}
+          <div style="padding:.625rem .75rem;">
+            <p style="font-family:var(--serif);font-size:.8125rem;font-weight:600;color:var(--ink);line-height:1.3;margin-bottom:3px;">{{ book.title|truncatechars:35 }}</p>
+            <p style="font-size:.6875rem;color:var(--ink-light);font-style:italic;margin-bottom:.375rem;">{{ book.author|truncatechars:25 }}</p>
+            <span class="chip {% if book.status == 'reading' %}chip-reading{% elif book.status == 'completed' %}chip-done{% else %}chip-future{% endif %}" style="font-size:.625rem;">{{ book.get_status_display }}</span>
+            {% if book.reading_month and book.status == 'future' %}<span class="chip chip-muted" style="font-size:.625rem;margin-left:.25rem;">{{ book.reading_month }}</span>{% endif %}
+          </div>
+        </div>
+      </a>
+      {% empty %}<p style="color:var(--ink-light);grid-column:1/-1;">Aun no hay libros registrados.</p>{% endfor %}
+      </div>
+    </div>
+
+    <script>
+    function setHomeView(v) {
+      localStorage.setItem('home_books_view', v);
+      document.getElementById('home-view-list').style.display = v === 'list' ? '' : 'none';
+      document.getElementById('home-view-grid').style.display = v === 'grid' ? '' : 'none';
+      document.getElementById('home-btn-list').className = 'btn btn-sm ' + (v === 'list' ? 'btn-dark' : 'btn-ghost');
+      document.getElementById('home-btn-grid').className = 'btn btn-sm ' + (v === 'grid' ? 'btn-dark' : 'btn-ghost');
+      document.getElementById('home-btn-list').style.padding = '4px 10px';
+      document.getElementById('home-btn-grid').style.padding = '4px 10px';
+      document.getElementById('home-btn-list').style.fontSize = '.75rem';
+      document.getElementById('home-btn-grid').style.fontSize = '.75rem';
+    }
+    (function(){ setHomeView(localStorage.getItem('home_books_view') || 'list'); })();
+    </script>
   </div>
 
   <aside>
