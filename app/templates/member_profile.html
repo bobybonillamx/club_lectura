@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load theme_tags %}
+{% block content %}
+<a href="/" class="btn btn-ghost btn-sm" style="margin-bottom:1.5rem;display:inline-block;">&#8592; Inicio</a>
+
+<div style="display:grid;grid-template-columns:240px 1fr;gap:2rem;align-items:start;">
+
+  <div>
+    <div class="card card-body" style="text-align:center;margin-bottom:1rem;">
+      {% if profile_user.avatar_url %}
+      <img src="{{ profile_user.avatar_url }}" alt="{{ profile_user.full_name }}" style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid var(--border);margin:0 auto .875rem;">
+      {% else %}
+      <div style="width:96px;height:96px;border-radius:50%;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:2.5rem;margin:0 auto .875rem;">&#128100;</div>
+      {% endif %}
+      <h2 style="font-size:1.125rem;margin-bottom:.25rem;">{{ profile_user.full_name|default:profile_user.username }}</h2>
+      <p style="font-size:.875rem;color:var(--ink-light);">@{{ profile_user.username }}</p>
+      {% if profile_user.location %}
+      <p style="font-size:.8125rem;color:var(--ink-light);margin-top:.375rem;">&#128205; {{ profile_user.location }}</p>
+      {% endif %}
+      {% if profile_user.website %}
+      <a href="{{ profile_user.website }}" target="_blank" rel="noopener" style="font-size:.8125rem;color:var(--accent);display:block;margin-top:.375rem;">&#127760; {{ profile_user.website|truncatechars:30 }}</a>
+      {% endif %}
+    </div>
+
+    {% if social_links %}
+    <div class="card card-body" style="margin-bottom:1rem;">
+      <p class="eyebrow" style="margin-bottom:.75rem;">Redes sociales</p>
+      {% for link in social_links %}
+      <a href="{{ link.url }}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:.5rem;font-size:.875rem;color:var(--ink-light);padding:5px 0;text-decoration:none;">
+        {{ link.icon|social_icon }}
+        <span>{{ link.network }}</span>
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if profile_user.favorite_book %}
+    <div class="card card-body">
+      <p class="eyebrow" style="margin-bottom:.5rem;">Libro favorito</p>
+      <p style="font-family:var(--serif);font-size:.9375rem;color:var(--ink);">{{ profile_user.favorite_book }}</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <div>
+    {% if profile_user.bio %}
+    <div class="card card-body" style="margin-bottom:1.25rem;">
+      <p class="eyebrow" style="margin-bottom:.625rem;">Sobre mi</p>
+      <p style="line-height:1.75;color:var(--ink-mid);">{{ profile_user.bio }}</p>
+    </div>
+    {% endif %}
+
+    {% if reviews %}
+    <p class="eyebrow" style="margin-bottom:1rem;">Resenas del club</p>
+    {% for review in reviews %}
+    <div class="card card-body" style="margin-bottom:.875rem;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.5rem;">
+        <a href="/libros/{{ review.book.id }}/" style="font-family:var(--serif);font-size:.9375rem;font-weight:600;color:var(--ink);">{{ review.book.title }}</a>
+        <span style="color:var(--accent);font-size:.875rem;flex-shrink:0;margin-left:.5rem;">{% for i in "12345" %}{% if forloop.counter <= review.rating %}&#9733;{% else %}&#9734;{% endif %}{% endfor %}</span>
+      </div>
+      <p style="font-size:.9375rem;color:var(--ink-mid);line-height:1.6;margin-bottom:.375rem;">{{ review.comment }}</p>
+      <p style="font-size:.75rem;color:var(--ink-light);">{{ review.created_at|date:"j M Y" }}</p>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="card card-body" style="color:var(--ink-light);">
+      {% if profile_user.bio %}Aun no ha escrito resenas.{% else %}Este miembro aun no ha completado su perfil.{% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
