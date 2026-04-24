@@ -48,3 +48,7 @@ urlpatterns = [
     path('pwa/manifest.json', views.manifest, name='manifest'),
     path('pwa/sw.js', views.service_worker, name='service_worker'),
 ]
+
+handler404 = 'core.views.handler404'
+handler403 = 'core.views.handler403'
+handler500 = 'core.views.handler500'
