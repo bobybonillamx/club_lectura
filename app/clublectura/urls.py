@@ -18,6 +18,7 @@ urlpatterns = [
     path('dashboard/reset-colores/', views.reset_colors, name='reset_colors'),
     path('dashboard/reset-fuente/', views.reset_font, name='reset_font'),
     path('libros/nuevo/', views.create_book, name='create_book'),
+    path('libros/fetch-datos/', views.fetch_book_data, name='fetch_book_data'),
     path('libros/categorias/nueva/', views.create_category, name='create_category'),
     path('libros/categorias/<int:cat_id>/eliminar/', views.delete_category, name='delete_category'),
     path('libros/<int:book_id>/editar/', views.edit_book, name='edit_book'),
