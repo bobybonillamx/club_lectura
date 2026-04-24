@@ -625,21 +625,70 @@
     {% endif %}
 
     {% if seccion == 'perfil' %}
-    <h2 style="margin-bottom:1.5rem;">Mi perfil</h2>
-    <div class="card" style="max-width:540px;">
-      <div class="card-header"><span class="card-header-label">Datos personales</span></div>
-      <div class="card-body">
-        <form action="/perfil/editar/" method="post">{% csrf_token %}
-          <div class="g2" style="margin-bottom:1rem;"><div class="field"><label class="lbl">Nombre completo</label><input class="inp" name="full_name" value="{{ user.full_name }}"></div><div class="field"><label class="lbl">Correo</label><input class="inp" name="email" type="email" value="{{ user.email }}"></div></div>
-          <div class="field" style="margin-bottom:1rem;"><label class="lbl">Libro favorito</label><input class="inp" name="favorite_book" value="{{ user.favorite_book }}"></div>
-          <div class="field" style="margin-bottom:1rem;"><label class="lbl">Biografia</label><textarea class="txa" name="bio" rows="3">{{ user.bio }}</textarea></div>
-          <div class="field" style="margin-bottom:1.25rem;">
-            <label class="lbl">URL foto de perfil</label>
-            <input class="inp" name="avatar_url" type="url" value="{{ user.avatar_url }}" placeholder="https://...">
-            {% if user.avatar_url %}<div style="margin-top:.75rem;display:flex;align-items:center;gap:.75rem;"><img src="{{ user.avatar_url }}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid var(--border);"><span class="hint">Foto actual</span></div>{% endif %}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start;">
+      <div>
+        <h2 style="margin-bottom:1.25rem;">Mi perfil</h2>
+        <div class="card" style="margin-bottom:1.25rem;">
+          <div class="card-header"><span class="card-header-label">Datos personales</span></div>
+          <div class="card-body">
+            <form action="/perfil/editar/" method="post">{% csrf_token %}
+              {% if user.avatar_url %}
+              <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem;padding:.875rem;background:var(--page);border-radius:var(--r);">
+                <img src="{{ user.avatar_url }}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--border);">
+                <div><p style="font-family:var(--serif);font-size:1rem;font-weight:600;color:var(--ink);">{{ user.full_name|default:user.username }}</p><p style="font-size:.875rem;color:var(--ink-light);">{{ user.email }}</p><a href="/miembros/{{ user.id }}/" class="btn btn-ghost btn-sm" style="margin-top:.5rem;" target="_blank">Ver perfil publico</a></div>
+              </div>
+              {% endif %}
+              <div class="g2" style="margin-bottom:1rem;"><div class="field"><label class="lbl">Nombre completo</label><input class="inp" name="full_name" value="{{ user.full_name }}"></div><div class="field"><label class="lbl">Correo</label><input class="inp" name="email" type="email" value="{{ user.email }}"></div></div>
+              <div class="g2" style="margin-bottom:1rem;"><div class="field"><label class="lbl">Ubicacion</label><input class="inp" name="location" value="{{ user.location }}" placeholder="Ciudad, Pais"></div><div class="field"><label class="lbl">Sitio web</label><input class="inp" name="website" type="url" value="{{ user.website }}" placeholder="https://..."></div></div>
+              <div class="field" style="margin-bottom:1rem;"><label class="lbl">Libro favorito</label><input class="inp" name="favorite_book" value="{{ user.favorite_book }}"></div>
+              <div class="field" style="margin-bottom:1rem;"><label class="lbl">Biografia</label><textarea class="txa" name="bio" rows="3" placeholder="Cuéntanos algo sobre ti...">{{ user.bio }}</textarea></div>
+              <div class="field" style="margin-bottom:1.25rem;">
+                <label class="lbl">URL foto de perfil</label>
+                <input class="inp" name="avatar_url" type="url" value="{{ user.avatar_url }}" placeholder="https://...">
+                <p class="hint">URL de imagen cuadrada. Usa Gravatar, GitHub avatar, etc.</p>
+              </div>
+              <button class="btn btn-dark">Guardar perfil</button>
+            </form>
           </div>
-          <button class="btn btn-dark">Guardar perfil</button>
-        </form>
+        </div>
+      </div>
+      <div>
+        <h2 style="margin-bottom:1.25rem;">Mis redes sociales</h2>
+        <div class="card">
+          <div class="card-header"><span class="card-header-label">Redes personales</span></div>
+          <div class="card-body">
+            <form action="/perfil/redes/nueva/" method="post" style="margin-bottom:1rem;">{% csrf_token %}
+              <div class="g2" style="margin-bottom:.75rem;">
+                <div class="field" style="margin-bottom:0;"><label class="lbl">Icono</label><select class="sel" name="icon">{% for val, label in social_icon_choices %}<option value="{{ val }}">{{ label }}</option>{% endfor %}</select></div>
+                <div class="field" style="margin-bottom:0;"><label class="lbl">Nombre</label><input class="inp" name="network" placeholder="Instagram..."></div>
+              </div>
+              <div class="field" style="margin-bottom:.75rem;"><label class="lbl">URL</label><input class="inp" name="url" type="url" placeholder="https://..."></div>
+              <button class="btn btn-ghost btn-sm">Agregar red social</button>
+            </form>
+            {% if user_social_links %}
+            <div style="border-top:1px solid var(--border);padding-top:.875rem;">
+              {% load theme_tags %}
+              {% for link in user_social_links %}
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;{% if not forloop.last %}border-bottom:1px solid var(--border);{% endif %}">
+                <div style="display:flex;align-items:center;gap:.5rem;">
+                  {{ link.icon|social_icon }}
+                  <span style="font-size:.875rem;font-weight:500;">{{ link.network }}</span>
+                  <a href="{{ link.url }}" target="_blank" rel="noopener" style="font-size:.8125rem;color:var(--ink-light);">{{ link.url|truncatechars:30 }}</a>
+                </div>
+                <form action="/perfil/redes/{{ link.id }}/eliminar/" method="post" style="margin:0;">{% csrf_token %}<button class="btn btn-ghost btn-sm" style="color:#8B2020;">Eliminar</button></form>
+              </div>
+              {% endfor %}
+            </div>
+            {% else %}
+            <p style="font-size:.875rem;color:var(--ink-light);">Sin redes agregadas.</p>
+            {% endif %}
+          </div>
+        </div>
+        <div style="margin-top:1rem;padding:.875rem 1rem;background:var(--accent-bg);border:1px solid var(--accent-bdr);border-radius:var(--r);">
+          <p style="font-size:.875rem;color:var(--ink);margin-bottom:.375rem;">&#128100; Tu perfil publico</p>
+          <p style="font-size:.8125rem;color:var(--ink-light);margin-bottom:.75rem;">Los miembros aprobados pueden ver tu perfil con tu bio, libro favorito y redes sociales.</p>
+          <a href="/miembros/{{ user.id }}/" class="btn btn-ghost btn-sm" target="_blank">Ver como aparece mi perfil</a>
+        </div>
       </div>
     </div>
     {% endif %}
