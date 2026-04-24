@@ -2,21 +2,25 @@
 
 PWA para gestión de clubes de lectura. Desarrollado con Django 5, PostgreSQL y Docker.
 
-**Desarrollado por [Gold Tech Mx](https://goldtech.mx)**
-
 ---
 
 ## Características
 
 - Biblioteca con votación, reseñas y categorías
-- Eventos con foto, detalle y vista galería/lista
+- Vista galería/lista en libros y eventos (preferencia guardada por usuario)
+- Eventos con foto, detalle y página de detalle al estilo de libros
 - Sistema de temas visuales (6 predefinidos + colores personalizados)
 - Tipografía personalizable con Google Fonts
+- Toast notifications auto-descartables
 - Notificaciones por correo (nuevo libro, evento, votación)
-- Gestión de usuarios: registro, aprobación, invitación, suspensión
+- Gestión de usuarios: registro, aprobación, invitación, suspensión, búsqueda en tiempo real
 - Perfiles de miembro con redes sociales
-- Auto-fetch de metadatos de libros (Google Books + Open Library)
+- Lista de miembros del club (galería)
+- Auto-fetch de metadatos de libros bajo demanda (Google Books + Open Library)
+- Reordenamiento manual de libros
+- Asignación de categorías en masa
 - SEO configurable desde el panel
+- Páginas de error personalizadas (404, 403, 500) con tema activo
 - PWA instalable en móvil
 - Integración con Amazon afiliados
 - Google OAuth opcional
@@ -82,7 +86,7 @@ docker compose exec web python manage.py createsuperuser
 ### 6. Acceder al sitio
 
 - Sitio público: `http://localhost:8787`
-- Panel de admin: `http://localhost:8787/dashboard/`
+- Panel de control: `http://localhost:8787/dashboard/`
 
 ---
 
@@ -91,25 +95,26 @@ docker compose exec web python manage.py createsuperuser
 ```
 club_lectura/
 ├── app/
-│   ├── clublectura/          # Configuración Django
-│   │   ├── settings.py
+│   ├── clublectura/
+│   │   ├── settings.py        # DEFAULT_AFFILIATE_TAG fijo aquí
 │   │   └── urls.py
-│   ├── core/                 # App principal
-│   │   ├── models.py         # Modelos: User, Book, Event, Category...
-│   │   ├── views.py          # Vistas
-│   │   ├── forms.py          # Formularios
+│   ├── core/
+│   │   ├── models.py          # User, Book, Event, Category, UserSocialLink...
+│   │   ├── views.py
+│   │   ├── forms.py
 │   │   ├── context_processors.py
 │   │   ├── templatetags/
-│   │   │   └── theme_tags.py # Filtros para temas e iconos
+│   │   │   └── theme_tags.py  # Filtros: theme_page_color, social_icon, etc.
 │   │   └── migrations/
-│   └── templates/            # Templates HTML
-│       ├── base.html
+│   └── templates/
+│       ├── base.html          # ⚠️ Ver nota de |safe arriba
 │       ├── home.html
 │       ├── books_page.html
 │       ├── book_detail.html
 │       ├── events_page.html
 │       ├── event_detail.html
 │       ├── dashboard.html
+│       ├── members_list.html
 │       ├── member_profile.html
 │       ├── 403.html / 404.html / 500.html
 │       └── auth/
@@ -122,27 +127,9 @@ club_lectura/
 
 ---
 
-## Despliegue en producción
-
-### Con Cloudflare Tunnel
-
-1. Instala `cloudflared` en tu servidor
-2. Crea un túnel apuntando a `http://localhost:8787`
-3. En el panel del club → Integraciones → pon el dominio del túnel (sin `https://`)
-
-### Variables adicionales para producción
-
-```env
-DEBUG=False
-ALLOWED_HOSTS=tudominio.com,www.tudominio.com
-```
-
----
-
 ## Flujo de deploy tras cambios
 
 ```powershell
-# En Windows
 git pull
 docker compose up -d --build
 docker compose exec web python manage.py migrate
@@ -153,11 +140,12 @@ docker compose exec web python manage.py migrate
 ## Configuración inicial del club
 
 1. Entra a `/dashboard/` con el superadmin
-2. **Inicio** — Nombre del club, descripción, logo, imagen hero
-3. **SEO** — Meta descripción, palabras clave
-4. **Apariencia** — Elige un tema y tipografía
-5. **Integraciones** — Configura SMTP para correos, dominio público, tag de Amazon
-6. **Correos** — Activa notificaciones automáticas
+2. **Inicio** — Nombre, descripción, logo, imagen hero
+3. **SEO** — Meta descripción, palabras clave, autor
+4. **Apariencia** — Elige tema y tipografía personalizada
+5. **Integraciones** — SMTP, dominio público, tag Amazon del club, Google OAuth
+6. **Correos** — Activa notificaciones automáticas y edita plantillas
+7. **Mi perfil** — Foto, bio, redes sociales personales
 
 ---
 
@@ -191,4 +179,4 @@ docker compose exec web python manage.py migrate
 
 ## Licencia
 
-Uso personal y comercial libre. Mantén el crédito "Powered by Locos X la Tecnología" en el footer.
+Uso personal y comercial libre. Mantén el crédito "Powered by Gold Tech Mx" en el footer.
