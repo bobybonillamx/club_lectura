@@ -14,7 +14,7 @@
 <title>{{ club_settings.name }}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="{{ theme_vars.fonts }}" rel="stylesheet">
+<link href="{{ theme_vars.fonts|safe }}" rel="stylesheet">
 <style>
 :root{
   --page:{{ theme_vars.page }};
@@ -28,8 +28,8 @@
   --ink:{{ theme_vars.ink }};
   --ink-mid:{{ theme_vars.ink_mid }};
   --ink-light:{{ theme_vars.ink_light }};
-  --serif:{{ theme_vars.serif }};
-  --sans:{{ theme_vars.sans }};
+  --serif:{{ theme_vars.serif|safe }};
+  --sans:{{ theme_vars.sans|safe }};
   --chip-reading-bg:{{ theme_vars.chip_reading_bg }};
   --chip-reading-ink:{{ theme_vars.chip_reading_ink }};
   --chip-done-bg:{{ theme_vars.chip_done_bg }};
