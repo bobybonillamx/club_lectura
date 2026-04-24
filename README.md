@@ -52,7 +52,6 @@ DB_USER=clublectura
 DB_PASSWORD=cambia-esto
 DB_HOST=db
 DB_PORT=5432
-DEFAULT_AFFILIATE_TAG=tu-tag-20
 PUBLIC_BASE_URL=https://tudominio.com
 ```
 
