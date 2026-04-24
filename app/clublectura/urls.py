@@ -42,6 +42,9 @@ urlpatterns = [
     path('integraciones/redes/<int:link_id>/eliminar/', views.delete_social_link, name='delete_social_link'),
     path('integraciones/smtp/test/', views.test_smtp, name='test_smtp'),
     path('perfil/editar/', views.edit_profile, name='edit_profile'),
+    path('perfil/redes/nueva/', views.add_user_social_link, name='add_user_social_link'),
+    path('perfil/redes/<int:link_id>/eliminar/', views.delete_user_social_link, name='delete_user_social_link'),
+    path('miembros/<int:user_id>/', views.member_profile, name='member_profile'),
     path('pwa/manifest.json', views.manifest, name='manifest'),
     path('pwa/sw.js', views.service_worker, name='service_worker'),
 ]
