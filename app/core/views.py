@@ -750,6 +750,28 @@ def delete_category(request, cat_id):
     return redirect('/dashboard/?seccion=libros')
 
 
+
+def fetch_book_data(request):
+    """AJAX endpoint - returns book metadata from Google Books and Open Library."""
+    import json as _json
+    from django.http import JsonResponse
+    title = request.GET.get('title', '').strip()
+    author = request.GET.get('author', '').strip()
+    if not title:
+        return JsonResponse({'error': 'Se requiere titulo'}, status=400)
+    try:
+        from .models import fetch_book_metadata
+        data = fetch_book_metadata(title, author)
+        return JsonResponse({
+            'author': data.get('author', ''),
+            'description': data.get('description', ''),
+            'cover_url': data.get('cover_url', ''),
+            'isbn': data.get('isbn', ''),
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
 def manifest(request):
     import json as _json
     cfg = ClubSettings.get_solo()
