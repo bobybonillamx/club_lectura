@@ -346,29 +346,11 @@ class Book(models.Model):
 
     def save(self, *args, **kwargs):
         tag = ClubSettings.get_solo().effective_affiliate_tag
-        # Auto-fetch metadata if any field is missing
-        isbn = ''
-        if not self.author or not self.cover_url or not self.description:
-            metadata = fetch_book_metadata(self.title, self.author)
-            self.cover_url = self.cover_url or metadata.get('cover_url', '')
-            self.description = self.description or metadata.get('description', '')
-            self.author = self.author or metadata.get('author', '')
-            isbn = metadata.get('isbn', '')
-            # Auto-assign category if found and not set
-            if not self.category_id and metadata.get('categories'):
-                cat_name = metadata['categories'][0].split('/')[0].strip()
-                cat = Category.objects.filter(
-                    Q(name__iexact=cat_name) | Q(name__icontains=cat_name[:6])
-                ).first()
-                if cat:
-                    self.category = cat
-        # Build Amazon URL - use ISBN for direct product link when available
+        # Build Amazon URL with affiliate tag
         if not self.amazon_url:
-            self.amazon_url = build_amazon_url(self.title, tag, isbn)
+            self.amazon_url = build_amazon_url(self.title, tag)
         else:
             self.amazon_url = apply_affiliate_tag(self.amazon_url, tag)
-        if not self.cover_url:
-            self.cover_url = f'https://source.unsplash.com/featured/?book,{quote_plus(self.title)}'
         super().save(*args, **kwargs)
 
 
