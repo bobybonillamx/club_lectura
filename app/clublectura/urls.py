@@ -25,6 +25,7 @@ urlpatterns = [
     path('libros/<int:book_id>/eliminar/', views.delete_book, name='delete_book'),
     path('libros/<int:book_id>/votar/', views.vote_book, name='vote_book'),
     path('libros/<int:book_id>/resena/', views.add_review, name='add_review'),
+    path('eventos/<int:event_id>/', views.event_detail, name='event_detail'),
     path('eventos/nuevo/', views.create_event, name='create_event'),
     path('eventos/<int:event_id>/editar/', views.edit_event, name='edit_event'),
     path('eventos/<int:event_id>/eliminar/', views.delete_event, name='delete_event'),
