@@ -205,8 +205,8 @@ def register(request):
 def dashboard(request):
     if not _is_effectively_approved(request.user):
         if getattr(request.user, 'is_suspended', False):
-            return HttpResponseForbidden('Tu cuenta ha sido suspendida.')
-        return HttpResponseForbidden('Tu cuenta esta pendiente de aprobacion.')
+            return render(request, '403.html', {'reason': 'suspended'}, status=403)
+        return render(request, '403.html', {'reason': 'pending'}, status=403)
 
     section = request.GET.get('seccion', 'inicio')
     cfg = ClubSettings.get_solo()
@@ -794,10 +794,12 @@ def delete_user_social_link(request, link_id):
     return redirect('/dashboard/?seccion=perfil')
 
 
+@login_required
 def fetch_book_data(request):
-    """AJAX endpoint - returns book metadata from Google Books and Open Library."""
-    import json as _json
+    """AJAX endpoint - returns book metadata. Requires login."""
     from django.http import JsonResponse
+    if not request.user.is_admin_like():
+        return JsonResponse({'error': 'No autorizado'}, status=403)
     title = request.GET.get('title', '').strip()
     author = request.GET.get('author', '').strip()
     if not title:
@@ -815,24 +817,49 @@ def fetch_book_data(request):
         return JsonResponse({'error': str(e)}, status=500)
 
 
+
+def handler404(request, exception=None):
+    return render(request, '404.html', status=404)
+
+
+def handler403(request, exception=None):
+    return render(request, '403.html', {'reason': 'forbidden'}, status=403)
+
+
+def handler500(request):
+    return render(request, '500.html', status=500)
+
+
 def manifest(request):
     import json as _json
-    cfg = ClubSettings.get_solo()
-    icons = []
-    if cfg.icon_url:
-        icons = [
-            {"src": cfg.icon_url, "sizes": "512x512", "type": "image/png", "purpose": "any maskable"},
-            {"src": cfg.icon_url, "sizes": "192x192", "type": "image/png"},
-        ]
-    data = {
-        "name": cfg.name,
-        "short_name": cfg.name[:12],
-        "start_url": "/",
-        "display": "standalone",
-        "background_color": cfg.theme_vars.get('page', '#F7F3EE'),
-        "theme_color": cfg.theme_vars.get('primary', '#6f42c1'),
-        "icons": icons,
-    }
+    try:
+        cfg = ClubSettings.get_solo()
+        icons = []
+        if cfg.icon_url:
+            icons = [
+                {"src": cfg.icon_url, "sizes": "512x512", "type": "image/png", "purpose": "any maskable"},
+                {"src": cfg.icon_url, "sizes": "192x192", "type": "image/png"},
+            ]
+        tv = cfg.theme_vars
+        data = {
+            "name": cfg.name,
+            "short_name": cfg.name[:12],
+            "start_url": "/",
+            "display": "standalone",
+            "background_color": tv.get('page', '#F7F3EE'),
+            "theme_color": tv.get('primary', '#6f42c1'),
+            "icons": icons,
+        }
+    except Exception:
+        data = {
+            "name": "Club de Lectura",
+            "short_name": "Club",
+            "start_url": "/",
+            "display": "standalone",
+            "background_color": "#F7F3EE",
+            "theme_color": "#3D2B1F",
+            "icons": [],
+        }
     return HttpResponse(_json.dumps(data), content_type='application/manifest+json')
 
 
