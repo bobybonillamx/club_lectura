@@ -32,7 +32,7 @@ THEMES = {
     'moderno_oscuro': {
         'label': 'Moderno Oscuro',
         'page': '#0F1117', 'surface': '#1A1D2E', 'border': '#2A2F42', 'border2': '#363C52',
-        'primary': '#7C6FFF', 'accent': '#A89FFF', 'accent_bg': '#252040', 'accent_bdr': '#4A4080',
+        'primary': '#7C6FFF', 'accent': '#C8C0FF', 'accent_bg': '#252040', 'accent_bdr': '#4A4080',
         'ink': '#F0EFFF', 'ink_mid': '#D0CEF0', 'ink_light': '#8B8FA8',
         'chip_reading_bg': '#0A2A0A', 'chip_reading_ink': '#7EE87E',
         'chip_done_bg': '#0A0A2E', 'chip_done_ink': '#A0A0FF',
