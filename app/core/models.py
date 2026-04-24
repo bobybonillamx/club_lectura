@@ -31,13 +31,14 @@ THEMES = {
     },
     'moderno_oscuro': {
         'label': 'Moderno Oscuro',
-        'page': '#111318', 'surface': '#1C2030', 'border': '#2A2F42', 'border2': '#363C52',
-        'primary': '#7C6FFF', 'accent': '#A89FFF', 'accent_bg': '#2A2050', 'accent_bdr': '#5A50A0',
-        'ink': '#F0EFFF', 'ink_mid': '#D8D6F8', 'ink_light': '#9A9EBB',
-        'chip_reading_bg': '#0D2E0D', 'chip_reading_ink': '#7EE87E',
-        'chip_done_bg': '#0D0D2E', 'chip_done_ink': '#9999FF',
-        'chip_future_bg': '#2A2050', 'chip_future_ink': '#C0B8FF', 'chip_future_bdr': '#5A50A0',
-        'chip_muted_bg': '#1C2030', 'chip_muted_ink': '#9A9EBB', 'chip_muted_bdr': '#363C52',
+        'page': '#0F1117', 'surface': '#1A1D2E', 'border': '#2A2F42', 'border2': '#363C52',
+        'primary': '#7C6FFF', 'accent': '#A89FFF', 'accent_bg': '#252040', 'accent_bdr': '#4A4080',
+        'ink': '#F0EFFF', 'ink_mid': '#D0CEF0', 'ink_light': '#8B8FA8',
+        'chip_reading_bg': '#0A2A0A', 'chip_reading_ink': '#7EE87E',
+        'chip_done_bg': '#0A0A2E', 'chip_done_ink': '#A0A0FF',
+        'chip_future_bg': '#252040', 'chip_future_ink': '#C8C0FF', 'chip_future_bdr': '#4A4080',
+        'chip_muted_bg': '#1A1D2E', 'chip_muted_ink': '#8B8FA8', 'chip_muted_bdr': '#2A2F42',
+        'vote_bg': '#1E1840', 'vote_border': '#4A4080', 'vote_ink': '#F0EFFF', 'vote_accent': '#C8C0FF',
         'serif': "'Space Grotesk', system-ui, sans-serif", 'sans': "'Space Grotesk', system-ui, sans-serif",
         'fonts': 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&display=swap',
     },
@@ -283,6 +284,11 @@ class ClubSettings(models.Model):
             base['chip_muted_bg'] = base.get('page', '#F7F3EE')
             base['chip_muted_ink'] = base.get('ink_light', '#7A6252')
             base['chip_muted_bdr'] = base.get('border', '#EAE0D5')
+        if 'vote_bg' not in base:
+            base['vote_bg'] = base.get('accent_bg', base.get('page'))
+            base['vote_border'] = base.get('accent_bdr', base.get('border'))
+            base['vote_ink'] = base.get('ink', '#1A0F0A')
+            base['vote_accent'] = base.get('accent', '#B87333')
         return base
 
     @property
