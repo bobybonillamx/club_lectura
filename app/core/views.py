@@ -818,6 +818,13 @@ def fetch_book_data(request):
 
 
 
+
+def event_detail(request, event_id):
+    visible = _visible_filter(request.user)
+    event = get_object_or_404(Event, pk=event_id, visibility__in=visible)
+    return render(request, 'event_detail.html', {'event': event})
+
+
 def handler404(request, exception=None):
     return render(request, '404.html', status=404)
 
