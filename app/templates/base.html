@@ -2,25 +2,20 @@
 <!doctype html>
 <html lang="es">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="theme-color" content="{{ theme_vars.primary }}">
-    {% if club_settings.meta_description %}
-    <meta name="description" content="{{ club_settings.meta_description }}">{% endif %}
-    {% if club_settings.meta_keywords %}
-    <meta name="keywords" content="{{ club_settings.meta_keywords }}">{% endif %}
-    {% if club_settings.meta_author %}
-    <meta name="author" content="{{ club_settings.meta_author }}">{% endif %}
-    <link rel="manifest" href="/pwa/manifest.json">
-    {% if club_settings.icon_url %}
-    <link rel="icon" href="{{ club_settings.icon_url }}">
-    {% else %}
-    <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">{% endif %}
-    <title>{{ club_settings.name }}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="{{ theme_vars.fonts|safe }}" rel="stylesheet">
-    <style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="{{ theme_vars.primary }}">
+{% if club_settings.meta_description %}<meta name="description" content="{{ club_settings.meta_description }}">{% endif %}
+{% if club_settings.meta_keywords %}<meta name="keywords" content="{{ club_settings.meta_keywords }}">{% endif %}
+{% if club_settings.meta_author %}<meta name="author" content="{{ club_settings.meta_author }}">{% endif %}
+<link rel="manifest" href="/pwa/manifest.json">
+{% if club_settings.icon_url %}<link rel="icon" href="{{ club_settings.icon_url }}">
+{% else %}<link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">{% endif %}
+<title>{{ club_settings.name }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="{{ theme_vars.fonts }}" rel="stylesheet">
+<style>
 :root{
   --page:{{ theme_vars.page }};
   --surface:{{ theme_vars.surface }};
@@ -33,8 +28,8 @@
   --ink:{{ theme_vars.ink }};
   --ink-mid:{{ theme_vars.ink_mid }};
   --ink-light:{{ theme_vars.ink_light }};
-  --serif:{{ theme_vars.serif|safe }};
-  --sans:{{ theme_vars.sans|safe }};
+  --serif:{{ theme_vars.serif }};
+  --sans:{{ theme_vars.sans }};
   --chip-reading-bg:{{ theme_vars.chip_reading_bg }};
   --chip-reading-ink:{{ theme_vars.chip_reading_ink }};
   --chip-done-bg:{{ theme_vars.chip_done_bg }};
@@ -116,57 +111,57 @@ details summary::-webkit-details-marker{display:none;}
 .cl-footer a{color:var(--ink-light);}
 .cl-footer a:hover{color:var(--ink);}
 @media(max-width:768px){.hide-mobile{display:none!important;}}
-    </style>
+</style>
 </head>
 <body>
-    <nav class="cl-nav">
-        <div class="cl-logomark">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <rect x="3" y="4" width="12" height="2" rx="1" fill="white" fill-opacity=".9" />
-                <rect x="3" y="8" width="12" height="2" rx="1" fill="white" fill-opacity=".9" />
-                <rect x="3" y="12" width="8" height="2" rx="1" fill="white" fill-opacity=".9" />
-            </svg>
-        </div>
-        {% if club_settings.nav_logo %}
-        <a href="/"><img src="{{ club_settings.nav_logo }}" alt="{{ club_settings.name }}" style="height:30px;width:auto;object-fit:contain;max-width:140px;"></a>
-        {% else %}
-        <a href="/" class="cl-brand">{{ club_settings.name }}</a>
-        {% endif %}
-        <div class="hide-mobile" style="display:flex;gap:2px;margin-left:.25rem;">
-            <a href="/libros/" class="cl-navlink">Libros</a>
-            <a href="/eventos/" class="cl-navlink">Eventos</a>
-        </div>
-        <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
-            {% if user.is_authenticated %}
-            <a href="/dashboard/" class="btn btn-ghost btn-sm">Panel</a>
-            <form action="/logout/" method="post" style="margin:0;">
-                {% csrf_token %}
-                <button class="btn btn-dark btn-sm">Salir</button>
-            </form>
-            {% else %}
-            <a href="/login/" class="btn btn-ghost btn-sm">{{ club_settings.effective_cta_login }}</a>
-            <a href="/registro/" class="btn btn-dark btn-sm">{{ club_settings.effective_cta_register }}</a>
-            {% endif %}
-        </div>
-    </nav>
-    <main style="max-width:1200px;margin:0 auto;padding:2rem 1.5rem;">
-        {% if messages %}{% for message in messages %}
-        <div class="alert alert-info">{{ message }}</div>
-        {% endfor %}{% endif %}
-        {% block content %}{% endblock %}
-    </main>
-    <footer class="cl-footer">
-        {% if club_settings.footer_text %}<p style="margin-bottom:.5rem;">{{ club_settings.footer_text }}</p>{% endif %}
-        <div style="display:flex;justify-content:center;align-items:center;gap:1rem;flex-wrap:wrap;">
-            Powered by <a href="https://goldtech.mx" target="_blank" rel="noopener">Gold Tech Mx</a>
-            &nbsp;&middot;&nbsp;
-            <a href="https://github.com/bobybonillamx/club_lectura" target="_blank" rel="noopener">GitHub</a>
-            {% if club_settings.footer_custom_link_text and club_settings.footer_custom_link_url %}
-            &nbsp;&middot;&nbsp;
-            <a href="{{ club_settings.footer_custom_link_url }}" target="_blank" rel="noopener">{{ club_settings.footer_custom_link_text }}</a>
-            {% endif %}
-        </div>
-    </footer>
-    <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/pwa/sw.js');</script>
+<nav class="cl-nav">
+  <div class="cl-logomark">
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <rect x="3" y="4" width="12" height="2" rx="1" fill="white" fill-opacity=".9"/>
+      <rect x="3" y="8" width="12" height="2" rx="1" fill="white" fill-opacity=".9"/>
+      <rect x="3" y="12" width="8" height="2" rx="1" fill="white" fill-opacity=".9"/>
+    </svg>
+  </div>
+  {% if club_settings.nav_logo %}
+    <a href="/"><img src="{{ club_settings.nav_logo }}" alt="{{ club_settings.name }}" style="height:30px;width:auto;object-fit:contain;max-width:140px;"></a>
+  {% else %}
+    <a href="/" class="cl-brand">{{ club_settings.name }}</a>
+  {% endif %}
+  <div class="hide-mobile" style="display:flex;gap:2px;margin-left:.25rem;">
+    <a href="/libros/" class="cl-navlink">Libros</a>
+    <a href="/eventos/" class="cl-navlink">Eventos</a>
+    {% if user.is_authenticated and user.is_approved %}<a href="/miembros/" class="cl-navlink">Miembros</a>{% endif %}
+  </div>
+  <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+    {% if user.is_authenticated %}
+      <a href="/dashboard/" class="btn btn-ghost btn-sm">Panel</a>
+      <form action="/logout/" method="post" style="margin:0;">{% csrf_token %}
+        <button class="btn btn-dark btn-sm">Salir</button>
+      </form>
+    {% else %}
+      <a href="/login/" class="btn btn-ghost btn-sm">{{ club_settings.effective_cta_login }}</a>
+      <a href="/registro/" class="btn btn-dark btn-sm">{{ club_settings.effective_cta_register }}</a>
+    {% endif %}
+  </div>
+</nav>
+<main style="max-width:1200px;margin:0 auto;padding:2rem 1.5rem;">
+  {% if messages %}{% for message in messages %}
+    <div class="alert alert-info">{{ message }}</div>
+  {% endfor %}{% endif %}
+  {% block content %}{% endblock %}
+</main>
+<footer class="cl-footer">
+  {% if club_settings.footer_text %}<p style="margin-bottom:.5rem;">{{ club_settings.footer_text }}</p>{% endif %}
+  <div style="display:flex;justify-content:center;align-items:center;gap:1rem;flex-wrap:wrap;">
+    Powered by <a href="https://goldtech.mx" target="_blank" rel="noopener">Gold Tech Mx</a>
+    &nbsp;&middot;&nbsp;
+    <a href="https://github.com/bobybonillamx/club_lectura" target="_blank" rel="noopener">GitHub</a>
+    {% if club_settings.footer_custom_link_text and club_settings.footer_custom_link_url %}
+      &nbsp;&middot;&nbsp;
+      <a href="{{ club_settings.footer_custom_link_url }}" target="_blank" rel="noopener">{{ club_settings.footer_custom_link_text }}</a>
+    {% endif %}
+  </div>
+</footer>
+<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/pwa/sw.js');</script>
 </body>
 </html>
