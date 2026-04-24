@@ -1,75 +1,101 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 {% load theme_tags %}
 {% block content %}
 
 <style>
-    .ev-modal {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,.85);
-        z-index: 9999;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-    }
-
-        .ev-modal.open {
-            display: flex;
-        }
-
-        .ev-modal img {
-            max-width: 90vw;
-            max-height: 90vh;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0,0,0,.5);
-        }
+.ev-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center;cursor:pointer;}
+.ev-modal.open{display:flex;}
+.ev-modal img{max-width:90vw;max-height:90vh;border-radius:12px;}
 </style>
 
-<p class="eyebrow" style="margin-bottom:.375rem;">Agenda</p>
-<h1 style="font-size:1.75rem;margin-bottom:2rem;">Eventos del club</h1>
+<div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
+  <div><p class="eyebrow" style="margin-bottom:.25rem;">Agenda</p><h1 style="font-size:1.75rem;">Eventos del club</h1></div>
+  <div style="display:flex;gap:.5rem;">
+    <button id="btn-list" onclick="setView('list')" class="btn btn-dark btn-sm">&#9776; Lista</button>
+    <button id="btn-grid" onclick="setView('grid')" class="btn btn-ghost btn-sm">&#9638; Galeria</button>
+  </div>
+</div>
 
 <p class="eyebrow" style="margin-bottom:.875rem;">Proximos</p>
+
+<!-- LISTA -->
+<div id="view-list">
 {% for e in upcoming %}
 <div class="card" style="margin-bottom:.875rem;overflow:hidden;">
-    {% if e.cover_image_url %}
-    <div style="height:180px;overflow:hidden;cursor:pointer;position:relative;" onclick="document.getElementById('modal-{{ e.id }}').classList.add('open')">
-        <img src="{{ e.cover_image_url }}" alt="{{ e.title }}" style="width:100%;height:100%;object-fit:cover;display:block;">
-        <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.5) 0%,transparent 60%);pointer-events:none;"></div>
-        <span style="position:absolute;bottom:.75rem;right:.75rem;background:rgba(0,0,0,.5);color:#fff;font-size:.75rem;padding:3px 10px;border-radius:20px;">Ver foto</span>
+  {% if e.cover_image_url %}
+  <div style="height:160px;overflow:hidden;cursor:pointer;position:relative;" onclick="document.getElementById('modal-{{ e.id }}').classList.add('open')">
+    <img src="{{ e.cover_image_url }}" alt="{{ e.title }}" style="width:100%;height:100%;object-fit:cover;display:block;">
+    <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.5) 0%,transparent 60%);pointer-events:none;"></div>
+  </div>
+  <div id="modal-{{ e.id }}" class="ev-modal" onclick="this.classList.remove('open')">
+    <img src="{{ e.cover_image_url }}" alt="{{ e.title }}">
+  </div>
+  {% endif %}
+  <div class="card-body">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;">
+      <div>
+        <a href="/eventos/{{ e.id }}/" style="font-family:var(--serif);font-size:1.0625rem;font-weight:600;color:var(--ink);display:block;margin-bottom:.25rem;">{{ e.title }}</a>
+        <p style="font-size:.8125rem;color:var(--ink-light);">
+          <span class="chip chip-muted" style="margin-right:.375rem;">{{ e.event_type }}</span>
+          {{ e.starts_at|date:"j M Y, H:i" }}{% if e.location %} &middot; {{ e.location }}{% endif %}
+        </p>
+        {% if e.description %}<p style="font-size:.9375rem;color:var(--ink-mid);margin-top:.5rem;line-height:1.6;">{{ e.description|truncatechars:160 }}</p>{% endif %}
+      </div>
+      <a href="/eventos/{{ e.id }}/" class="btn btn-ghost btn-sm" style="flex-shrink:0;">Ver detalle</a>
     </div>
-    <div id="modal-{{ e.id }}" class="ev-modal" onclick="this.classList.remove('open')">
-        <img src="{{ e.cover_image_url }}" alt="{{ e.title }}">
-    </div>
-    {% endif %}
-    <div class="card-body">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;">
-            <div>
-                <h3 style="font-size:1.0625rem;margin-bottom:.25rem;">{{ e.title }}</h3>
-                <p style="font-size:.8125rem;color:var(--ink-light);">
-                    <span class="chip chip-muted" style="margin-right:.375rem;">{{ e.event_type }}</span>
-                    {{ e.starts_at|date:"j M Y, H:i" }}{% if e.location %} &middot; {{ e.location }}{% endif %}
-                </p>
-                {% if e.description %}<p style="font-size:.9375rem;color:var(--ink-mid);margin-top:.5rem;line-height:1.6;">{{ e.description }}</p>{% endif %}
-            </div>
-            {% if e.external_video_url %}<a href="{{ e.external_video_url }}" class="btn btn-ghost btn-sm" target="_blank" rel="noopener" style="flex-shrink:0;">Ver video &#8599;</a>{% endif %}
-        </div>
-    </div>
+  </div>
 </div>
 {% empty %}<p style="color:var(--ink-light);margin-bottom:1.5rem;">Sin eventos proximos.</p>{% endfor %}
+</div>
+
+<!-- GRID -->
+<div id="view-grid" style="display:none;">
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1.25rem;margin-bottom:2rem;">
+{% for e in upcoming %}
+<a href="/eventos/{{ e.id }}/" style="text-decoration:none;">
+  <div class="card" style="overflow:hidden;transition:box-shadow .15s;height:100%;" onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,.12)'" onmouseout="this.style.boxShadow=''">
+    {% if e.cover_image_url %}
+      <img src="{{ e.cover_image_url }}" alt="{{ e.title }}" style="width:100%;height:140px;object-fit:cover;display:block;">
+    {% else %}
+      <div style="width:100%;height:140px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:2.5rem;">&#127880;</div>
+    {% endif %}
+    <div style="padding:.875rem;">
+      <p style="font-family:var(--serif);font-size:.9375rem;font-weight:600;color:var(--ink);margin-bottom:.25rem;line-height:1.3;">{{ e.title|truncatechars:50 }}</p>
+      <p style="font-size:.75rem;color:var(--ink-light);">{{ e.starts_at|date:"j M Y" }}</p>
+      {% if e.location %}<p style="font-size:.75rem;color:var(--ink-light);">&#128205; {{ e.location|truncatechars:30 }}</p>{% endif %}
+      <span class="chip chip-muted" style="font-size:.625rem;margin-top:.5rem;">{{ e.event_type }}</span>
+    </div>
+  </div>
+</a>
+{% empty %}<p style="color:var(--ink-light);grid-column:1/-1;">Sin eventos proximos.</p>{% endfor %}
+</div>
+</div>
 
 <hr style="border:none;border-top:1px solid var(--border);margin:1.5rem 0;">
 <p class="eyebrow" style="margin-bottom:.875rem;">Pasados</p>
 {% for e in past %}
 <div class="card card-body" style="margin-bottom:.625rem;opacity:.72;">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
-        <div>
-            <strong style="font-family:var(--serif);color:var(--ink);">{{ e.title }}</strong>
-            <span style="font-size:.8125rem;color:var(--ink-light);margin-left:.5rem;">{{ e.event_type }} &middot; {{ e.starts_at|date:"j M Y" }}</span>
-        </div>
-        {% if e.external_video_url %}<a href="{{ e.external_video_url }}" class="btn btn-ghost btn-sm" target="_blank" rel="noopener">Video</a>{% endif %}
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
+    <div>
+      <a href="/eventos/{{ e.id }}/" style="font-family:var(--serif);font-weight:600;color:var(--ink);">{{ e.title }}</a>
+      <span style="font-size:.8125rem;color:var(--ink-light);margin-left:.5rem;">{{ e.event_type }} &middot; {{ e.starts_at|date:"j M Y" }}</span>
     </div>
+    {% if e.external_video_url %}<a href="{{ e.external_video_url }}" class="btn btn-ghost btn-sm" target="_blank" rel="noopener">Video</a>{% endif %}
+  </div>
 </div>
 {% empty %}<p style="color:var(--ink-light);">Sin eventos pasados.</p>{% endfor %}
 
+<script>
+function setView(v) {
+  localStorage.setItem('events_view', v);
+  document.getElementById('view-list').style.display = v === 'list' ? '' : 'none';
+  document.getElementById('view-grid').style.display = v === 'grid' ? '' : 'none';
+  document.getElementById('btn-list').className = 'btn btn-sm ' + (v === 'list' ? 'btn-dark' : 'btn-ghost');
+  document.getElementById('btn-grid').className = 'btn btn-sm ' + (v === 'grid' ? 'btn-dark' : 'btn-ghost');
+}
+(function() {
+  var v = localStorage.getItem('events_view') || 'list';
+  setView(v);
+})();
+</script>
 {% endblock %}
