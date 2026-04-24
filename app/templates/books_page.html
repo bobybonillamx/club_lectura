@@ -2,56 +2,94 @@
 {% block content %}
 <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
   <div><p class="eyebrow" style="margin-bottom:.25rem;">Biblioteca</p><h1 style="font-size:1.75rem;">Libros del club</h1></div>
+  <div style="display:flex;gap:.5rem;">
+    <button id="btn-list" onclick="setView('list')" class="btn btn-dark btn-sm" title="Vista lista">&#9776; Lista</button>
+    <button id="btn-grid" onclick="setView('grid')" class="btn btn-ghost btn-sm" title="Vista galeria">&#9638; Galeria</button>
+  </div>
 </div>
+
 <form method="get" action="/libros/" style="display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:2rem;">
-  <input type="text" name="q" value="{{ query|default:'' }}" class="inp" placeholder="Buscar por titulo o autor..." style="max-width:280px;width:100%;">
-  <select name="estado" class="sel" style="max-width:170px;width:100%;" onchange="this.form.submit()">
-    <option value="">Todos los estados</option>
-    <option value="completed" {% if estado == 'completed' %}selected{% endif %}>Leidos</option>
-    <option value="reading" {% if estado == 'reading' %}selected{% endif %}>Leyendo</option>
-    <option value="future" {% if estado == 'future' %}selected{% endif %}>En votacion</option>
+  <input type="text" name="q" value="{{ query|default:'' }}" class="inp" placeholder="Buscar por titulo o autor..." style="max-width:240px;width:100%;">
+  <select name="estado" class="sel" style="max-width:150px;width:100%;" onchange="this.form.submit()">
+    <option value="">Todos</option>
+    <option value="completed" {% if estado == "completed" %}selected{% endif %}>Leidos</option>
+    <option value="reading" {% if estado == "reading" %}selected{% endif %}>Leyendo</option>
+    <option value="future" {% if estado == "future" %}selected{% endif %}>En votacion</option>
   </select>
-  <select name="categoria" class="sel" style="max-width:170px;width:100%;" onchange="this.form.submit()">
+  <select name="categoria" class="sel" style="max-width:160px;width:100%;" onchange="this.form.submit()">
     <option value="">Todas las categorias</option>
     {% for cat in categories %}<option value="{{ cat.id }}" {% if categoria == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>{% endfor %}
   </select>
-  <button class="btn btn-dark" type="submit">Buscar</button>
-  {% if query or estado or categoria %}<a href="/libros/" class="btn btn-ghost">Limpiar</a>{% endif %}
+  <button class="btn btn-dark btn-sm" type="submit">Buscar</button>
+  {% if query or estado or categoria %}<a href="/libros/" class="btn btn-ghost btn-sm">Limpiar</a>{% endif %}
 </form>
 
+<!-- LISTA VIEW -->
+<div id="view-list">
 {% for book in books %}
-<a href="/libros/{{ book.id }}/" style="display:block;text-decoration:none;margin-bottom:.75rem;">
-  <div class="card" style="{% if book.status == 'future' and book.allow_voting %}border-color:var(--accent-bdr);{% endif %}transition:box-shadow .15s;" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.07)'" onmouseout="this.style.boxShadow=''">
-    {% if book.status == 'future' and book.allow_voting %}
-    <div style="background:var(--chip-future-bg);border-bottom:1px solid var(--chip-future-bdr);padding:.375rem 1.25rem;font-size:.75rem;color:var(--chip-future-ink);display:flex;align-items:center;gap:.5rem;font-weight:500;">
-      &#128717; <strong>Votacion abierta</strong> &mdash; {{ book.votes.count }} voto{{ book.votes.count|pluralize:"s" }} &middot; Entra para votar
-    </div>
-    {% endif %}
-    <div style="display:flex;align-items:center;">
+<div class="card" style="margin-bottom:.75rem;overflow:hidden;">
+  {% if book.status == "future" and book.allow_voting %}
+  <div style="background:var(--chip-future-bg);border-bottom:1px solid var(--chip-future-bdr);padding:.375rem 1.25rem;font-size:.75rem;color:var(--chip-future-ink);display:flex;align-items:center;gap:.5rem;font-weight:500;">
+    &#128717; <strong>Votacion abierta</strong> &mdash; {{ book.votes.count }} voto{{ book.votes.count|pluralize:"s" }} &middot; Entra para votar
+  </div>
+  {% endif %}
+  <div style="display:flex;align-items:center;">
+    <a href="/libros/{{ book.id }}/" style="display:block;flex-shrink:0;">
       {% if book.cover_url %}
-        <img src="{{ book.cover_url }}" alt="{{ book.title }}" style="width:48px;height:72px;object-fit:cover;flex-shrink:0;">
+        <img src="{{ book.cover_url }}" alt="{{ book.title }}" style="width:56px;height:84px;object-fit:cover;">
       {% else %}
-        <div style="width:48px;height:72px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0;">&#128214;</div>
+        <div style="width:56px;height:84px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">&#128214;</div>
       {% endif %}
-      <div style="flex:1;padding:.875rem 1.125rem;display:flex;justify-content:space-between;align-items:center;gap:.75rem;">
-        <div>
-          <p style="font-family:var(--serif);font-size:.9375rem;font-weight:600;color:var(--ink);margin-bottom:2px;">{{ book.title }}</p>
-          <p style="font-size:.8125rem;color:var(--ink-light);font-style:italic;">{{ book.author }}</p>
-          {% if book.category %}<span class="chip chip-muted" style="font-size:.6875rem;margin-top:3px;">{{ book.category.name }}</span>{% endif %}
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.375rem;">
-          <span class="chip {% if book.status == 'reading' %}chip-reading{% elif book.status == 'completed' %}chip-done{% else %}chip-future{% endif %}">
-            {{ book.get_status_display }}
-          </span>
-          {% if book.reading_month and book.status == 'future' %}
-          <span class="chip chip-muted" style="font-size:.625rem;">{{ book.reading_month }}</span>
-          {% endif %}
-        </div>
+    </a>
+    <div style="flex:1;padding:.875rem 1.125rem;display:flex;justify-content:space-between;align-items:center;gap:.75rem;">
+      <div>
+        <a href="/libros/{{ book.id }}/" style="font-family:var(--serif);font-size:.9375rem;font-weight:600;color:var(--ink);display:block;margin-bottom:2px;">{{ book.title }}</a>
+        <p style="font-size:.8125rem;color:var(--ink-light);font-style:italic;">{{ book.author }}</p>
+        {% if book.category %}<span class="chip chip-muted" style="font-size:.6875rem;margin-top:4px;">{{ book.category.name }}</span>{% endif %}
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.375rem;flex-shrink:0;">
+        <span class="chip {% if book.status == "reading" %}chip-reading{% elif book.status == "completed" %}chip-done{% else %}chip-future{% endif %}">{{ book.get_status_display }}</span>
+        {% if book.reading_month and book.status == "future" %}<span class="chip chip-muted" style="font-size:.6875rem;">{{ book.reading_month }}</span>{% endif %}
       </div>
     </div>
   </div>
+</div>
+{% empty %}<p style="color:var(--ink-light);padding:2rem 0;">No se encontraron libros.</p>{% endfor %}
+</div>
+
+<!-- GRID VIEW -->
+<div id="view-grid" style="display:none;">
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1.25rem;">
+{% for book in books %}
+<a href="/libros/{{ book.id }}/" style="text-decoration:none;">
+  <div class="card" style="overflow:hidden;transition:box-shadow .15s;" onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,.12)'" onmouseout="this.style.boxShadow=''">
+    {% if book.cover_url %}
+      <img src="{{ book.cover_url }}" alt="{{ book.title }}" style="width:100%;aspect-ratio:2/3;object-fit:cover;display:block;">
+    {% else %}
+      <div style="width:100%;aspect-ratio:2/3;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:2.5rem;">&#128214;</div>
+    {% endif %}
+    <div style="padding:.75rem;">
+      <p style="font-family:var(--serif);font-size:.875rem;font-weight:600;color:var(--ink);line-height:1.3;margin-bottom:3px;">{{ book.title|truncatechars:40 }}</p>
+      <p style="font-size:.75rem;color:var(--ink-light);font-style:italic;margin-bottom:.5rem;">{{ book.author|truncatechars:30 }}</p>
+      <span class="chip {% if book.status == "reading" %}chip-reading{% elif book.status == "completed" %}chip-done{% else %}chip-future{% endif %}" style="font-size:.625rem;">{{ book.get_status_display }}</span>
+    </div>
+  </div>
 </a>
-{% empty %}
-<p style="color:var(--ink-light);padding:2rem 0;">No se encontraron libros con estos filtros.</p>
-{% endfor %}
+{% empty %}<p style="color:var(--ink-light);padding:2rem 0;grid-column:1/-1;">No se encontraron libros.</p>{% endfor %}
+</div>
+</div>
+
+<script>
+function setView(v) {
+  localStorage.setItem('books_view', v);
+  document.getElementById('view-list').style.display = v === 'list' ? '' : 'none';
+  document.getElementById('view-grid').style.display = v === 'grid' ? '' : 'none';
+  document.getElementById('btn-list').className = 'btn btn-sm ' + (v === 'list' ? 'btn-dark' : 'btn-ghost');
+  document.getElementById('btn-grid').className = 'btn btn-sm ' + (v === 'grid' ? 'btn-dark' : 'btn-ghost');
+}
+(function() {
+  var v = localStorage.getItem('books_view') || 'list';
+  setView(v);
+})();
+</script>
 {% endblock %}
