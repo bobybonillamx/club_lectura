@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+<div style="max-width:480px;margin:4rem auto;text-align:center;">
+  {% if reason == 'suspended' %}
+  <p style="font-size:5rem;margin-bottom:1rem;">&#128274;</p>
+  <h1 style="font-size:2rem;margin-bottom:.75rem;">Cuenta suspendida</h1>
+  <p style="color:var(--ink-light);margin-bottom:2rem;">Tu cuenta ha sido suspendida. Contacta al administrador del club si crees que es un error.</p>
+  {% elif reason == 'pending' %}
+  <p style="font-size:5rem;margin-bottom:1rem;">&#9203;</p>
+  <h1 style="font-size:2rem;margin-bottom:.75rem;">Cuenta pendiente</h1>
+  <p style="color:var(--ink-light);margin-bottom:2rem;">Tu cuenta esta pendiente de aprobacion por un administrador. Te avisaremos por correo cuando sea aprobada.</p>
+  {% else %}
+  <p style="font-size:5rem;margin-bottom:1rem;">&#128683;</p>
+  <h1 style="font-size:2rem;margin-bottom:.75rem;">Acceso no autorizado</h1>
+  <p style="color:var(--ink-light);margin-bottom:2rem;">No tienes permiso para acceder a esta seccion.</p>
+  {% endif %}
+  <div style="display:flex;gap:.75rem;justify-content:center;">
+    <a href="/" class="btn btn-dark">Ir al inicio</a>
+    <form action="/logout/" method="post" style="margin:0;">{% csrf_token %}<button class="btn btn-ghost">Cerrar sesion</button></form>
+  </div>
+</div>
+{% endblock %}
