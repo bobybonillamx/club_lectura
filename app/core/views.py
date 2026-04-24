@@ -134,7 +134,7 @@ def books_page(request):
     status = request.GET.get('estado', '')
     query = request.GET.get('q', '').strip()
     categoria = request.GET.get('categoria', '')
-    qs = Book.objects.filter(visibility__in=visible).select_related('category').order_by('-created_at')
+    qs = Book.objects.filter(visibility__in=visible).select_related('category').order_by('order', '-created_at')
     if status in {BookStatus.COMPLETED, BookStatus.READING, BookStatus.FUTURE}:
         qs = qs.filter(status=status)
     if query:
@@ -225,7 +225,7 @@ def dashboard(request):
         'settings_form': settings_form,
         'social_form': SocialLinkForm(),
         'profile_form': UserProfileForm(instance=request.user),
-        'books': Book.objects.order_by('-created_at')[:100],
+        'books': Book.objects.select_related('category').order_by('order', '-created_at')[:100],
         'events_all': Event.objects.order_by('-starts_at')[:100],
         'users_all': User.objects.order_by('-date_joined')[:100],
         'users_pending': User.objects.filter(is_approved=False, is_suspended=False),
@@ -390,8 +390,12 @@ def edit_book(request, book_id):
     else:
         book.category = None
     book.reading_month = request.POST.get('reading_month', book.reading_month).strip()
+    try:
+        book.order = int(request.POST.get('order', book.order))
+    except (ValueError, TypeError):
+        pass
     book.save(update_fields=['title', 'author', 'description', 'cover_url', 'amazon_url',
-                             'pdf_url', 'external_video_url', 'status', 'visibility', 'allow_voting', 'reading_month', 'category'])
+                             'pdf_url', 'external_video_url', 'status', 'visibility', 'allow_voting', 'reading_month', 'category', 'order'])
     messages.success(request, 'Libro actualizado.')
     return redirect('/dashboard/?seccion=libros')
 
@@ -817,6 +821,54 @@ def fetch_book_data(request):
         return JsonResponse({'error': str(e)}, status=500)
 
 
+
+
+
+@login_required
+def reorder_book(request, book_id):
+    if request.method != 'POST':
+        return HttpResponseForbidden('Metodo no permitido.')
+    if not request.user.is_admin_like():
+        return HttpResponseForbidden('Solo admins.')
+    book = get_object_or_404(Book, pk=book_id)
+    try:
+        book.order = int(request.POST.get('order', 0))
+        book.save(update_fields=['order'])
+    except (ValueError, TypeError):
+        pass
+    return redirect('/dashboard/?seccion=libros')
+
+
+@login_required
+def bulk_assign_category(request):
+    if request.method != 'POST':
+        return HttpResponseForbidden('Metodo no permitido.')
+    if not request.user.is_admin_like():
+        return HttpResponseForbidden('Solo admins.')
+    book_ids = request.POST.getlist('book_ids')
+    cat_id = request.POST.get('category_id', '')
+    if book_ids:
+        if cat_id:
+            try:
+                cat = Category.objects.get(pk=int(cat_id))
+                Book.objects.filter(pk__in=book_ids).update(category=cat)
+                messages.success(request, f'Categoria "{cat.name}" asignada a {len(book_ids)} libro(s).')
+            except (Category.DoesNotExist, ValueError):
+                messages.error(request, 'Categoria no encontrada.')
+        else:
+            Book.objects.filter(pk__in=book_ids).update(category=None)
+            messages.success(request, f'Categoria removida de {len(book_ids)} libro(s).')
+    return redirect('/dashboard/?seccion=libros')
+
+
+def members_list(request):
+    """Public list of approved members."""
+    if not _is_effectively_approved(request.user):
+        return HttpResponseForbidden('Solo miembros aprobados.')
+    members = User.objects.filter(
+        is_approved=True, is_suspended=False
+    ).order_by('full_name', 'username')
+    return render(request, 'members_list.html', {'members': members})
 
 
 def event_detail(request, event_id):
