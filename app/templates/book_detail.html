@@ -63,12 +63,12 @@
 <hr style="border:none;border-top:1px solid var(--border);margin:0 0 2rem;">
 <div style="display:grid;grid-template-columns:1fr 360px;gap:2rem;">
   <div>
-    <p class="eyebrow" style="margin-bottom:1rem;">Resenas</p>
+    <p style="font-size:.75rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-light);margin-bottom:1rem;">Resenas</p>
     {% for review in approved_reviews %}
     <div class="card card-body" style="margin-bottom:.875rem;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.375rem;">
         <strong style="font-size:.9375rem;color:var(--ink);">{{ review.user.username }}</strong>
-        <span style="color:var(--accent);font-size:.875rem;">{% for i in "12345" %}{% if forloop.counter <= review.rating %}&#9733;{% else %}&#9734;{% endif %}{% endfor %}</span>
+        <span style="color:var(--chip-future-ink);font-size:.875rem;">{% for i in "12345" %}{% if forloop.counter <= review.rating %}&#9733;{% else %}&#9734;{% endif %}{% endfor %}</span>
       </div>
       <p style="font-size:.9375rem;color:var(--ink-mid);line-height:1.6;margin-bottom:.375rem;">{{ review.comment }}</p>
       <p style="font-size:.75rem;color:var(--ink-light);">{{ review.created_at|date:"j M Y" }}</p>
