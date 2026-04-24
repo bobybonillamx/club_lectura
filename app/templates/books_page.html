@@ -1,56 +1,55 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 {% block content %}
 <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
-    <div><p class="eyebrow" style="margin-bottom:.25rem;">Biblioteca</p><h1 style="font-size:1.75rem;">Libros del club</h1></div>
+  <div><p class="eyebrow" style="margin-bottom:.25rem;">Biblioteca</p><h1 style="font-size:1.75rem;">Libros del club</h1></div>
 </div>
 <form method="get" action="/libros/" style="display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:2rem;">
-    <input type="text" name="q" value="{{ query|default:'' }}" class="inp" placeholder="Buscar por titulo o autor..." style="max-width:280px;width:100%;">
-    <select name="estado" class="sel" style="max-width:170px;width:100%;" onchange="this.form.submit()">
-        <option value="">Todos los estados</option>
-        <option value="completed" {% if estado == 'completed' %}selected{% endif %}>Leidos</option>
-        <option value="reading" {% if estado == 'reading' %}selected{% endif %}>Leyendo</option>
-        <option value="future" {% if estado == 'future' %}selected{% endif %}>En votacion</option>
-    </select>
-    <select name="categoria" class="sel" style="max-width:170px;width:100%;" onchange="this.form.submit()">
-        <option value="">Todas las categorias</option>
-        {% for cat in categories %}
-        <option value="{{ cat.id }}" {% if categoria == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>{% endfor %}
-    </select>
-    <button class="btn btn-dark" type="submit">Buscar</button>
-    {% if query or estado or categoria %}<a href="/libros/" class="btn btn-ghost">Limpiar</a>{% endif %}
+  <input type="text" name="q" value="{{ query|default:'' }}" class="inp" placeholder="Buscar por titulo o autor..." style="max-width:280px;width:100%;">
+  <select name="estado" class="sel" style="max-width:170px;width:100%;" onchange="this.form.submit()">
+    <option value="">Todos los estados</option>
+    <option value="completed" {% if estado == 'completed' %}selected{% endif %}>Leidos</option>
+    <option value="reading" {% if estado == 'reading' %}selected{% endif %}>Leyendo</option>
+    <option value="future" {% if estado == 'future' %}selected{% endif %}>En votacion</option>
+  </select>
+  <select name="categoria" class="sel" style="max-width:170px;width:100%;" onchange="this.form.submit()">
+    <option value="">Todas las categorias</option>
+    {% for cat in categories %}<option value="{{ cat.id }}" {% if categoria == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>{% endfor %}
+  </select>
+  <button class="btn btn-dark" type="submit">Buscar</button>
+  {% if query or estado or categoria %}<a href="/libros/" class="btn btn-ghost">Limpiar</a>{% endif %}
 </form>
 
 {% for book in books %}
 <a href="/libros/{{ book.id }}/" style="display:block;text-decoration:none;margin-bottom:.75rem;">
-    <div class="card" style="{% if book.status == 'future' and book.allow_voting %}border-color:var(--accent-bdr);{% endif %}transition:box-shadow .15s;" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.07)'" onmouseout="this.style.boxShadow=''">
-        {% if book.status == 'future' and book.allow_voting %}
-        <div style="background:var(--accent-bg);border-bottom:1px solid var(--accent-bdr);padding:.375rem 1.25rem;font-size:.75rem;color:var(--accent);display:flex;align-items:center;gap:.5rem;">
-            &#128717; <strong>Votacion abierta</strong> &mdash; {{ book.votes.count }} voto{{ book.votes.count|pluralize:"s" }} &middot; Entra para votar
-        </div>
-        {% endif %}
-        <div style="display:flex;align-items:center;">
-            {% if book.cover_url %}
-            <img src="{{ book.cover_url }}" alt="{{ book.title }}" style="width:48px;height:72px;object-fit:cover;flex-shrink:0;">
-            {% else %}
-            <div style="width:48px;height:72px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0;">&#128214;</div>
-            {% endif %}
-            <div style="flex:1;padding:.875rem 1.125rem;display:flex;justify-content:space-between;align-items:center;gap:.75rem;">
-                <div>
-                    <p style="font-family:var(--serif);font-size:.9375rem;font-weight:600;color:var(--ink);margin-bottom:2px;">{{ book.title }}</p>
-                    <p style="font-size:.8125rem;color:var(--ink-light);font-style:italic;">{{ book.author }}</p>
-                    {% if book.category %}<span class="chip chip-muted" style="font-size:.6875rem;margin-top:3px;">{{ book.category.name }}</span>{% endif %}
-                </div>
-                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.375rem;">
-                    <span class="chip {% if book.status == 'reading' %}chip-reading{% elif book.status == 'completed' %}chip-done{% else %}chip-future{% endif %}">
-                        {{ book.get_status_display }}
-                    </span>
-                    {% if book.reading_month and book.status == 'future' %}
-                    <span class="chip chip-muted" style="font-size:.625rem;">{{ book.reading_month }}</span>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
+  <div class="card" style="{% if book.status == 'future' and book.allow_voting %}border-color:var(--accent-bdr);{% endif %}transition:box-shadow .15s;" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.07)'" onmouseout="this.style.boxShadow=''">
+    {% if book.status == 'future' and book.allow_voting %}
+    <div style="background:var(--chip-future-bg);border-bottom:1px solid var(--chip-future-bdr);padding:.375rem 1.25rem;font-size:.75rem;color:var(--chip-future-ink);display:flex;align-items:center;gap:.5rem;font-weight:500;">
+      &#128717; <strong>Votacion abierta</strong> &mdash; {{ book.votes.count }} voto{{ book.votes.count|pluralize:"s" }} &middot; Entra para votar
     </div>
+    {% endif %}
+    <div style="display:flex;align-items:center;">
+      {% if book.cover_url %}
+        <img src="{{ book.cover_url }}" alt="{{ book.title }}" style="width:48px;height:72px;object-fit:cover;flex-shrink:0;">
+      {% else %}
+        <div style="width:48px;height:72px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0;">&#128214;</div>
+      {% endif %}
+      <div style="flex:1;padding:.875rem 1.125rem;display:flex;justify-content:space-between;align-items:center;gap:.75rem;">
+        <div>
+          <p style="font-family:var(--serif);font-size:.9375rem;font-weight:600;color:var(--ink);margin-bottom:2px;">{{ book.title }}</p>
+          <p style="font-size:.8125rem;color:var(--ink-light);font-style:italic;">{{ book.author }}</p>
+          {% if book.category %}<span class="chip chip-muted" style="font-size:.6875rem;margin-top:3px;">{{ book.category.name }}</span>{% endif %}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.375rem;">
+          <span class="chip {% if book.status == 'reading' %}chip-reading{% elif book.status == 'completed' %}chip-done{% else %}chip-future{% endif %}">
+            {{ book.get_status_display }}
+          </span>
+          {% if book.reading_month and book.status == 'future' %}
+          <span class="chip chip-muted" style="font-size:.625rem;">{{ book.reading_month }}</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
 </a>
 {% empty %}
 <p style="color:var(--ink-light);padding:2rem 0;">No se encontraron libros con estos filtros.</p>
