@@ -45,9 +45,9 @@ class ClubSettingsForm(forms.ModelForm):
         fields = [
             'name', 'description', 'logo_url', 'icon_url', 'cover_image_url',
             'theme', 'primary_color', 'accent_color',
+            'custom_font_url', 'custom_font_serif', 'custom_font_sans',
             'meta_description', 'meta_keywords', 'meta_author',
             'home_welcome_text', 'cta_register_text', 'cta_login_text',
-            'font_preset', 'custom_font_url', 'custom_font_serif', 'custom_font_sans',
             'footer_text', 'footer_custom_link_text', 'footer_custom_link_url',
             'public_domain', 'affiliate_tag',
             'google_login_enabled', 'google_client_id', 'google_client_secret',
