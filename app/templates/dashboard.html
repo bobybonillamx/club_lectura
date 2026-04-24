@@ -491,7 +491,19 @@
     {% endif %}
 
     {% if seccion == 'usuarios' %}
-    <h2 style="margin-bottom:1.5rem;">Usuarios</h2>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
+      <h2>Usuarios</h2>
+      <input class="inp" id="user-search" placeholder="Buscar usuario..." style="max-width:220px;" oninput="filterUsers(this.value)">
+    </div>
+    <script>
+    function filterUsers(q) {
+      q = q.toLowerCase();
+      document.querySelectorAll('.user-row').forEach(function(row) {
+        var text = row.textContent.toLowerCase();
+        row.style.display = text.includes(q) ? '' : 'none';
+      });
+    }
+    </script>
     <div class="card" style="margin-bottom:1.25rem;">
       <div class="card-header"><span class="card-header-label">Invitar usuario</span></div>
       <div class="card-body">
@@ -522,7 +534,7 @@
       <div class="card-header"><span class="card-header-label">Miembros ({{ users_all|length }})</span></div>
       <div class="card-body" style="padding:0;">
         {% for u in users_all %}
-        <div style="padding:.875rem 1.5rem;{% if not forloop.last %}border-bottom:1px solid var(--border);{% endif %}">
+        <div class="user-row" style="padding:.875rem 1.5rem;{% if not forloop.last %}border-bottom:1px solid var(--border);{% endif %}">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
             <div>
               <span style="font-weight:500;color:var(--ink);">{{ u.username }}</span>
