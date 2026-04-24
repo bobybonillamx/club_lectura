@@ -455,35 +455,42 @@ def fetch_book_metadata(title, author_hint=''):
 
 def fetch_from_google_books(title):
     query = quote_plus(title)
-    # Search without language restriction to get better author results
-    # Try with intitle first, fall back to general search
-    for search_query in [f'intitle:{query}', query]:
-        url = f'https://www.googleapis.com/books/v1/volumes?q={search_query}&maxResults=5&orderBy=relevance'
-        data = _safe_json_get(url)
-        items = data.get('items') or []
-        if items:
-            break
+    # Fetch more results to find the most popular/relevant edition
+    url = f'https://www.googleapis.com/books/v1/volumes?q={quote_plus(title)}&maxResults=10&orderBy=relevance'
+    data = _safe_json_get(url)
+    items = data.get('items') or []
     if not items:
         return {}
-    # Pick the best match - prefer items with cover image and multiple authors info
-    best = None
-    for item in items:
+
+    # Score each result: prefer high ratingsCount, has image, has authors
+    def score(item):
         info = item.get('volumeInfo', {})
-        if info.get('authors') and info.get('imageLinks'):
-            best = item
-            break
-    if not best:
-        best = items[0]
+        s = 0
+        if info.get('imageLinks'):
+            s += 10
+        if info.get('authors'):
+            s += 5
+        s += min(info.get('ratingsCount', 0), 1000) // 100
+        if info.get('description'):
+            s += 3
+        if info.get('industryIdentifiers'):
+            s += 2
+        return s
+
+    best = max(items, key=score)
     info = best.get('volumeInfo', {})
     image_links = info.get('imageLinks', {})
     authors = info.get('authors') or []
-    # Use largest available image
+
+    # Get best quality image available
     cover = (image_links.get('extraLarge') or image_links.get('large') or
              image_links.get('medium') or image_links.get('thumbnail') or '')
     cover = cover.replace('http://', 'https://')
-    # Upgrade to zoom=1 for better quality
-    if cover and 'zoom=' in cover:
-        cover = cover.replace('zoom=1', 'zoom=3').replace('zoom=5', 'zoom=3')
+    # Request higher zoom for better quality
+    if 'zoom=' in cover:
+        import re as _re
+        cover = _re.sub('zoom=[0-9]+', 'zoom=2', cover)
+
     return {
         'cover_url': cover,
         'description': info.get('description', ''),
