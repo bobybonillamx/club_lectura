@@ -340,6 +340,11 @@
                   <p class="hint">Mes en que planean leer este libro.</p>
                 </div>
                 {% endif %}
+                <div class="field" style="margin-bottom:.75rem;">
+                  <label class="lbl">Orden de aparicion</label>
+                  <input class="inp" name="order" type="number" min="0" value="{{ b.order }}" style="max-width:100px;" placeholder="0">
+                  <p class="hint">0 = por fecha. 1, 2, 3... = orden manual.</p>
+                </div>
                 <button class="btn btn-dark btn-sm">Guardar cambios</button>
               </form>
             </details>
@@ -386,6 +391,29 @@
         .catch(function() { btn.disabled = false; status.textContent = 'Error de conexion'; });
     }
     </script>
+    <div class="card" style="margin-top:1.25rem;">
+      <div class="card-header"><span class="card-header-label">Asignar categoria en masa</span></div>
+      <div class="card-body">
+        <form action="/libros/categorias/bulk/" method="post">{% csrf_token %}
+          <p style="font-size:.875rem;color:var(--ink-light);margin-bottom:.75rem;">Selecciona libros y asignales una categoria de una vez.</p>
+          <div style="max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--r);padding:.5rem;margin-bottom:.75rem;">
+            {% for b in books %}
+            <label style="display:flex;align-items:center;gap:.5rem;padding:4px 6px;cursor:pointer;font-size:.875rem;">
+              <input type="checkbox" name="book_ids" value="{{ b.id }}" style="accent-color:var(--accent);">
+              {{ b.title }}{% if b.category %} <span class="chip chip-muted" style="font-size:.625rem;">{{ b.category.name }}</span>{% endif %}
+            </label>
+            {% endfor %}
+          </div>
+          <div style="display:flex;gap:.75rem;align-items:center;">
+            <select class="sel" name="category_id" style="max-width:200px;">
+              <option value="">Sin categoria</option>
+              {% for cat in categories %}<option value="{{ cat.id }}">{{ cat.name }}</option>{% endfor %}
+            </select>
+            <button class="btn btn-ghost btn-sm">Asignar</button>
+          </div>
+        </form>
+      </div>
+    </div>
     <div class="card" style="margin-top:1.25rem;">
       <div class="card-header" style="justify-content:space-between;">
         <span class="card-header-label">Categorias</span>
