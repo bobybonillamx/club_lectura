@@ -33,8 +33,10 @@ THEMES = {
         'page': '#111318', 'surface': '#1C2030', 'border': '#2A2F42', 'border2': '#363C52',
         'primary': '#7C6FFF', 'accent': '#A89FFF', 'accent_bg': '#2A2050', 'accent_bdr': '#5A50A0',
         'ink': '#F0EFFF', 'ink_mid': '#D8D6F8', 'ink_light': '#9A9EBB',
-        'chip_reading_bg': '#1A3A1A', 'chip_reading_ink': '#6EE06E',
-        'chip_done_bg': '#1A1A3A', 'chip_done_ink': '#8888FF',
+        'chip_reading_bg': '#0D2E0D', 'chip_reading_ink': '#7EE87E',
+        'chip_done_bg': '#0D0D2E', 'chip_done_ink': '#9999FF',
+        'chip_future_bg': '#2A2050', 'chip_future_ink': '#C0B8FF', 'chip_future_bdr': '#5A50A0',
+        'chip_muted_bg': '#1C2030', 'chip_muted_ink': '#9A9EBB', 'chip_muted_bdr': '#363C52',
         'serif': "'Space Grotesk', system-ui, sans-serif", 'sans': "'Space Grotesk', system-ui, sans-serif",
         'fonts': 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&display=swap',
     },
@@ -270,6 +272,14 @@ class ClubSettings(models.Model):
         if 'chip_done_bg' not in base:
             base['chip_done_bg'] = '#EEF0F8'
             base['chip_done_ink'] = '#2D3A6A'
+        if 'chip_future_bg' not in base:
+            base['chip_future_bg'] = base.get('accent_bg', '#FDF3E3')
+            base['chip_future_ink'] = base.get('accent', '#B87333')
+            base['chip_future_bdr'] = base.get('accent_bdr', '#F0D8A8')
+        if 'chip_muted_bg' not in base:
+            base['chip_muted_bg'] = base.get('page', '#F7F3EE')
+            base['chip_muted_ink'] = base.get('ink_light', '#7A6252')
+            base['chip_muted_bdr'] = base.get('border', '#EAE0D5')
         return base
 
     @property

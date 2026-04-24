@@ -2,55 +2,66 @@
 <!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="{{ theme_vars.primary }}">
-{% if club_settings.meta_description %}<meta name="description" content="{{ club_settings.meta_description }}">{% endif %}
-<link rel="manifest" href="/pwa/manifest.json">
-{% if club_settings.icon_url %}<link rel="icon" href="{{ club_settings.icon_url }}">
-{% else %}<link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">{% endif %}
-<title>{{ club_settings.name }}</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="{{ theme_vars.fonts }}" rel="stylesheet">
-<style>
-    :root {
-        --page: {{ theme_vars.page }};
-        --surface: {{ theme_vars.surface }};
-        --border: {{ theme_vars.border }};
-        --border2: {{ theme_vars.border2 }};
-        --primary: {{ theme_vars.primary }};
-        --accent: {{ theme_vars.accent }};
-        --accent-bg: {{ theme_vars.accent_bg }};
-        --accent-bdr: {{ theme_vars.accent_bdr }};
-        --ink: {{ theme_vars.ink }};
-        --ink-mid: {{ theme_vars.ink_mid }};
-        --ink-light: {{ theme_vars.ink_light }};
-        --serif: {{ theme_vars.serif }};
-        --sans: {{ theme_vars.sans }};
-        --r: 8px;
-        --rl: 14px;
-        --chip-reading-bg: {{ theme_vars.chip_reading_bg }};
-        --chip-reading-ink: {{ theme_vars.chip_reading_ink }};
-        --chip-done-bg: {{ theme_vars.chip_done_bg }};
-        --chip-done-ink: {{ theme_vars.chip_done_ink }};
-    }
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="{{ theme_vars.primary }}">
+    {% if club_settings.meta_description %}
+    <meta name="description" content="{{ club_settings.meta_description }}">{% endif %}
+    {% if club_settings.meta_keywords %}
+    <meta name="keywords" content="{{ club_settings.meta_keywords }}">{% endif %}
+    {% if club_settings.meta_author %}
+    <meta name="author" content="{{ club_settings.meta_author }}">{% endif %}
+    <link rel="manifest" href="/pwa/manifest.json">
+    {% if club_settings.icon_url %}
+    <link rel="icon" href="{{ club_settings.icon_url }}">
+    {% else %}
+    <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">{% endif %}
+    <title>{{ club_settings.name }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="{{ theme_vars.fonts }}" rel="stylesheet">
+    <style>
+:root{
+  --page:{{ theme_vars.page }};
+  --surface:{{ theme_vars.surface }};
+  --border:{{ theme_vars.border }};
+  --border2:{{ theme_vars.border2 }};
+  --primary:{{ theme_vars.primary }};
+  --accent:{{ theme_vars.accent }};
+  --accent-bg:{{ theme_vars.accent_bg }};
+  --accent-bdr:{{ theme_vars.accent_bdr }};
+  --ink:{{ theme_vars.ink }};
+  --ink-mid:{{ theme_vars.ink_mid }};
+  --ink-light:{{ theme_vars.ink_light }};
+  --serif:{{ theme_vars.serif }};
+  --sans:{{ theme_vars.sans }};
+  --chip-reading-bg:{{ theme_vars.chip_reading_bg }};
+  --chip-reading-ink:{{ theme_vars.chip_reading_ink }};
+  --chip-done-bg:{{ theme_vars.chip_done_bg }};
+  --chip-done-ink:{{ theme_vars.chip_done_ink }};
+  --chip-future-bg:{{ theme_vars.chip_future_bg }};
+  --chip-future-ink:{{ theme_vars.chip_future_ink }};
+  --chip-future-bdr:{{ theme_vars.chip_future_bdr }};
+  --chip-muted-bg:{{ theme_vars.chip_muted_bg }};
+  --chip-muted-ink:{{ theme_vars.chip_muted_ink }};
+  --chip-muted-bdr:{{ theme_vars.chip_muted_bdr }};
+  --r:8px;--rl:14px;
+  --fz:16px;
+}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:var(--sans);font-size:15px;background:var(--page);color:var(--ink-mid);min-height:100vh;-webkit-font-smoothing:antialiased;}
+body{font-family:var(--sans);font-size:var(--fz);background:var(--page);color:var(--ink-mid);min-height:100vh;-webkit-font-smoothing:antialiased;}
 h1,h2,h3,h4{font-family:var(--serif);color:var(--ink);font-weight:600;line-height:1.2;}
 a{color:inherit;text-decoration:none;}
 p{line-height:1.65;}
 textarea,input,select,button{font-family:var(--sans);}
 
-/* NAV */
 .cl-nav{background:var(--surface);border-bottom:1px solid var(--border);height:56px;display:flex;align-items:center;padding:0 1.5rem;gap:1.25rem;position:sticky;top:0;z-index:200;}
 .cl-logomark{width:32px;height:32px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .cl-brand{font-family:var(--serif);font-size:1rem;font-weight:600;color:var(--ink);letter-spacing:-.01em;}
-.cl-navlink{font-size:.8125rem;color:var(--ink-light);padding:4px 10px;border-radius:6px;transition:color .12s,background .12s;}
+.cl-navlink{font-size:.875rem;color:var(--ink-light);padding:4px 10px;border-radius:6px;transition:color .12s,background .12s;}
 .cl-navlink:hover{color:var(--ink);background:var(--accent-bg);}
 
-/* BUTTONS */
-.btn{font-size:.8125rem;font-weight:500;border-radius:var(--r);padding:8px 16px;cursor:pointer;border:none;display:inline-block;transition:opacity .12s,transform .1s;line-height:1.4;white-space:nowrap;}
+.btn{font-size:.875rem;font-weight:500;border-radius:var(--r);padding:9px 18px;cursor:pointer;border:none;display:inline-block;transition:opacity .12s,transform .1s;line-height:1.4;white-space:nowrap;}
 .btn:active{transform:scale(.98);}
 .btn-dark{background:var(--primary);color:var(--page);}
 .btn-dark:hover{opacity:.88;color:var(--page);}
@@ -59,170 +70,103 @@ textarea,input,select,button{font-family:var(--sans);}
 .btn-accent{background:var(--accent);color:var(--surface);}
 .btn-accent:hover{opacity:.88;color:var(--surface);}
 .btn-danger{background:#8B2020;color:#fff;}
-.btn-danger:hover{opacity:.88;color:#fff;}
-.btn-sm{padding:5px 12px;font-size:.75rem;}
+.btn-sm{padding:6px 13px;font-size:.8125rem;}
 
-/* CARDS */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;}
 .card-body{padding:1.25rem 1.5rem;}
 .card-header{padding:.75rem 1.5rem;border-bottom:1px solid var(--border);background:var(--accent-bg);display:flex;align-items:center;justify-content:space-between;}
 .card-header-label{font-size:.6875rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);}
 
-/* FORMS */
 .field{margin-bottom:1rem;}
-.lbl{font-size:.75rem;font-weight:500;color:var(--ink-light);display:block;margin-bottom:5px;letter-spacing:.02em;}
-.inp,.sel,.txa{font-size:.875rem;color:var(--ink);background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:9px 13px;width:100%;outline:none;transition:border-color .12s,box-shadow .12s;-webkit-appearance:none;appearance:none;}
+.lbl{font-size:.8125rem;font-weight:500;color:var(--ink-light);display:block;margin-bottom:5px;letter-spacing:.02em;}
+.inp,.sel,.txa{font-size:.9375rem;color:var(--ink);background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:9px 13px;width:100%;outline:none;transition:border-color .12s,box-shadow .12s;-webkit-appearance:none;appearance:none;}
 .inp:focus,.sel:focus,.txa:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 15%,transparent);}
 .txa{resize:vertical;min-height:80px;line-height:1.6;}
-.hint{font-size:.6875rem;color:var(--ink-light);margin-top:4px;line-height:1.5;}
+.hint{font-size:.8125rem;color:var(--ink-light);margin-top:4px;line-height:1.5;}
 
-/* CHIPS */
-    .chip-reading {
-        background:
+.chip{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:500;white-space:nowrap;}
+.chip-reading{background:var(--chip-reading-bg);color:var(--chip-reading-ink);}
+.chip-future{background:var(--chip-future-bg);color:var(--chip-future-ink);border:1px solid var(--chip-future-bdr);}
+.chip-done{background:var(--chip-done-bg);color:var(--chip-done-ink);}
+.chip-muted{background:var(--chip-muted-bg);color:var(--chip-muted-ink);border:1px solid var(--chip-muted-bdr);}
 
-    {
-
-    {
-        theme_vars .chip_reading_bg
-    }
-
-    }
-
-    ;color: {
-
-    {
-        theme_vars .chip_reading_ink
-    }
-
-    }
-    ;
-    }
-
-    .chip-future {
-        background: var(--accent-bg);
-        color: var(--accent);
-        border: 1px solid var(--accent-bdr);
-    }
-
-    .chip-done {
-        background:
-
-    {
-
-    {
-        theme_vars .chip_done_bg
-    }
-
-    }
-
-    ;color: {
-
-    {
-        theme_vars .chip_done_ink
-    }
-
-    }
-    ;
-    }
-
-    .chip-muted {
-        background: var(--page);
-        color: var(--ink-light);
-        border: 1px solid var(--border);
-    }
-
-/* EYEBROW */
-.eyebrow{font-size:.6875rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:.375rem;}
-
-/* SIDEBAR NAV */
-.sidenav-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:var(--r);font-size:.875rem;color:var(--ink-light);transition:background .12s,color .12s;margin-bottom:2px;}
+.eyebrow{font-size:.75rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:.375rem;}
+.sidenav-item{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:var(--r);font-size:.9375rem;color:var(--ink-light);transition:background .12s,color .12s;margin-bottom:2px;}
 .sidenav-item:hover{background:var(--accent-bg);color:var(--ink);}
 .sidenav-item.active{background:var(--accent-bg);color:var(--ink);font-weight:500;border-left:2px solid var(--accent);border-radius:0 var(--r) var(--r) 0;padding-left:10px;}
-.badge-count{background:var(--accent-bg);color:var(--accent);border:1px solid var(--accent-bdr);font-size:.625rem;padding:1px 6px;border-radius:10px;font-weight:600;}
+.badge-count{background:var(--accent-bg);color:var(--accent);border:1px solid var(--chip-future-bdr);font-size:.6875rem;padding:1px 6px;border-radius:10px;font-weight:600;}
 
-/* ALERTS */
-.alert{padding:.75rem 1rem;border-radius:var(--r);font-size:.875rem;margin-bottom:1rem;}
-.alert-info{background:var(--accent-bg);border:1px solid var(--accent-bdr);color:var(--ink);}
+.alert{padding:.875rem 1rem;border-radius:var(--r);font-size:.9375rem;margin-bottom:1rem;}
+.alert-info{background:var(--accent-bg);border:1px solid var(--chip-future-bdr);color:var(--ink);}
 
-/* GRID */
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;}
 .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;}
 @media(max-width:680px){.g2,.g3,.g4{grid-template-columns:1fr;}}
 @media(max-width:900px){.g3{grid-template-columns:1fr 1fr;}.g4{grid-template-columns:1fr 1fr;}}
 
-/* STATS */
-.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1rem;text-align:center;}
-.stat-num{font-family:var(--serif);font-size:1.75rem;font-weight:600;color:var(--ink);line-height:1;}
-.stat-lbl{font-size:.6875rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-light);margin-top:4px;}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1.25rem;text-align:center;}
+.stat-num{font-family:var(--serif);font-size:2rem;font-weight:600;color:var(--ink);line-height:1;}
+.stat-lbl{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-light);margin-top:4px;}
 
 details summary{list-style:none;cursor:pointer;}
 details summary::-webkit-details-marker{display:none;}
 
-/* FOOTER */
-.cl-footer{border-top:1px solid var(--border);padding:1.5rem;text-align:center;font-size:.8125rem;color:var(--ink-light);background:var(--surface);margin-top:3rem;}
+.cl-footer{border-top:1px solid var(--border);padding:1.5rem;text-align:center;font-size:.875rem;color:var(--ink-light);background:var(--surface);margin-top:3rem;}
 .cl-footer a{color:var(--ink-light);}
 .cl-footer a:hover{color:var(--ink);}
-
 @media(max-width:768px){.hide-mobile{display:none!important;}}
-</style>
+    </style>
 </head>
 <body>
-
-<nav class="cl-nav">
-  <div class="cl-logomark">
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-      <rect x="3" y="4" width="12" height="2" rx="1" fill="white" fill-opacity=".9"/>
-      <rect x="3" y="8" width="12" height="2" rx="1" fill="white" fill-opacity=".9"/>
-      <rect x="3" y="12" width="8" height="2" rx="1" fill="white" fill-opacity=".9"/>
-    </svg>
-  </div>
-  {% if club_settings.nav_logo %}
-    <a href="/"><img src="{{ club_settings.nav_logo }}" alt="{{ club_settings.name }}" style="height:30px;width:auto;object-fit:contain;max-width:140px;"></a>
-  {% else %}
-    <a href="/" class="cl-brand">{{ club_settings.name }}</a>
-  {% endif %}
-  <div class="hide-mobile" style="display:flex;gap:2px;margin-left:.25rem;">
-    <a href="/libros/" class="cl-navlink">Libros</a>
-    <a href="/eventos/" class="cl-navlink">Eventos</a>
-  </div>
-  <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
-    {% if user.is_authenticated %}
-      <a href="/dashboard/" class="btn btn-ghost">Panel</a>
-      <form action="/logout/" method="post" style="margin:0;">{% csrf_token %}
-        <button class="btn btn-dark">Salir</button>
-      </form>
-    {% else %}
-      <a href="/login/" class="btn btn-ghost">{{ club_settings.effective_cta_login }}</a>
-      <a href="/registro/" class="btn btn-dark">{{ club_settings.effective_cta_register }}</a>
-    {% endif %}
-  </div>
-</nav>
-
-<main style="max-width:1200px;margin:0 auto;padding:2rem 1.5rem;">
-  {% if messages %}{% for message in messages %}
-    <div class="alert alert-info">{{ message }}</div>
-  {% endfor %}{% endif %}
-  {% block content %}{% endblock %}
-</main>
-
-<footer class="cl-footer">
-  {% if club_settings.footer_text %}<p style="margin-bottom:.5rem;">{{ club_settings.footer_text }}</p>{% endif %}
-  <div style="display:flex;justify-content:center;align-items:center;gap:1rem;flex-wrap:wrap;">
-    {% if club_settings.footer_powered_by_name %}
-      Powered by <a href="{{ club_settings.footer_powered_by_url }}" target="_blank" rel="noopener">{{ club_settings.footer_powered_by_name }}</a>
-    {% else %}
-      Powered by <a href="https://bio.goldtech.mx/lxltmx" target="_blank" rel="noopener">Locos X la Tecnología</a>
-    {% endif %}
-    &nbsp;&middot;&nbsp;
-    <a href="https://github.com/bobybonillamx/club_lectura" target="_blank" rel="noopener">GitHub</a>
-    {% if club_settings.footer_custom_link_text and club_settings.footer_custom_link_url %}
-      &nbsp;&middot;&nbsp;
-      <a href="{{ club_settings.footer_custom_link_url }}" target="_blank" rel="noopener">{{ club_settings.footer_custom_link_text }}</a>
-    {% endif %}
-  </div>
-</footer>
-
-<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/pwa/sw.js');</script>
+    <nav class="cl-nav">
+        <div class="cl-logomark">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <rect x="3" y="4" width="12" height="2" rx="1" fill="white" fill-opacity=".9" />
+                <rect x="3" y="8" width="12" height="2" rx="1" fill="white" fill-opacity=".9" />
+                <rect x="3" y="12" width="8" height="2" rx="1" fill="white" fill-opacity=".9" />
+            </svg>
+        </div>
+        {% if club_settings.nav_logo %}
+        <a href="/"><img src="{{ club_settings.nav_logo }}" alt="{{ club_settings.name }}" style="height:30px;width:auto;object-fit:contain;max-width:140px;"></a>
+        {% else %}
+        <a href="/" class="cl-brand">{{ club_settings.name }}</a>
+        {% endif %}
+        <div class="hide-mobile" style="display:flex;gap:2px;margin-left:.25rem;">
+            <a href="/libros/" class="cl-navlink">Libros</a>
+            <a href="/eventos/" class="cl-navlink">Eventos</a>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+            {% if user.is_authenticated %}
+            <a href="/dashboard/" class="btn btn-ghost btn-sm">Panel</a>
+            <form action="/logout/" method="post" style="margin:0;">
+                {% csrf_token %}
+                <button class="btn btn-dark btn-sm">Salir</button>
+            </form>
+            {% else %}
+            <a href="/login/" class="btn btn-ghost btn-sm">{{ club_settings.effective_cta_login }}</a>
+            <a href="/registro/" class="btn btn-dark btn-sm">{{ club_settings.effective_cta_register }}</a>
+            {% endif %}
+        </div>
+    </nav>
+    <main style="max-width:1200px;margin:0 auto;padding:2rem 1.5rem;">
+        {% if messages %}{% for message in messages %}
+        <div class="alert alert-info">{{ message }}</div>
+        {% endfor %}{% endif %}
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="cl-footer">
+        {% if club_settings.footer_text %}<p style="margin-bottom:.5rem;">{{ club_settings.footer_text }}</p>{% endif %}
+        <div style="display:flex;justify-content:center;align-items:center;gap:1rem;flex-wrap:wrap;">
+            Powered by <a href="https://goldtech.mx" target="_blank" rel="noopener">Gold Tech Mx</a>
+            &nbsp;&middot;&nbsp;
+            <a href="https://github.com/bobybonillamx/club_lectura" target="_blank" rel="noopener">GitHub</a>
+            {% if club_settings.footer_custom_link_text and club_settings.footer_custom_link_url %}
+            &nbsp;&middot;&nbsp;
+            <a href="{{ club_settings.footer_custom_link_url }}" target="_blank" rel="noopener">{{ club_settings.footer_custom_link_text }}</a>
+            {% endif %}
+        </div>
+    </footer>
+    <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/pwa/sw.js');</script>
 </body>
 </html>
