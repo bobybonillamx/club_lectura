@@ -191,4 +191,4 @@ docker compose exec web python manage.py migrate
 
 ## Licencia
 
-Uso personal y comercial libre. Mantén el crédito "Powered by Gold Tech Mx" en el footer.
+Uso personal y comercial libre. Mantén el crédito "Powered by Locos X la Tecnología" en el footer.
