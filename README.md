@@ -96,7 +96,7 @@ docker compose exec web python manage.py createsuperuser
 club_lectura/
 ├── app/
 │   ├── clublectura/
-│   │   ├── settings.py        # DEFAULT_AFFILIATE_TAG fijo aquí
+│   │   ├── settings.py 
 │   │   └── urls.py
 │   ├── core/
 │   │   ├── models.py          # User, Book, Event, Category, UserSocialLink...
@@ -107,7 +107,7 @@ club_lectura/
 │   │   │   └── theme_tags.py  # Filtros: theme_page_color, social_icon, etc.
 │   │   └── migrations/
 │   └── templates/
-│       ├── base.html          # ⚠️ Ver nota de |safe arriba
+│       ├── base.html          
 │       ├── home.html
 │       ├── books_page.html
 │       ├── book_detail.html
